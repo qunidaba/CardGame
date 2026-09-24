@@ -1,0 +1,1909 @@
+{
+    "enemies": [
+        {
+            "id": 1,
+            "name": "哥布林",
+            "image": "",
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 102,
+            "imageHeight": 75,
+            "imageScale": 1,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 50,
+            "maxHp": 50,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "攻击6 + 虚弱2（1回合）",
+                    "weight": 50,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 6,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Weaken",
+                            "duration": 1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Multi",
+                    "value": 1,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 50,
+                    "status": "",
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Taunt",
+                            "value": 1,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Attack",
+                            "value": 8,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                8,
+                10
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act1_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 2,
+            "name": "小甲虫",
+            "image": "",
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 1,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 80,
+            "maxHp": 80,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "防御15 + 荆棘1",
+                    "weight": 50,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": true,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 15,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Buff",
+                            "value": 1,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Thorns",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Attack",
+                    "value": 10,
+                    "multiHit": true,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 50,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                12,
+                20
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act1_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 3,
+            "name": "哥布林狂战士",
+            "image": "",
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 102,
+            "imageHeight": 75,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 130,
+            "maxHp": 130,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "防御20 + 力量1",
+                    "weight": 25,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 20,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Attack",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 3,
+                            "description": null,
+                            "weight": 100,
+                            "status": "",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Sequence",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 50,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Buff",
+                            "value": 3,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": "力量3",
+                            "weight": 100,
+                            "status": "Strength",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "MultiAttack",
+                            "value": 4,
+                            "multiHit": false,
+                            "hitCount": 2,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                35,
+                40
+            ],
+            "relicDrop": true,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act1_elite"
+            ],
+            "passive": null
+        },
+        {
+            "id": 4,
+            "name": "独眼怪",
+            "image": "",
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 175,
+            "imageHeight": 170,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 150,
+            "maxHp": 150,
+            "intents": [
+                {
+                    "type": "Buff",
+                    "value": 15,
+                    "multiHit": false,
+                    "hitCount": 2,
+                    "description": "力量+2",
+                    "weight": 30,
+                    "status": "Strength",
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "MultiAttack",
+                    "value": 5,
+                    "multiHit": false,
+                    "hitCount": 3,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Defense",
+                    "value": 12,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 40,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "攻击10 + 易伤2（2回合）",
+                    "weight": 20,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 10,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Vulnerable",
+                            "duration": 2,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                50,
+                70
+            ],
+            "relicDrop": false,
+            "bossRelic": true,
+            "isBoss": true,
+            "pools": [
+
+],
+            "passive": null
+        },
+        {
+            "id": 5,
+            "name": "圣锤守卫",
+            "image": "",
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 80,
+            "maxHp": 80,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 1,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 25,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 10,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Charge",
+                            "value": 0,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Buff",
+                    "value": 3,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "力量+3",
+                    "weight": 25,
+                    "status": "Strength",
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Attack",
+                    "value": 10,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 25,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                40,
+                60
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+
+],
+            "passive": null
+        },
+        {
+            "id": 6,
+            "name": "锁匠的亡魂",
+            "image": "",
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 50,
+            "maxHp": 50,
+            "intents": [
+                {
+                    "type": "Attack",
+                    "value": 8,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 40,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "MultiAttack",
+                    "value": 5,
+                    "multiHit": false,
+                    "hitCount": 2,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Defense",
+                    "value": 8,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                35,
+                55
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+
+],
+            "passive": null
+        },
+        {
+            "id": 7,
+            "name": "剧毒蝙蝠",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 30,
+            "maxHp": 30,
+            "intents": [
+                {
+                    "type": "Debuff",
+                    "value": 3,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "中毒3（2回合）",
+                    "weight": 30,
+                    "status": "Poison",
+                    "duration": 2,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "攻击5+中毒3（1回合）",
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 5,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 3,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Poison",
+                            "duration": 1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                8,
+                12
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act1_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 8,
+            "name": "树人",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 100,
+            "maxHp": 100,
+            "intents": [
+                {
+                    "type": "Attack",
+                    "value": 14,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 35,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "防御8+再生3（2回合）",
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 8,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": "防御8+再生3（2回合）",
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Buff",
+                            "value": 3,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Regeneration",
+                            "duration": 2,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                14,
+                22
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act1_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 9,
+            "name": "火焰小鬼",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 45,
+            "maxHp": 45,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "攻击4+灼烧2",
+                    "weight": 40,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 4,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Burn",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Debuff",
+                    "value": 6,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 40,
+                    "status": "Burn",
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                10,
+                13
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act1_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 10,
+            "name": "毒沼蛙",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 140,
+            "maxHp": 140,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Buff",
+                            "value": 4,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Regeneration",
+                            "duration": 3,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Defense",
+                            "value": 10,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 40,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 12,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 6,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Poison",
+                            "duration": 3,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "MultiAttack",
+                    "value": 4,
+                    "multiHit": false,
+                    "hitCount": 3,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                40,
+                60
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act1_elite"
+            ],
+            "passive": null
+        },
+        {
+            "id": 11,
+            "name": "诡异蠕虫",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 80,
+            "maxHp": 80,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 40,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 8,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Curse",
+                            "value": 68,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 15,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Curse",
+                            "value": 69,
+                            "multiHit": false,
+                            "hitCount": 2,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                18,
+                28
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 12,
+            "name": "吞噬怪",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 85,
+            "maxHp": 85,
+            "intents": [
+                {
+                    "type": "Attack",
+                    "value": 10,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 35,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Swallow",
+                    "value": 1,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": "",
+                    "duration": 2,
+                    "battleStart": true,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 35,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Sunder",
+                            "value": 6,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Swallow",
+                            "value": 1,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "",
+                            "duration": 2,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                18,
+                28
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 13,
+            "name": "愤怒骷髅头",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 60,
+            "maxHp": 60,
+            "intents": [
+                {
+                    "type": "MultiAttack",
+                    "value": 2,
+                    "multiHit": false,
+                    "hitCount": 3,
+                    "description": null,
+                    "weight": 35,
+                    "status": "",
+                    "duration": 3,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 8,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Weaken",
+                            "duration": 1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                18,
+                28
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_common"
+            ],
+            "passive": "Weakness"
+        },
+        {
+            "id": 14,
+            "name": "遁地蠕虫",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": "14_burrow",
+            "burrowFrames": [
+
+],
+            "emergeImage": "14_emerge",
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 100,
+            "maxHp": 100,
+            "intents": [
+                {
+                    "type": "Burrow",
+                    "value": 3,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 100,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "",
+                    "weight": 100,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 8,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Buff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Strength",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 100,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "MultiAttack",
+                            "value": 4,
+                            "multiHit": false,
+                            "hitCount": 2,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Vulnerable",
+                            "duration": 2,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                20,
+                30
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_common"
+            ],
+            "passive": null
+        },
+        {
+            "id": 15,
+            "name": "哥布林巫师",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 102,
+            "imageHeight": 75,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 90,
+            "maxHp": 90,
+            "intents": [
+                {
+                    "type": "Summon",
+                    "value": 1,
+                    "multiHit": false,
+                    "hitCount": 2,
+                    "description": null,
+                    "weight": 40,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": true,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 8,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 3,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Weaken",
+                            "duration": 1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "HealAllies",
+                    "value": 15,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+
+]
+                }
+            ],
+            "goldRange": [
+                18,
+                28
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_elite"
+            ],
+            "passive": null
+        },
+        {
+            "id": 20,
+            "name": "亡灵骑士",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 200,
+            "maxHp": 200,
+            "intents": [
+                {
+                    "type": "Sequence",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "三段斩",
+                    "weight": 40,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Buff",
+                            "value": 3,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Strength",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Attack",
+                            "value": 16,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "MultiAttack",
+                            "value": 8,
+                            "multiHit": false,
+                            "hitCount": 3,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 20,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Attack",
+                            "value": 10,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Debuff",
+                    "value": 3,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": "Vulnerable",
+                    "duration": 2,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                60,
+                90
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_elite"
+            ],
+            "passive": null
+        },
+        {
+            "id": 21,
+            "name": "咒法师",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 170,
+            "maxHp": 170,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 35,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 10,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Weaken",
+                            "duration": 2,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Buff",
+                            "value": 4,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Thorns",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Defense",
+                            "value": 15,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "MultiAttack",
+                    "value": 7,
+                    "multiHit": false,
+                    "hitCount": 3,
+                    "description": null,
+                    "weight": 35,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                60,
+                90
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_elite"
+            ],
+            "passive": null
+        },
+        {
+            "id": 22,
+            "name": "深渊之主",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 100,
+            "imageHeight": 60,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 280,
+            "maxHp": 280,
+            "intents": [
+                {
+                    "type": "Buff",
+                    "value": 4,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 20,
+                    "status": "Strength",
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 25,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 12,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 3,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Vulnerable",
+                            "duration": 2,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "MultiAttack",
+                    "value": 6,
+                    "multiHit": false,
+                    "hitCount": 4,
+                    "description": null,
+                    "weight": 25,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Defense",
+                    "value": 20,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 15,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Sequence",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": "深渊之怒",
+                    "weight": 15,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 14,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "MultiAttack",
+                            "value": 9,
+                            "multiHit": false,
+                            "hitCount": 3,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Buff",
+                            "value": 5,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Strength",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                100,
+                150
+            ],
+            "relicDrop": false,
+            "bossRelic": true,
+            "isBoss": true,
+            "pools": [
+
+],
+            "passive": null
+        }
+    ]
+}

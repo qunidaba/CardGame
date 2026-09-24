@@ -1,0 +1,161 @@
+{
+    "encounters": [
+        {
+            "id": 1,
+            "name": "哥布林小队",
+            "pool": "act1_common",
+            "weight": 10,
+            "enemies": [
+                1,
+                1
+            ]
+        },
+        {
+            "id": 2,
+            "name": "火焰小鬼+甲虫",
+            "pool": "act1_common_late",
+            "weight": 8,
+            "enemies": [
+                9,
+                2
+            ]
+        },
+        {
+            "id": 3,
+            "name": "甲虫",
+            "pool": "act1_common",
+            "weight": 7,
+            "enemies": [
+                2
+            ]
+        },
+        {
+            "id": 4,
+            "name": "火焰小鬼*2",
+            "pool": "act1_common",
+            "weight": 8,
+            "enemies": [
+                9,
+                9
+            ]
+        },
+        {
+            "id": 5,
+            "name": "树人",
+            "pool": "act1_common",
+            "weight": 8,
+            "enemies": [
+                8
+            ]
+        },
+        {
+            "id": 6,
+            "name": "火焰小鬼*3",
+            "pool": "act1_common_late",
+            "weight": 1,
+            "enemies": [
+                9,
+                9,
+                9
+            ]
+        },
+        {
+            "id": 7,
+            "name": "剧毒蝙蝠*2+哥布林",
+            "pool": "act1_common_late",
+            "weight": 1,
+            "enemies": [
+                7,
+                7,
+                1
+            ]
+        },
+        {
+            "id": 8,
+            "name": "剧毒蝙蝠*2",
+            "pool": "act1_common",
+            "weight": 8,
+            "enemies": [
+                7,
+                7
+            ]
+        },
+        {
+            "id": 9,
+            "name": "甲虫*2",
+            "pool": "act1_common_late",
+            "weight": 1,
+            "enemies": [
+                2,
+                2
+            ]
+        },
+        {
+            "id": 10,
+            "name": "毒沼蛙",
+            "pool": "act1_elite",
+            "weight": 10,
+            "enemies": [
+                10
+            ]
+        },
+        {
+            "id": 12,
+            "name": "哥布林狂战士",
+            "pool": "act1_elite",
+            "weight": 10,
+            "enemies": [
+                3
+            ]
+        },
+        {
+            "id": 13,
+            "name": "诡异蠕虫*2",
+            "pool": "act2_common",
+            "weight": 10,
+            "enemies": [
+                11,
+                11
+            ]
+        },
+        {
+            "id": 14,
+            "name": "吞噬怪*2",
+            "pool": "act2_common",
+            "weight": 8,
+            "enemies": [
+                12,
+                12
+            ]
+        },
+        {
+            "id": 15,
+            "name": "愤怒骷髅头*3",
+            "pool": "act2_common",
+            "weight": 8,
+            "enemies": [
+                13,
+                13,
+                13
+            ]
+        },
+        {
+            "id": 16,
+            "name": "遁地蠕虫",
+            "pool": "act2_common",
+            "weight": 8,
+            "enemies": [
+                14
+            ]
+        },
+        {
+            "id": 17,
+            "name": "哥布林巫师",
+            "pool": "act2_elite",
+            "weight": 5,
+            "enemies": [
+                15
+            ]
+        }
+    ]
+}

@@ -1,0 +1,173 @@
+{
+    "potions": [
+        {
+            "id": 1,
+            "name": "治疗药水",
+            "description": "回复 10% 最大生命",
+            "effect": {
+                "type": "HealPercent",
+                "value": 0.1,
+                "duration": -1,
+                "status": null,
+                "target": null
+            },
+            "icon": "potion_heal"
+        },
+        {
+            "id": 2,
+            "name": "暴怒药水",
+            "description": "下一次出牌伤害翻倍",
+            "effect": {
+                "type": "ApplyStatus",
+                "value": 1,
+                "duration": -1,
+                "status": "Rage",
+                "target": "self"
+            },
+            "icon": "potion_strength"
+        },
+        {
+            "id": 3,
+            "name": "铁壁药水",
+            "description": "获得 10 防御",
+            "effect": {
+                "type": "GainDefense",
+                "value": 10,
+                "duration": -1,
+                "status": null,
+                "target": null
+            },
+            "icon": "potion_block"
+        },
+        {
+            "id": 4,
+            "name": "敏捷药水",
+            "description": "抽 3 张牌",
+            "effect": {
+                "type": "DrawCards",
+                "value": 3,
+                "duration": -1,
+                "status": null,
+                "target": null
+            },
+            "icon": "potion_dexterity"
+        },
+        {
+            "id": 5,
+            "name": "剧毒药水",
+            "description": "给敌人施加 5 层中毒（3 回合）",
+            "effect": {
+                "type": "ApplyStatus",
+                "value": 5,
+                "duration": 3,
+                "status": "Poison",
+                "target": "enemy"
+            },
+            "icon": "potion_poison"
+        },
+        {
+            "id": 6,
+            "name": "力量药水",
+            "description": "获得 2 层力量",
+            "effect": {
+                "type": "ApplyStatus",
+                "value": 2,
+                "duration": -1,
+                "status": "Strength",
+                "target": "self"
+            },
+            "icon": "potion_strength"
+        },
+        {
+            "id": 7,
+            "name": "再生药水",
+            "description": "获得 3 回合 3 层再生",
+            "effect": {
+                "type": "ApplyStatus",
+                "value": 3,
+                "duration": 3,
+                "status": "Regeneration",
+                "target": "self"
+            },
+            "icon": "potion_heal"
+        },
+        {
+            "id": 8,
+            "name": "虚弱药水",
+            "description": "给敌人施加 2 层虚弱（2 回合）",
+            "effect": {
+                "type": "ApplyStatus",
+                "value": 2,
+                "duration": 2,
+                "status": "Weaken",
+                "target": "enemy"
+            },
+            "icon": "potion_weaken"
+        },
+        {
+            "id": 9,
+            "name": "易伤药水",
+            "description": "给敌人施加 5 层易伤（2 回合）",
+            "effect": {
+                "type": "ApplyStatus",
+                "value": 5,
+                "duration": 2,
+                "status": "Vulnerable",
+                "target": "enemy"
+            },
+            "icon": "potion_vulnerable"
+        },
+        {
+            "id": 10,
+            "name": "坚壁药水",
+            "description": "本回合获得防御翻倍",
+            "effect": {
+                "type": "ApplyStatus",
+                "value": 1,
+                "duration": 1,
+                "status": "DefenseUp",
+                "target": "self"
+            },
+            "icon": "potion_block"
+        },
+        {
+            "id": 11,
+            "name": "升格药水",
+            "description": "选择一张手牌，点数 +1",
+            "effect": {
+                "type": "CardRankShift",
+                "value": 1,
+                "duration": -1,
+                "status": null,
+                "target": null
+            },
+            "icon": "potion_rank_up"
+        },
+        {
+            "id": 12,
+            "name": "降格药水",
+            "description": "选择一张手牌，点数 -1",
+            "effect": {
+                "type": "CardRankShift",
+                "value": -1,
+                "duration": -1,
+                "status": null,
+                "target": null
+            },
+            "icon": "potion_rank_down"
+        },
+        {
+            "id": 13,
+            "name": "心之药水",
+            "description": "把手中的牌全部变为红桃",
+            "effect": {
+                "type": "SetHandSuit",
+                "value": "Heart",
+                "duration": -1,
+                "status": null,
+                "target": null
+            },
+            "icon": "potion_heart"
+        }
+    ]
+}

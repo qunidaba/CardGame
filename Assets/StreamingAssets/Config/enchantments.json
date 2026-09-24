@@ -1,0 +1,916 @@
+{
+    "enchantments": [
+        {
+            "id": 2,
+            "name": "坚盾",
+            "description": "打出时：获得 2 点防御",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "AddDefense",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 10,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 3,
+            "name": "疾风",
+            "description": "打出时：额外抽 1 张牌",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "AddDraw",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 8,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 4,
+            "name": "回春",
+            "description": "打出时：回复 2 点生命",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "AddHeal",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 8,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 5,
+            "name": "贪婪",
+            "description": "打出时：获得 5 金币",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "AddGold",
+                    "value": 5,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 5,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 10,
+            "name": "毒刃",
+            "description": "打出时：施加 3 层中毒（2 回合）",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "ApplyPoison",
+                    "value": 3,
+                    "duration": 2,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 8,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 11,
+            "name": "灼热",
+            "description": "打出时：施加 4 层灼烧（每回合减半）",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "ApplyBurn",
+                    "value": 4,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 8,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 12,
+            "name": "虚弱诅咒",
+            "description": "打出时：施加 3 层虚弱（1 回合）",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "ApplyWeaken",
+                    "value": 3,
+                    "duration": 1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 20,
+            "name": "顺风耳",
+            "description": "参与顺子时：本回合之后每次出牌伤害 +2",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "AddTurnDamageBonus",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 8,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "StraightAny"
+        },
+        {
+            "id": 21,
+            "name": "同花之魂",
+            "description": "参与同花时：本回合抽 1 张，下回合再抽 1 张",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "AddDraw",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                },
+                {
+                    "type": "AddDrawNextTurn",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 8,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "FlushAny"
+        },
+        {
+            "id": 22,
+            "name": "铁三角",
+            "description": "参与三条时：本次出牌伤害 ×1.5",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "MultiplyDamage",
+                    "value": 1.5,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "ThreeOfAKind"
+        },
+        {
+            "id": 23,
+            "name": "葫芦大师",
+            "description": "参与葫芦时：额外造成等同于该牌点数的伤害",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "AddDamageEqualRank",
+                    "value": 0,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 7,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "FullHouse"
+        },
+        {
+            "id": 24,
+            "name": "连对专家",
+            "description": "参与两连对时：额外抽 3 张牌",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "AddDraw",
+                    "value": 3,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "TwoConsecutivePairs"
+        },
+        {
+            "id": 25,
+            "name": "同花顺之巅",
+            "description": "参与同花顺时：本场战斗中每打出一张该花色的牌，额外造成 2 点伤害",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "AddSuitDamageBonus",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Epic",
+            "weight": 4,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "StraightFlushAny"
+        },
+        {
+            "id": 26,
+            "name": "对子专精",
+            "description": "参与对子时：本次出牌伤害 ×2",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "MultiplyDamage",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 8,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "OnePair"
+        },
+        {
+            "id": 27,
+            "name": "四条爆发",
+            "description": "参与四条时：本次出牌伤害 ×3",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "MultiplyDamage",
+                    "value": 3,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 7,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "FourOfAKind"
+        },
+        {
+            "id": 30,
+            "name": "瘟疫",
+            "description": "参与顺子时：施加等同于出牌张数的中毒（2 回合）",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "ApplyPoisonEqualCount",
+                    "value": 0,
+                    "duration": 2,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 7,
+            "isUnique": true,
+            "pool": "HandType",
+            "exclusiveGroup": null,
+            "condition": "StraightAny"
+        },
+        {
+            "id": 31,
+            "name": "破甲",
+            "description": "打出时：施加 4 层易伤（1 回合）",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "ApplyVulnerable",
+                    "value": 4,
+                    "duration": 1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 7,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 32,
+            "name": "吸血",
+            "description": "打出时：回复本次造成伤害的 50%",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "HealPercentOfDamage",
+                    "value": 50,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Epic",
+            "weight": 7,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 33,
+            "name": "剧毒共鸣",
+            "description": "打出时：敌人每有 1 层中毒，额外造成 1 点伤害",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "AddDamagePerEnemyPoison",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 34,
+            "name": "灼烧引爆",
+            "description": "打出时：敌人灼烧层数翻倍",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "DoubleEnemyBurn",
+                    "value": 0,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Epic",
+            "weight": 5,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 35,
+            "name": "燃料",
+            "description": "在手牌中时：每打出一张红色牌（♥/♦），给敌人施加 2 层灼烧",
+            "trigger": "OnOtherCardPlayed",
+            "effects": [
+                {
+                    "type": "ApplyBurnPerRedCard",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 8,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 36,
+            "name": "瘟疫医生",
+            "description": "打出时：敌人每有 1 层中毒，回复 1 点生命",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "HealPerEnemyPoison",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 7,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 37,
+            "name": "炼化",
+            "description": "打出时：敌人每有 1 层中毒，获得 1 层力量",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "GainStrengthPerEnemyPoison",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 38,
+            "name": "处决",
+            "description": "打出时：若敌人生命低于 30%，本次伤害 ×3",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "ExecuteBelowHpPercent",
+                    "value": 30,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Epic",
+            "weight": 4,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 39,
+            "name": "元素共鸣",
+            "description": "打出时：敌人每有 1 种负面状态，额外造成 2 点伤害",
+            "trigger": "OnHandType",
+            "effects": [
+                {
+                    "type": "AddDamagePerEnemyDebuff",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 40,
+            "name": "自残契约",
+            "description": "打出时：失去 3 点生命，抽 2 张牌",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "LoseHp",
+                    "value": 3,
+                    "duration": -1,
+                    "status": null
+                },
+                {
+                    "type": "AddDraw",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 41,
+            "name": "荆棘之肤",
+            "description": "打出时：获得 2 层荆棘",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "ApplySelfStatus",
+                    "value": 2,
+                    "duration": -1,
+                    "status": "Thorns"
+                }
+            ],
+            "rarity": "Common",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 42,
+            "name": "再生之种",
+            "description": "打出时：获得 2 层再生（2 回合）",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "ApplySelfStatus",
+                    "value": 1,
+                    "duration": 2,
+                    "status": "Regeneration"
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 43,
+            "name": "四色印记",
+            "description": "打出时：按当前命运花色获得 2 层对应增益（2回合）（♠力量/♥再生/♣专注/♦敏捷）",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "GainBuffByDominantSuit",
+                    "value": 2,
+                    "duration": 2,
+                    "status": null
+                }
+            ],
+            "rarity": "Common",
+            "weight": 5,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 44,
+            "name": "余烬",
+            "description": "此牌被弃时：给随机一名敌人施加 6 层灼烧",
+            "trigger": "OnDiscard",
+            "effects": [
+                {
+                    "type": "ApplyBurnRandom",
+                    "value": 6,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 45,
+            "name": "残毒",
+            "description": "此牌被弃时：给随机一名敌人施加 3 层中毒（2 回合）",
+            "trigger": "OnDiscard",
+            "effects": [
+                {
+                    "type": "ApplyPoisonRandom",
+                    "value": 3,
+                    "duration": 2,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 6,
+            "isUnique": true,
+            "pool": "Buff",
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 60,
+            "name": "万能牌",
+            "description": "常驻：可手动改变此牌的判定花色与点数",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "Wildcard",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Epic",
+            "weight": 3,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": "Modifier",
+            "condition": ""
+        },
+        {
+            "id": 61,
+            "name": "变色",
+            "description": "常驻：可手动改变此牌的判定花色",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "SuitShift",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 5,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": "Modifier",
+            "condition": ""
+        },
+        {
+            "id": 62,
+            "name": "镜牌",
+            "description": "常驻：可变为手牌中另一张牌的复制（花色、点数、附魔一致）",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "Mirror",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Epic",
+            "weight": 3,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": "Modifier",
+            "condition": ""
+        },
+        {
+            "id": 63,
+            "name": "回手",
+            "description": "打出后：此牌回到手牌",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "ReturnToHand",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 5,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 64,
+            "name": "保留",
+            "description": "回合结束时：此牌留在手牌",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "Retain",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 5,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 65,
+            "name": "天命",
+            "description": "常驻：战斗第一回合必定抽到",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "Destiny",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 5,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 66,
+            "name": "魔导",
+            "description": "打出时：随机一张手牌获得一个临时随机附魔，本场战斗结束后消失",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "GrantRandomTier1Enchant",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Epic",
+            "weight": 5,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 67,
+            "name": "咒印",
+            "description": "打出时：失去 3 点生命",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "LoseHp",
+                    "value": 3,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Curse",
+            "weight": 0,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 68,
+            "name": "禁锢",
+            "description": "诅咒：此牌无法被打出",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "Unplayable",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Curse",
+            "weight": 0,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 69,
+            "name": "割裂",
+            "description": "诅咒：此牌无法与同数字的牌一起打出",
+            "trigger": "Passive",
+            "effects": [
+                {
+                    "type": "NoSameRank",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Curse",
+            "weight": 0,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 70,
+            "name": "搜寻",
+            "description": "打出后：从弃牌堆选一张牌回到手牌",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "SearchDiscard",
+                    "value": 1,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Rare",
+            "weight": 0,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 71,
+            "name": "无力",
+            "description": "打出时：本次出牌伤害 -2",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "ReduceDamage",
+                    "value": 2,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Curse",
+            "weight": 0,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 72,
+            "name": "吞噬",
+            "description": "打出时：金币 -3",
+            "trigger": "OnPlay",
+            "effects": [
+                {
+                    "type": "LoseGold",
+                    "value": 3,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Curse",
+            "weight": 0,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        },
+        {
+            "id": 73,
+            "name": "吞噬+",
+            "description": "抽到时：金币 -3",
+            "trigger": "OnDraw",
+            "effects": [
+                {
+                    "type": "LoseGold",
+                    "value": 3,
+                    "duration": -1,
+                    "status": null
+                }
+            ],
+            "rarity": "Curse",
+            "weight": 0,
+            "isUnique": true,
+            "pool": null,
+            "exclusiveGroup": null,
+            "condition": ""
+        }
+    ]
+}

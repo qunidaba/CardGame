@@ -1,0 +1,669 @@
+{
+    "relics": [
+        {
+            "id": 1,
+            "name": "赌徒护腕",
+            "description": "回合开始时，额外抽1张牌",
+            "rarity": "Common",
+            "effects": [
+                {
+                    "trigger": "OnPlayerTurnStart",
+                    "type": "AddDrawOnPlay",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 2,
+            "name": "炼金术士之石",
+            "description": "药水效果 +50%，药水槽 +1。",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "OnPotionUse",
+                    "type": "MultiplyPotionEffect",
+                    "value": 1.5,
+                    "condition": null,
+                    "duration": 0
+                },
+                {
+                    "trigger": "Passive",
+                    "type": "AddPotionSlot",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 3,
+            "name": "皇家印记",
+            "description": "打出同花顺时，额外抽1牌+获得5防御",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "OnHandType",
+                    "type": "AddDraw",
+                    "value": 1,
+                    "condition": "StraightFlushAny",
+                    "duration": 0
+                },
+                {
+                    "trigger": "OnHandType",
+                    "type": "AddDefense",
+                    "value": 5,
+                    "condition": "StraightFlushAny",
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 4,
+            "name": "贪婪钱包",
+            "description": "获得金币 +25%，但商店价格 +20%。",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "OnGoldGain",
+                    "type": "MultiplyGold",
+                    "value": 1.25,
+                    "condition": null,
+                    "duration": 0
+                },
+                {
+                    "trigger": "OnShopEnter",
+                    "type": "ModifyShopPrice",
+                    "value": 1.2,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 5,
+            "name": "吸血鬼獠牙",
+            "description": "造成伤害时回复1点血量",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "OnDealDamage",
+                    "type": "AddHealOnPlay",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 6,
+            "name": "铁心",
+            "description": "每回合开始时，获得3点防御",
+            "rarity": "Common",
+            "effects": [
+                {
+                    "trigger": "OnPlayerTurnStart",
+                    "type": "AddDefense",
+                    "value": 3,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 7,
+            "name": "剧毒之刃",
+            "description": "打出一对时，给敌人施加3层中毒，持续3回合",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "OnHandType",
+                    "type": "ApplyPoison",
+                    "value": 3,
+                    "condition": "OnePair",
+                    "duration": 3
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 10,
+            "name": "命运共鸣",
+            "description": "命运之力充能翻倍",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "MultiplyFatePower",
+                    "value": 2,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 11,
+            "name": "四色祭仪",
+            "description": "战斗胜利时，若其余三花色与命运花色的出牌数差值都 ≤3，命运花色额外 +1 命格值",
+            "rarity": "Common",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "FourColorRite",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 12,
+            "name": "花色调和",
+            "description": "主命格花色每打出一张，额外 +3 伤害",
+            "rarity": "Epic",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "MainSuitDamageBonus",
+                    "value": 3,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 13,
+            "name": "顺子大师",
+            "description": "打出顺子（5张）时，额外抽 1 并 +2 伤害",
+            "rarity": "Common",
+            "effects": [
+                {
+                    "trigger": "OnHandType",
+                    "type": "AddDamageOnPlay",
+                    "value": 2,
+                    "condition": "Straight5",
+                    "duration": 0
+                },
+                {
+                    "trigger": "OnHandType",
+                    "type": "AddDrawOnPlay",
+                    "value": 1,
+                    "condition": "Straight5",
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 14,
+            "name": "同花之王",
+            "description": "打出同花时，本次伤害 +50%",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "OnHandType",
+                    "type": "MultiplyDamage",
+                    "value": 1.5,
+                    "condition": "FlushAny",
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 15,
+            "name": "葫芦收藏家",
+            "description": "打出葫芦时，获得等同于对子与三条点数之和的金币",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "OnHandType",
+                    "type": "GainGoldFromFullHouse",
+                    "value": 1,
+                    "condition": "FullHouse",
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 16,
+            "name": "四条猎手",
+            "description": "打出四条时，本场永久 +5 力量",
+            "rarity": "Epic",
+            "effects": [
+                {
+                    "trigger": "OnHandType",
+                    "type": "AddStrength",
+                    "value": 5,
+                    "condition": "FourOfAKind",
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 17,
+            "name": "皇家赌注",
+            "description": "打出同花顺时，本次伤害翻倍",
+            "rarity": "Epic",
+            "effects": [
+                {
+                    "trigger": "OnHandType",
+                    "type": "MultiplyDamage",
+                    "value": 2,
+                    "condition": "StraightFlushAny",
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 18,
+            "name": "瘟疫之心",
+            "description": "你给予敌人中毒时，中毒层数 +1",
+            "rarity": "Epic",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "PoisonBonus",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 19,
+            "name": "灼热之核",
+            "description": "敌人灼烧衰减速度变为每回合减少 1/4 层数",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "SlowBurnDecay",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 20,
+            "name": "易伤标记",
+            "description": "战斗开始时，给敌人 4 层易伤（1 回合）",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "OnCombatStart",
+                    "type": "ApplyVulnerable",
+                    "value": 4,
+                    "condition": null,
+                    "duration": 2
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 21,
+            "name": "荆棘王冠",
+            "description": "战斗开始时，获得 3 层荆棘",
+            "rarity": "Common",
+            "effects": [
+                {
+                    "trigger": "OnCombatStart",
+                    "type": "ApplyThorns",
+                    "value": 3,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 22,
+            "name": "速通者",
+            "description": "若两回合内结束战斗，获得 20 金币",
+            "rarity": "Common",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "FastWinGold",
+                    "value": 20,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 23,
+            "name": "高利贷",
+            "description": "立即 +100 金币，最大生命 -10",
+            "rarity": "Common",
+            "effects": [
+                {
+                    "trigger": "OnAcquire",
+                    "type": "AddGold",
+                    "value": 100,
+                    "condition": null,
+                    "duration": 0
+                },
+                {
+                    "trigger": "OnAcquire",
+                    "type": "AddMaxHp",
+                    "value": -10,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 24,
+            "name": "回收站",
+            "description": "弃牌重抽次数 +1",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "ExtraMulligan",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 25,
+            "name": "神之血",
+            "description": "最大生命 +10",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "OnAcquire",
+                    "type": "AddMaxHp",
+                    "value": 10,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 26,
+            "name": "不死鸟",
+            "description": "每局一次，死亡时以 30% 生命复活",
+            "rarity": "Epic",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "PhoenixRevive",
+                    "value": 30,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 27,
+            "name": "双倍附魔",
+            "description": "每次获得附魔时，额外获得 1 个随机附魔",
+            "rarity": "Epic",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "DoubleEnchant",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 28,
+            "name": "附魔共鸣",
+            "description": "每有 4 张已附魔的牌，伤害 +1",
+            "rarity": "Rare",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "EnchantResonance",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": false,
+            "iconPath": null
+        },
+        {
+            "id": 29,
+            "name": "圣锤",
+            "description": "三条可以与比它数字大 1 的牌组成四条",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "Hammer",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 30,
+            "name": "生锈的钥匙",
+            "description": "一把生锈的钥匙，似乎能打开某个箱子。",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "KeyItem",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 31,
+            "name": "诡异的钥匙",
+            "description": "一把形状诡异的钥匙，摸起来是温的。",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "KeyItem",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 32,
+            "name": "跳动的心脏",
+            "description": "打出红桃牌时回复 1 点生命；打出黑桃牌时失去 1 点生命并额外造成 1 次 1 点伤害",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "BeatingHeart",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 33,
+            "name": "滋养手环",
+            "description": "每回合结束时最大生命 +1、生命 +1（每局最多触发 5 次）",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "OnPlayerTurnEnd",
+                    "type": "AddMaxHpAndHealPerTurn",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 5
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 34,
+            "name": "同化之心",
+            "description": "每打出 1 次牌，随机一张非红桃手牌临时变为红桃（回合结束后恢复）",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "OnCardPlayed",
+                    "type": "HeartifyHandCard",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 35,
+            "name": "半人石像",
+            "description": "出牌时：生命 ≥50% 则抽 1 张牌并失去 1 点生命；生命 <50% 则回复 1 点生命",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "OnCardPlayed",
+                    "type": "HalfHpPlayEffect",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 36,
+            "name": "魔导书",
+            "description": "一次打出 5 张牌时，其中随机 2 张获得随机附魔（仅本场战斗）",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "OnCardPlayed",
+                    "type": "GrantRandomEnchantToPlayedCards",
+                    "value": 2,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        },
+        {
+            "id": 37,
+            "name": "护命铜钱",
+            "description": "受到致命伤害时，若金币数 > 100 则金币 -50，并回复 20% 最大生命",
+            "rarity": "Event",
+            "effects": [
+                {
+                    "trigger": "Passive",
+                    "type": "CoinGuard",
+                    "value": 1,
+                    "condition": null,
+                    "duration": 0
+                }
+            ],
+            "maxSlots": 1,
+            "eventOnly": true,
+            "iconPath": null
+        }
+    ]
+}

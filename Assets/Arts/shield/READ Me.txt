@@ -1,0 +1,55 @@
+Thank you for purchasing the Pixel Bow Pack Vol. 1!
+This pack contains 10 unique pixel bows you can use in your games, projects, or as decorative assets.
+
+📦 Content
+
+10 different bows (PNG, transparent)
+
+Preview mockup
+
+This README
+
+⚙️ Usage
+
+Download the files.
+
+Import the PNGs into your game engine (Unity, Godot, RPG Maker etc.) or graphic software.
+
+Use the bows freely in your projects.
+
+✅ License
+
+You can use the assets in personal and commercial projects.
+
+Editing and modification is allowed.
+
+Reselling or redistributing the individual files is not allowed.
+
+---
+
+Vielen Dank für den Kauf des Pixel Bow Pack Vol. 1!
+Dieses Paket enthält 10 einzigartige Pixel-Bögen, die du in deinen Spielen, Projekten oder als Deko-Assets nutzen kannst.
+
+📦 Inhalt
+
+10 verschiedene Bögen (PNG, transparent)
+
+Mockup zur Vorschau
+
+Dieses README
+
+⚙️ Nutzung
+
+Lade die Dateien herunter.
+
+Importiere die PNGs in deine Game Engine (Unity, Godot, RPG Maker etc.) oder Grafiksoftware.
+
+Verwende die Bögen frei in deinen Projekten.
+
+✅ Lizenz
+
+Du darfst die Assets in privaten und kommerziellen Projekten verwenden.
+
+Eine Umschreibung oder Bearbeitung ist erlaubt.
+
+Verkauf oder Weitergabe der einzelnen Dateien ist nicht erlaubt.
