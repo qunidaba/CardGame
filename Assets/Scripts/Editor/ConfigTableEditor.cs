@@ -788,6 +788,9 @@ public class ConfigTableEditor : EditorWindow
         File.WriteAllText(configPath, json);
         AssetDatabase.Refresh();
         Debug.Log($"配置已保存: {configPath}");
+
+        // 保存后立刻重载 + 校验（会跑字段覆盖检查和 ConfigValidator），问题直接进 Console
+        Roguelike.Data.ConfigLoader.Reload();
     }
 
     private Dictionary<string, object> ConvertObjectToDict(object obj)

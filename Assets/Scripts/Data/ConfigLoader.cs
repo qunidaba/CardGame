@@ -49,6 +49,9 @@ namespace Roguelike.Data
 
             isLoaded = true;
             Debug.Log($"[ConfigLoader] 所有配置加载完成: Enemies={cachedConfig.enemies.Count}, Relics={cachedConfig.relics.Count}, Enchantments={cachedConfig.enchantments.Count}, Events={cachedConfig.events.Count}, Potions={cachedConfig.potions.Count}, Acts={cachedConfig.acts.Count}, Encounters={cachedConfig.encounters.Count}");
+
+            // 加载完立刻校验一遍，把配置问题一次性报出来
+            ConfigValidator.Validate(cachedConfig);
         }
 
         public static void Reload()
@@ -71,7 +74,7 @@ namespace Roguelike.Data
             {
                 var dict = item as Dictionary<string, object>;
                 if (dict == null) continue;
-                cachedConfig.enemies.Add(ParseEnemy(dict));
+                cachedConfig.enemies.Add(ParseChecked("enemies", dict, ParseEnemy));
             }
         }
 
@@ -129,7 +132,7 @@ namespace Roguelike.Data
                 {
                     var idict = i as Dictionary<string, object>;
                     if (idict != null)
-                        e.intents.Add(ParseIntent(idict));
+                        e.intents.Add(ParseChecked("intent", idict, ParseIntent));
                 }
             }
 
@@ -158,7 +161,7 @@ namespace Roguelike.Data
                 foreach (var a in actList)
                 {
                     var adict = a as Dictionary<string, object>;
-                    if (adict != null) intent.actions.Add(ParseIntent(adict));
+                    if (adict != null) intent.actions.Add(ParseChecked("intent.action", adict, ParseIntent));
                 }
             }
 
@@ -179,7 +182,7 @@ namespace Roguelike.Data
             {
                 var dict = item as Dictionary<string, object>;
                 if (dict == null) continue;
-                cachedConfig.relics.Add(ParseRelic(dict));
+                cachedConfig.relics.Add(ParseChecked("relics", dict, ParseRelic));
             }
         }
 
@@ -203,14 +206,16 @@ namespace Roguelike.Data
                     var edict = e as Dictionary<string, object>;
                     if (edict != null)
                     {
-                        r.effects.Add(new RelicEffectData
+                        var red = new RelicEffectData
                         {
                             trigger = GetString(edict, "trigger"),
                             type = GetString(edict, "type"),
                             value = edict.GetValueOrDefault("value"),
                             condition = GetString(edict, "condition"),
                             duration = GetInt(edict, "duration", -1)
-                        });
+                        };
+                        r.effects.Add(red);
+                        CheckParsedFields("relic.effect", edict, red);
                     }
                 }
             }
@@ -232,7 +237,7 @@ namespace Roguelike.Data
             {
                 var dict = item as Dictionary<string, object>;
                 if (dict == null) continue;
-                cachedConfig.enchantments.Add(ParseEnchantment(dict));
+                cachedConfig.enchantments.Add(ParseChecked("enchantments", dict, ParseEnchantment));
             }
         }
 
@@ -259,13 +264,15 @@ namespace Roguelike.Data
                             var edict = e2 as Dictionary<string, object>;
                             if (edict != null)
                             {
-                                e.effects.Add(new EnchantmentEffectData
+                                var eed = new EnchantmentEffectData
                                 {
                                     type = GetString(edict, "type"),
                                     value = edict.GetValueOrDefault("value"),
                                     duration = GetInt(edict, "duration", -1),
                                     status = GetString(edict, "status")
-                                });
+                                };
+                                e.effects.Add(eed);
+                                CheckParsedFields("enchantment.effect", edict, eed);
                             }
                         }
                     }
@@ -287,7 +294,7 @@ namespace Roguelike.Data
             {
                 var dict = item as Dictionary<string, object>;
                 if (dict == null) continue;
-                cachedConfig.events.Add(ParseEvent(dict));
+                cachedConfig.events.Add(ParseChecked("events", dict, ParseEvent));
             }
         }
 
@@ -315,6 +322,7 @@ namespace Roguelike.Data
                             text = GetString(odict, "text"),
                             condition = GetString(odict, "condition")
                         };
+                        CheckParsedFields("event.option", odict, opt);
 
                         if (odict.TryGetValue("results", out var res) && res is List<object> resList)
                         {
@@ -323,7 +331,7 @@ namespace Roguelike.Data
                                 var rdict = r as Dictionary<string, object>;
                                 if (rdict != null)
                                 {
-                                    opt.results.Add(ParseEventResult(rdict));
+                                    opt.results.Add(ParseChecked("event.result", rdict, ParseEventResult));
                                 }
                             }
                         }
@@ -382,7 +390,7 @@ namespace Roguelike.Data
             {
                 var dict = item as Dictionary<string, object>;
                 if (dict == null) continue;
-                cachedConfig.potions.Add(ParsePotion(dict));
+                cachedConfig.potions.Add(ParseChecked("potions", dict, ParsePotion));
             }
         }
 
@@ -406,6 +414,7 @@ namespace Roguelike.Data
                     status = GetString(effDict, "status"),
                     target = GetString(effDict, "target")
                 };
+                CheckParsedFields("potion.effect", effDict, p.effect);
             }
 
             return p;
@@ -425,7 +434,7 @@ namespace Roguelike.Data
             {
                 var dict = item as Dictionary<string, object>;
                 if (dict == null) continue;
-                cachedConfig.acts.Add(ParseAct(dict));
+                cachedConfig.acts.Add(ParseChecked("acts", dict, ParseAct));
             }
         }
 
@@ -457,6 +466,7 @@ namespace Roguelike.Data
                 if (dict.TryGetValue("enemies", out var arr) && arr is List<object> ids)
                     enc.enemies = ids.ConvertAll(x => Convert.ToInt32(x));
 
+                CheckParsedFields("encounters", dict, enc);
                 cachedConfig.encounters.Add(enc);
             }
         }
@@ -550,6 +560,83 @@ namespace Roguelike.Data
             var rarity = GetString(d, "rarity", "");
             if (!string.IsNullOrEmpty(rarity)) return rarity;
             return RarityUtil.FromTier(GetInt(d, "tier", 1));
+        }
+
+        // ===== 字段覆盖检查（防止「JSON 里有、Parse 方法漏读」）=====
+
+        /// <summary>解析并顺带检查字段覆盖（新增字段忘了在 Parse 里读 → 报警）</summary>
+        private static T ParseChecked<T>(string configName, Dictionary<string, object> d,
+                                         Func<Dictionary<string, object>, T> parse) where T : class
+        {
+            var parsed = parse(d);
+            CheckParsedFields(configName, d, parsed);
+            return parsed;
+        }
+
+        /// <summary>
+        /// 对比「JSON 的字段」和「解析出来的对象」：
+        /// 1) JSON 里有、类上没有的 key → 拼写错误 / 字段已删除
+        /// 2) 类上有、JSON 里有非空值、但解析结果是默认值 → Parse 方法漏读了这个字段
+        /// 只在编辑器 / 开发版报警（正式包直接跳过）。
+        /// </summary>
+        private static void CheckParsedFields(string configName, Dictionary<string, object> d, object parsed)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (d == null || parsed == null) return;
+
+            var type = parsed.GetType();
+            var fields = type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var fieldNames = new HashSet<string>();
+            foreach (var f in fields) fieldNames.Add(f.Name);
+
+            // 1) JSON 里多出来的 key（类里没有这个字段）
+            foreach (var kv in d)
+            {
+                if (!fieldNames.Contains(kv.Key))
+                    Debug.LogWarning($"[ConfigLoader] {configName}「{Describe(parsed)}」JSON 字段 '{kv.Key}' 在 {type.Name} 上没有对应字段（拼写错误？字段已删除？）");
+            }
+
+            // 2) 有值却没解析出来（最典型的「新增字段忘了解析」）
+            foreach (var f in fields)
+            {
+                if (!d.TryGetValue(f.Name, out var raw)) continue;
+                if (IsDefaultValue(f.GetValue(parsed)) && !IsDefaultValue(raw))
+                    Debug.LogWarning($"[ConfigLoader] {configName}「{Describe(parsed)}」字段 '{f.Name}' 在 JSON 里有值（{raw}）但解析结果是默认值 —— Parse 方法很可能漏读了这个字段");
+            }
+#endif
+        }
+
+        /// <summary>值是否「空/默认」（null、空串、0、false、空集合）</summary>
+        private static bool IsDefaultValue(object v)
+        {
+            if (v == null) return true;
+            if (v is string s) return s.Length == 0;
+            if (v is bool b) return !b;
+            if (v is int i) return i == 0;
+            if (v is long l) return l == 0L;
+            if (v is float f) return Mathf.Approximately(f, 0f);
+            if (v is double db) return Math.Abs(db) < 1e-9;
+            if (v is System.Collections.ICollection c) return c.Count == 0;
+            return false;
+        }
+
+        /// <summary>给日志用的友好标识（id / 名字）</summary>
+        private static string Describe(object o)
+        {
+            var t = o.GetType();
+            var idField = t.GetField("id") ?? t.GetField("actId");
+            if (idField != null)
+            {
+                var id = idField.GetValue(o);
+                if (id != null && !(id is int iid && iid == 0)) return $"id={id}";
+            }
+            var nameField = t.GetField("name") ?? t.GetField("title");
+            if (nameField != null)
+            {
+                var name = nameField.GetValue(o);
+                if (name != null && !string.IsNullOrEmpty(name.ToString())) return name.ToString();
+            }
+            return t.Name;
         }
 
         // ===== 快捷查找方法 =====
