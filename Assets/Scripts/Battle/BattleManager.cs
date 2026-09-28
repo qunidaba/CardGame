@@ -813,7 +813,7 @@ public class BattleManager
     public void StartPlayerTurn()
     {
         if (IsBattleOver) return;
-        CoroutineRunner.Instance.StartCoroutine(StartPlayerTurnRoutine());
+        CoroutineRunner.Instance.StartCoroutine(Roguelike.CoroutineRunner.SafeCoroutine(StartPlayerTurnRoutine()));
     }
 
     private IEnumerator StartPlayerTurnRoutine()
@@ -1367,10 +1367,10 @@ public class BattleManager
         {
             OnRequestEnemyActionDelay(() => CoroutineRunner.Instance.StartCoroutine(ExecuteEnemyTurnRoutine()));
         }
-        else
-        {
-            CoroutineRunner.Instance.StartCoroutine(ExecuteEnemyTurnRoutine());
-        }
+else
+            {
+                CoroutineRunner.Instance.StartCoroutine(Roguelike.CoroutineRunner.SafeCoroutine(ExecuteEnemyTurnRoutine()));
+            }
     }
 
     private IEnumerator ExecuteEnemyTurnRoutine()

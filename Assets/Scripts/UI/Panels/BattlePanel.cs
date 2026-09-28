@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Roguelike;
 using Roguelike.Data;
-using Roguelike;
+using Roguelike.Core;
 
 /// <summary>
 /// 战斗界面面板（使用TextMeshPro）
@@ -207,6 +207,9 @@ public class BattlePanel : BasePanel
 
         // 自动创建容器（如果未指定）
         EnsureContainers();
+
+        // 注册对象池
+        RegisterPools();
 
         // 清掉上一场可能残留的表现层（面板被隐藏时协程中断，飘字/特效/手牌会卡住）
         ResetBattleVisuals();
@@ -1204,12 +1207,30 @@ private void OnEnemyTurnStart()
         if (turnEndPromptPrefab != null && promptContainer != null)
         {
             string msg = isPlayerTurnEnd ? "回合结束" : "敌方回合结束";
-            var promptObj = Instantiate(turnEndPromptPrefab, promptContainer);
-            var tmp = promptObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (tmp != null) tmp.text = msg;
-            // 自动销毁
-            Destroy(promptObj, 1.5f);
+            var promptObj = Roguelike.Core.PoolManager.Get<RectTransform>("TurnPrompt");
+            if (promptObj == null)
+            {
+                var fallback = Instantiate(turnEndPromptPrefab, promptContainer);
+                var tmpTextComp = fallback.GetComponentInChildren<TextMeshProUGUI>();
+                if (tmpTextComp != null) tmpTextComp.text = msg;
+                Destroy(fallback, 1.5f);
+                return;
+            }
+
+            promptObj.SetParent(promptContainer, false);
+            var tmpText = promptObj.GetComponentInChildren<TextMeshProUGUI>();
+            if (tmpText != null) tmpText.text = msg;
+            promptObj.gameObject.SetActive(true);
+
+            StartCoroutine(ReturnTurnPrompt(promptObj));
         }
+    }
+
+    private System.Collections.IEnumerator ReturnTurnPrompt(RectTransform promptObj)
+    {
+        yield return new WaitForSeconds(1.5f);
+        if (promptObj != null)
+            Roguelike.Core.PoolManager.Return("TurnPrompt", promptObj);
     }
 
     private void OnRequestEnemyActionDelay(System.Action onComplete)
@@ -1283,8 +1304,29 @@ private void OnEnemyTurnStart()
 
     private void SpawnFloatingText(Vector3 worldPos, string text, Color color, float fontSize, float popScale)
     {
-        var txtObj = Instantiate(damageTextPrefab, damageTextContainer);
+        var txtObj = Roguelike.Core.PoolManager.Get<TextMeshProUGUI>("DamageText");
+if (txtObj == null)
+        {
+            // 池未就绪时降级
+            GameObject fallback = UnityEngine.Object.Instantiate(damageTextPrefab, damageTextContainer);
+            SetupFloatingText(fallback, worldPos, text, color, fontSize, popScale);
+            var tmpText = fallback.GetComponentInChildren<TextMeshProUGUI>();
+            var rectT = fallback.GetComponent<RectTransform>();
+            StartCoroutine(FloatingTextAnim(fallback.gameObject, tmpText, fallback.GetComponent<RectTransform>(), popScale));
+            return;
+        }
+
+txtObj.transform.SetParent(damageTextContainer, false);
+        SetupFloatingText(txtObj.gameObject, worldPos, text, color, fontSize, popScale);
         var tmp = txtObj.GetComponentInChildren<TextMeshProUGUI>();
+        var rect = txtObj.GetComponent<RectTransform>();
+        StartCoroutine(FloatingTextAnim(txtObj.gameObject, tmp, txtObj.GetComponent<RectTransform>(), popScale));
+    }
+
+    /// <summary>把飘字文本/颜色/位置等初始化到对象上（从池取出后调用）</summary>
+    private void SetupFloatingText(GameObject obj, Vector3 worldPos, string text, Color color, float fontSize, float popScale)
+    {
+        var tmp = obj.GetComponentInChildren<TextMeshProUGUI>();
         if (tmp != null)
         {
             tmp.text = text;
@@ -1301,7 +1343,7 @@ private void OnEnemyTurnStart()
             }
         }
 
-        var rect = txtObj.GetComponent<RectTransform>();
+        var rect = obj.GetComponent<RectTransform>();
         var canvas = GetComponentInParent<Canvas>();
         if (canvas != null && rect != null)
         {
@@ -1311,18 +1353,15 @@ private void OnEnemyTurnStart()
                 canvas.worldCamera,
                 out var localPos
             );
-            // 更大随机偏移，避免多个数字叠在一起
             localPos += new Vector2(UnityEngine.Random.Range(-40f, 40f), UnityEngine.Random.Range(-10f, 10f));
             rect.anchoredPosition = localPos;
         }
 
         if (rect != null) rect.localScale = Vector3.one * 0.5f;
-
-        float pop = popScale > 0f ? popScale : floatingTextPopScale;
-        StartCoroutine(FloatingTextAnim(txtObj, rect, tmp, pop));
+        obj.SetActive(true);
     }
 
-    private System.Collections.IEnumerator FloatingTextAnim(GameObject obj, RectTransform rect, TextMeshProUGUI tmp, float popScale)
+    private System.Collections.IEnumerator FloatingTextAnim(GameObject obj, TextMeshProUGUI tmp, RectTransform rect, float popScale)
     {
         float duration = Mathf.Max(0.2f, floatingTextDuration);
         float elapsed = 0f;
@@ -1357,7 +1396,7 @@ private void OnEnemyTurnStart()
 
             yield return null;
         }
-        Destroy(obj);
+        Roguelike.Core.PoolManager.Return("DamageText", obj.GetComponent<TextMeshProUGUI>());
     }
 
     /// <summary>按伤害值取分档样式（字号 / 弹出缩放 / 颜色）</summary>
@@ -1427,7 +1466,77 @@ private void OnEnemyTurnStart()
         shakeRoutine = null;
     }
 
-    // --- UI 刷新方法 ---
+    // --- 对象池注册 ---
+        private void RegisterPools()
+        {
+            if (damageTextContainer == null || damageTextPrefab == null) return;
+
+            // 伤害/治疗/防御飘字
+            Roguelike.Core.PoolManager.RegisterPool<TextMeshProUGUI>("DamageText", damageTextPrefab, 10, 30, damageTextContainer);
+
+            // 命中特效（序列帧动画）
+            if (hitEffectFrames != null && hitEffectFrames.Length > 0)
+            {
+                // 创建一个临时 GameObject 作为预制体（避免每次 new GameObject + AddComponent<Image>）
+                var hitEffectPrefab = CreateHitEffectPrefab();
+                Roguelike.Core.PoolManager.RegisterPool<Image>("HitEffect", hitEffectPrefab, 5, 15, damageTextContainer);
+            }
+
+            // 投射物（卡牌飞行特效）
+            var projPrefab = CreateProjectilePrefab();
+            if (projPrefab != null)
+                Roguelike.Core.PoolManager.RegisterPool<Image>("Projectile", projPrefab, 8, 20, damageTextContainer);
+
+            // 拖尾特效
+            var trailPrefab = CreateTrailPrefab();
+            if (trailPrefab != null)
+                Roguelike.Core.PoolManager.RegisterPool<Image>("CardTrail", trailPrefab, 6, 12, damageTextContainer);
+
+            // 提示框
+            if (turnEndPromptPrefab != null)
+                Roguelike.Core.PoolManager.RegisterPool<RectTransform>("TurnPrompt", turnEndPromptPrefab, 1, 3, promptContainer);
+        }
+
+        // --- 预制体创建辅助（只执行一次，生成供池使用的预制体对象）---
+        private GameObject CreateHitEffectPrefab()
+        {
+            if (hitEffectFrames == null || hitEffectFrames.Length == 0) return null;
+            var go = new GameObject("HitEffect_Prefab", typeof(RectTransform), typeof(Image));
+            go.SetActive(false);
+            var img = go.GetComponent<Image>();
+            img.sprite = hitEffectFrames[0];
+            img.raycastTarget = false;
+            img.color = Color.white;
+            var rt = go.GetComponent<RectTransform>();
+            rt.sizeDelta = hitEffectSize;
+            return go;
+        }
+
+        private GameObject CreateProjectilePrefab()
+        {
+            if (damageTextContainer == null) return null;
+            var go = new GameObject("PlayProjectile_Prefab", typeof(RectTransform), typeof(Image));
+            go.SetActive(false);
+            var img = go.GetComponent<Image>();
+            img.sprite = GetProjectileSprite();
+            img.raycastTarget = false;
+            img.color = new Color(1f, 1f, 1f, 0.95f);
+            var rt = go.GetComponent<RectTransform>();
+            rt.sizeDelta = cardProjectileSize;
+            rt.localScale = Vector3.one;
+            return go;
+        }
+
+        private GameObject CreateTrailPrefab()
+        {
+            if (damageTextContainer == null) return null;
+            var go = new GameObject("CardTrail_Prefab", typeof(RectTransform), typeof(Image));
+            go.SetActive(false);
+            var img = go.GetComponent<Image>();
+            img.sprite = GetTrailFrames().Length > 0 ? GetTrailFrames()[0] : null;
+            img.raycastTarget = false;
+            return go;
+        }
 
     private void OnDestroy()
     {
@@ -2301,32 +2410,42 @@ private void OnEnemyTurnStart()
             yield return null;
         }
 
-        if (trailRt != null) Destroy(trailRt.gameObject);
-        if (projRt != null)
-        {
-            if (cardFlyImpact) SpawnHitEffect(projRt.position);
-            Destroy(projRt.gameObject);
+        if (trailRt != null) Roguelike.Core.PoolManager.Return("CardTrail", trailRt.GetComponent<Image>());
+            if (projRt != null)
+            {
+                if (cardFlyImpact) SpawnHitEffect(projRt.position);
+                Roguelike.Core.PoolManager.Return("Projectile", projRt.GetComponent<Image>());
+            }
+            OnProjectileFinished();
         }
-        OnProjectileFinished();
-    }
 
     /// <summary>创建投射物（牌打出后变成的特效）</summary>
     private Image CreateProjectile()
     {
-        if (damageTextContainer == null) return null;
+        var img = Roguelike.Core.PoolManager.Get<Image>("Projectile");
+        if (img == null)
+        {
+            // 池未就绪时降级
+            if (damageTextContainer == null) return null;
+            var go = new GameObject("PlayProjectile", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(damageTextContainer, false);
+            go.transform.SetAsLastSibling();
+            img = go.GetComponent<Image>();
+        }
+        else
+        {
+            img.transform.SetParent(damageTextContainer, false);
+            img.transform.SetAsLastSibling();
+        }
 
-        var go = new GameObject("PlayProjectile", typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(damageTextContainer, false);
-        go.transform.SetAsLastSibling();
-
-        var img = go.GetComponent<Image>();
         img.sprite = GetProjectileSprite();
         img.raycastTarget = false;
         img.color = new Color(1f, 1f, 1f, 0.95f);
 
-        var rt = go.GetComponent<RectTransform>();
+        var rt = img.rectTransform;
         rt.sizeDelta = cardProjectileSize;
         rt.localScale = Vector3.one;
+        rt.localPosition = Vector3.zero;
 
         return img;
     }
@@ -2390,16 +2509,26 @@ private void OnEnemyTurnStart()
     {
         if (damageTextContainer == null) return;
 
-        var go = new GameObject("HitEffect", typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(damageTextContainer, false);
-        go.transform.SetAsLastSibling();
+        var img = Roguelike.Core.PoolManager.Get<Image>("HitEffect");
+        if (img == null)
+        {
+            // 池未就绪时降级
+            var go = new GameObject("HitEffect", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(damageTextContainer, false);
+            go.transform.SetAsLastSibling();
+            img = go.GetComponent<Image>();
+        }
+        else
+        {
+            img.transform.SetParent(damageTextContainer, false);
+            img.transform.SetAsLastSibling();
+        }
 
-        var img = go.GetComponent<Image>();
         img.sprite = frames[0];
         img.raycastTarget = false;
         img.color = Color.white;
 
-        var rt = go.GetComponent<RectTransform>();
+        var rt = img.rectTransform;
         rt.position = worldPos;
         rt.sizeDelta = hitEffectSize;
         if (hitEffectRandomRotation)
@@ -2421,7 +2550,7 @@ private void OnEnemyTurnStart()
             if (img != null) img.sprite = frames[frame];
             yield return null;
         }
-        if (rt != null) Destroy(rt.gameObject);
+        Roguelike.Core.PoolManager.Return("HitEffect", img);
     }
 
     private Sprite[] hitFramesCache;
@@ -2450,21 +2579,30 @@ private void OnEnemyTurnStart()
     /// <summary>创建跟随式拖尾（枢轴在右端=头部，向身后拉伸）</summary>
     private Image CreateFollowTrail()
     {
-        if (damageTextContainer == null) return null;
+        var img = Roguelike.Core.PoolManager.Get<Image>("CardTrail");
+        if (img == null)
+        {
+            // 池未就绪时降级
+            if (damageTextContainer == null) return null;
+            var go = new GameObject("CardTrailRibbon", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(damageTextContainer, false);
+            go.transform.SetAsFirstSibling();
+            img = go.GetComponent<Image>();
+        }
+        else
+        {
+            img.transform.SetParent(damageTextContainer, false);
+            img.transform.SetAsFirstSibling();
+        }
 
-        var go = new GameObject("CardTrailRibbon", typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(damageTextContainer, false);
-        go.transform.SetAsFirstSibling();
-
-        var img = go.GetComponent<Image>();
         img.sprite = GetTrailSprite() ?? GetRuntimeStreakSprite();
         img.raycastTarget = false;
         img.color = new Color(1f, 1f, 1f, 0.55f);
 
-        var rt = go.GetComponent<RectTransform>();
+        var rt = img.rectTransform;
         rt.pivot = new Vector2(0f, 0.5f);   // 左端=头部
         rt.sizeDelta = new Vector2(0f, cardTrailSize.y);
-        go.SetActive(false);
+        img.gameObject.SetActive(false);
 
         return img;
     }
