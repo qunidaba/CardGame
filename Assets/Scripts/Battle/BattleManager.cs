@@ -11,15 +11,19 @@ using Roguelike.Data;
 /// 由 BattleUI 创建和持有，不负责单例
 /// 纯逻辑层，只转发数据层事件，不手动 Invoke UI 更新
 /// </summary>
-public partial class BattleManager : IPotionContext
+public partial class BattleManager : IPotionContext, IEnemyAbilityContext
 {
     // ===== 子系统 =====
     /// <summary>药水系统（使用药水 / 点数修正）</summary>
     public PotionSystem Potions { get; private set; }
 
+    /// <summary>敌人能力系统（吞噬 / 弱点）</summary>
+    public EnemyAbilitySystem EnemyAbilities { get; private set; }
+
     public BattleManager()
     {
         Potions = new PotionSystem(this);
+        EnemyAbilities = new EnemyAbilitySystem(this);
     }
 
     // ===== IPotionContext 实现（供药水系统回调）=====
@@ -31,6 +35,17 @@ public partial class BattleManager : IPotionContext
     public void DrawToHand(int count) => AddToHand(deckPile.Draw(count));
     public void NotifyCardVisualsChanged() => NotifyEnchantmentsChanged();
     public void NotifyPotionsChanged() => OnPotionsChanged?.Invoke();
+
+    // ===== IEnemyAbilityContext 实现（供敌人能力系统回调）=====
+    public IReadOnlyList<BattleUnit> Enemies => enemies;
+    public DeckPile Deck => deckPile;
+    // 注意：BattleManager 已有同名 CurrentTarget（玩家选中目标，语义不同），故显式实现
+    BattleUnit IEnemyAbilityContext.CurrentTarget => GetEnemy();
+
+    // ===== 对外转发（供 Handler / 状态注册表调用）=====
+    public void ApplySwallow(int count, BattleUnit attacker) => EnemyAbilities.ApplySwallow(count, attacker);
+    public List<CardData> GetSwallowedCards(BattleUnit unit) => EnemyAbilities.GetSwallowedCards(unit);
+    public List<WeaknessType> GetWeaknesses(BattleUnit unit) => EnemyAbilities.GetWeaknesses(unit);
 
     // --- 精确数据变化事件（UI 直接订阅，携带 delta）---
     public event Action<BattleUnit, int> OnPlayerHpChanged;      // delta: +治疗 -伤害
@@ -567,8 +582,7 @@ public partial class BattleManager : IPotionContext
         enemyDatas.Clear();
         enemyIntents.Clear();
         queuedIntents.Clear();
-        swallowedCards.Clear();
-        enemyWeaknesses.Clear();
+        EnemyAbilities.Clear();
         CurrentTargetIndex = -1;   // 开局不预选敌人，需要玩家点选目标
 
         var dummy = new EnemyData { id = 0, name = "敌人", hp = enemyHp, maxHp = enemyHp };
@@ -627,8 +641,7 @@ public partial class BattleManager : IPotionContext
         enemyDatas.Clear();
         enemyIntents.Clear();
         queuedIntents.Clear();
-        swallowedCards.Clear();
-        enemyWeaknesses.Clear();
+        EnemyAbilities.Clear();
         CurrentTargetIndex = -1;   // 开局不预选敌人，需要玩家点选目标
 
         if (enemyList != null)
@@ -852,7 +865,7 @@ public partial class BattleManager : IPotionContext
         TurnsElapsed++;
 
         // 敌人被动：愤怒骷髅头——每回合刷新 2 个弱点牌型
-        RefreshEnemyWeaknesses();
+        EnemyAbilities.RefreshWeaknesses();
 
         Debug.Log($"--- 玩家回合开始 | 血量: {player.CurrentHp}/{player.MaxHp} | 防御: {player.Defense} ---");
 
@@ -1130,7 +1143,7 @@ public partial class BattleManager : IPotionContext
         currentHandTypeResult = result;
 
         // 敌人被动：被非弱点牌型攻击 → 自身 +1 力量
-        ApplyWeaknessPassiveOnPlay(result.type);
+        EnemyAbilities.ApplyWeaknessOnPlay(result.type);
 
         // 花色命运：统计本场打出的花色
         CountPlayedSuits(selected);
@@ -1546,7 +1559,7 @@ else
         RefreshTauntStatus();
 
         // 吞噬怪已阵亡：归还它吞掉的牌
-        ReturnSwallowedCardsOfDeadEnemies();
+        EnemyAbilities.ReturnSwallowedCardsOfDeadEnemies();
 
         if (player.IsDead)
         {
