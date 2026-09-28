@@ -20,10 +20,14 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
     /// <summary>敌人能力系统（吞噬 / 弱点）</summary>
     public EnemyAbilitySystem EnemyAbilities { get; private set; }
 
+    /// <summary>花色统计（本场战斗）</summary>
+    public SuitTally Suits { get; private set; }
+
     public BattleManager()
     {
         Potions = new PotionSystem(this);
         EnemyAbilities = new EnemyAbilitySystem(this);
+        Suits = new SuitTally((suit, count) => OnSuitTallyChanged?.Invoke(suit, count));
     }
 
     // ===== IPotionContext 实现（供药水系统回调）=====
@@ -289,124 +293,18 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
         return damage;
     }
 
-    // ===== 花色命运 =====
+    // ===== 花色命运（SuitTally 子系统）=====
 
-    public int GetSuitCount(Suit suit) => suitTally.TryGetValue(suit, out var v) ? v : 0;
-
-    public Dictionary<Suit, int> GetSuitTally() => new Dictionary<Suit, int>(suitTally);
-
-    /// <summary>
-    /// 本场战斗打出的最多花色；平局时以最后打出的花色优先
-    /// </summary>
-    public Suit GetDominantSuit()
-    {
-        int max = -1;
-        Suit best = lastPlayedSuit;
-        foreach (Suit s in Enum.GetValues(typeof(Suit)))
-        {
-            int c = GetSuitCount(s);
-            if (c > max) { max = c; best = s; }
-        }
-        if (max > 0 && GetSuitCount(lastPlayedSuit) == max)
-            best = lastPlayedSuit;
-        return best;
-    }
-
-    private void ResetSuitTally()
-    {
-        suitTally.Clear();
-        lastPlayedSuit = Suit.Spade;
-    }
-
-    private void CountPlayedSuits(List<CardData> cards)
-    {
-        foreach (var card in cards)
-        {
-            suitTally[card.suit] = GetSuitCount(card.suit) + 1;
-            lastPlayedSuit = card.suit;
-        }
-        foreach (var card in cards)
-            OnSuitTallyChanged?.Invoke(card.suit, GetSuitCount(card.suit));
-    }
+    public int GetSuitCount(Suit suit) => Suits.GetCount(suit);
+    public Dictionary<Suit, int> GetSuitTally() => Suits.GetAll();
+    public Suit GetDominantSuit() => Suits.Dominant();
+    private void ResetSuitTally() => Suits.Reset();
+    private void CountPlayedSuits(List<CardData> cards) => Suits.CountPlayed(cards);
 
     // ===== 附魔回合状态接口（由 EnchantmentSystem 调用）=====
 
     /// <summary>本次出牌结束后返回 value 张牌到手牌（连对专家）</summary>
     public void RequestReturnToHand(int value) => returnToHandCount += value;
-
-    /// <summary>把额外伤害叠加到牌型效果列表的伤害项上</summary>
-    private static void AddDamageToEffects(List<HandEffectTable.HandEffect> effects, int amount)
-    {
-        if (amount == 0) return;
-        var dmg = effects.Find(e => e.effectType == HandEffectTable.EffectType.Damage);
-        if (dmg != null)
-        {
-            dmg.value += amount;
-            dmg.description = $"造成 {dmg.value} 点伤害";
-        }
-        else
-        {
-            effects.Add(new HandEffectTable.HandEffect
-            {
-                effectType = HandEffectTable.EffectType.Damage,
-                value = amount,
-                description = $"造成 {amount} 点伤害"
-            });
-        }
-    }
-
-    /// <summary>把牌型效果列表里的伤害乘以倍率</summary>
-    private static void MultiplyDamageEffect(List<HandEffectTable.HandEffect> effects, float mult)
-    {
-        var dmg = effects.Find(e => e.effectType == HandEffectTable.EffectType.Damage);
-        if (dmg != null)
-        {
-            dmg.value = Mathf.RoundToInt(dmg.value * mult);
-            dmg.description = $"造成 {dmg.value} 点伤害";
-        }
-    }
-
-    /// <summary>把数值叠加到指定类型的效果项上（不存在则新建）</summary>
-    private static void AddEffectValue(List<HandEffectTable.HandEffect> effects, HandEffectTable.EffectType type, int amount)
-    {
-        HandEffectTable.AddOrMerge(effects, type, amount);
-    }
-
-    /// <summary>是否顺子类牌型（含同花顺）</summary>
-    private static bool IsStraightHand(HandTypeResult r)
-    {
-        if (r == null) return false;
-        switch (r.type)
-        {
-            case HandType.Straight3:
-            case HandType.Straight4:
-            case HandType.Straight5:
-            case HandType.StraightFlush3:
-            case HandType.StraightFlush4:
-            case HandType.StraightFlush5:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /// <summary>是否同花类牌型（含同花顺）</summary>
-    private static bool IsFlushHand(HandTypeResult r)
-    {
-        if (r == null) return false;
-        switch (r.type)
-        {
-            case HandType.Flush3:
-            case HandType.Flush4:
-            case HandType.Flush5:
-            case HandType.StraightFlush3:
-            case HandType.StraightFlush4:
-            case HandType.StraightFlush5:
-                return true;
-            default:
-                return false;
-        }
-    }
 
     /// <summary>
     /// 把出牌的各类加成套用到 effects 上（纯计算，实际出牌与预览共用）。
@@ -416,13 +314,13 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
     {
         // 顺风耳：本回合出牌伤害加成
         int turnBonus = player.GetStatusAmount(StatusEffectType.TurnDamageBonus);
-        if (turnBonus > 0) AddDamageToEffects(effects, turnBonus);
+        if (turnBonus > 0) HandEffectUtil.AddDamageToEffects(effects, turnBonus);
 
         // 同花顺之巅：本场该花色每张牌的额外伤害
         int suitBonus = 0;
         foreach (var card in selected)
             suitBonus += player.GetStatusAmount(StatusEffectType.SuitDamageBonus, card.suit);
-        if (suitBonus > 0) AddDamageToEffects(effects, suitBonus);
+        if (suitBonus > 0) HandEffectUtil.AddDamageToEffects(effects, suitBonus);
 
         // 遗物「花色调和」：主命格花色每张牌额外 +N 伤害
         if (relicSystem != null && runData != null && runData.HasMainDestiny)
@@ -433,7 +331,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
                 int cnt = 0;
                 foreach (var card in selected)
                     if ((int)card.suit == runData.mainDestinySuit) cnt++;
-                if (cnt > 0) AddDamageToEffects(effects, cnt * per);
+                if (cnt > 0) HandEffectUtil.AddDamageToEffects(effects, cnt * per);
             }
         }
 
@@ -441,18 +339,18 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
         if (relicSystem != null && runData != null && relicSystem.GetFlatBonus("EnchantResonance", 0) > 0)
         {
             int bonus = runData.GetEnchantedCardKeys().Count / 4;
-            if (bonus > 0) AddDamageToEffects(effects, bonus);
+            if (bonus > 0) HandEffectUtil.AddDamageToEffects(effects, bonus);
         }
 
         // 命格：黑桃被动（每回合第 1 手翻倍 / 第 2 手起 +N）——数值集中在 DestinyEffects
         DestinyEffects.GetSpadePlayBonus(runData, playIndex, out int spadeAdd, out float spadeMult);
-        if (spadeMult != 1f) MultiplyDamageEffect(effects, spadeMult);
-        if (spadeAdd > 0) AddDamageToEffects(effects, spadeAdd);
+        if (spadeMult != 1f) HandEffectUtil.MultiplyDamageEffect(effects, spadeMult);
+        if (spadeAdd > 0) HandEffectUtil.AddDamageToEffects(effects, spadeAdd);
 
         // 暴怒：下一次出牌伤害翻倍
         if (player.GetStatusAmount(StatusEffectType.Rage) > 0)
         {
-            MultiplyDamageEffect(effects, 2);
+            HandEffectUtil.MultiplyDamageEffect(effects, 2);
             if (consumeRage) player.RemoveStatus(StatusEffectType.Rage, 1);
         }
 
@@ -460,14 +358,14 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
         if (runData != null)
         {
             int straightDraw = battleStraightDraw + runData.permanentStraightDrawBonus;
-            if (straightDraw > 0 && IsStraightHand(result))
-                AddEffectValue(effects, HandEffectTable.EffectType.DrawCard, straightDraw);
+            if (straightDraw > 0 && HandEffectUtil.IsStraightHand(result))
+                HandEffectUtil.AddEffectValue(effects, HandEffectTable.EffectType.DrawCard, straightDraw);
 
-            if (runData.permanentFlushDrawBonus > 0 && IsFlushHand(result))
-                AddEffectValue(effects, HandEffectTable.EffectType.DrawCard, runData.permanentFlushDrawBonus);
+            if (runData.permanentFlushDrawBonus > 0 && HandEffectUtil.IsFlushHand(result))
+                HandEffectUtil.AddEffectValue(effects, HandEffectTable.EffectType.DrawCard, runData.permanentFlushDrawBonus);
 
-            if (runData.permanentFlushDamageBonus > 0 && IsFlushHand(result))
-                AddDamageToEffects(effects, runData.permanentFlushDamageBonus);
+            if (runData.permanentFlushDamageBonus > 0 && HandEffectUtil.IsFlushHand(result))
+                HandEffectUtil.AddDamageToEffects(effects, runData.permanentFlushDamageBonus);
         }
     }
 
@@ -553,9 +451,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
     /// <summary>本场战斗玩家累计失去的生命（事件挑战结算用）</summary>
     public int PlayerHpLostThisBattle => playerHpLostThisBattle;
 
-    // --- 花色命运：本场战斗各花色出牌计数 ---
-    private readonly Dictionary<Suit, int> suitTally = new Dictionary<Suit, int>();
-    private Suit lastPlayedSuit = Suit.Spade;
+    // --- 花色命运：本场战斗各花色出牌计数（逻辑在 SuitTally）---
 
     /// <summary>某花色计数变化（花色, 最新计数）</summary>
     public event Action<Suit, int> OnSuitTallyChanged;
