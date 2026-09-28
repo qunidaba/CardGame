@@ -1865,9 +1865,9 @@ private void OnEnemyTurnStart()
             cardUI.OnClick = () =>
             {
                 // 点数修正药水：待选牌状态 → 点哪张就改哪张
-                if (battleManager != null && battleManager.HasPendingRankShift)
+                if (battleManager != null && battleManager.Potions.HasPendingRankShift)
                 {
-                    battleManager.ApplyPendingRankShift(cardData);
+                    battleManager.Potions.ApplyPendingRankShift(cardData);
                     return;
                 }
                 handArea.ToggleSelect(cardData);
@@ -2980,7 +2980,7 @@ private void OnEnemyTurnStart()
         if (rd == null || index < 0 || index >= rd.PotionIds.Count) return;
 
         int potionId = rd.PotionIds[index];
-        battleManager.UsePotion(potionId);
+        battleManager.Potions.UsePotion(potionId);
         RefreshPotions();
     }
 

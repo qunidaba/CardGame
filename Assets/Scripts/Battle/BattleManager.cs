@@ -11,8 +11,27 @@ using Roguelike.Data;
 /// 由 BattleUI 创建和持有，不负责单例
 /// 纯逻辑层，只转发数据层事件，不手动 Invoke UI 更新
 /// </summary>
-public partial class BattleManager
+public partial class BattleManager : IPotionContext
 {
+    // ===== 子系统 =====
+    /// <summary>药水系统（使用药水 / 点数修正）</summary>
+    public PotionSystem Potions { get; private set; }
+
+    public BattleManager()
+    {
+        Potions = new PotionSystem(this);
+    }
+
+    // ===== IPotionContext 实现（供药水系统回调）=====
+    public RunData Run => runData;
+    public BattleUnit Player => player;
+    public BattleUnit CurrentEnemy => GetEnemy();
+    public IReadOnlyList<CardData> HandCards => handArea != null ? handArea.HandCards : null;
+    public int PoisonBonus => GetPoisonBonus();
+    public void DrawToHand(int count) => AddToHand(deckPile.Draw(count));
+    public void NotifyCardVisualsChanged() => NotifyEnchantmentsChanged();
+    public void NotifyPotionsChanged() => OnPotionsChanged?.Invoke();
+
     // --- 精确数据变化事件（UI 直接订阅，携带 delta）---
     public event Action<BattleUnit, int> OnPlayerHpChanged;      // delta: +治疗 -伤害
     public event Action<BattleUnit, int> OnPlayerMaxHpChanged;
@@ -1767,125 +1786,6 @@ public float GetNextPlayDamageMultiplier()
 
     /// <summary>遗物「瘟疫之心」：施加中毒时的额外层数</summary>
     public int GetPoisonBonus() => relicSystem != null ? relicSystem.GetFlatBonus("PoisonBonus", 0) : 0;
-
-    /// <summary>使用药水（战斗中）</summary>
-    public bool UsePotion(int potionId)
-    {
-        if (runData == null) return false;
-        if (!runData.PotionIds.Contains(potionId)) return false;
-
-        var potion = Roguelike.Data.ConfigLoader.GetPotion(potionId);
-        if (potion == null || potion.effect == null) return false;
-
-        int val = GetIntValue(potion.effect.value);
-        int dur = potion.effect.duration;
-
-        switch (potion.effect.type)
-        {
-            case "HealPercent":
-                player.Heal(Mathf.RoundToInt(player.MaxHp * GetFloatValue(potion.effect.value)));
-                break;
-            case "NextPlayDamageMult":
-                SetNextPlayDamageMultiplier(GetFloatValue(potion.effect.value));
-                break;
-            case "GainDefense":
-                player.AddDefense(val);
-                break;
-            case "DrawCards":
-            {
-                var drawn = deckPile.Draw(val);
-                AddToHand(drawn);
-                break;
-            }
-            case "ApplyStatus":
-            {
-                if (string.IsNullOrEmpty(potion.effect.status) ||
-                    !System.Enum.TryParse<StatusEffectType>(potion.effect.status, true, out var st))
-                    break;
-
-                bool toEnemy = string.IsNullOrEmpty(potion.effect.target) ||
-                               potion.effect.target.Equals("enemy", System.StringComparison.OrdinalIgnoreCase);
-                if (toEnemy)
-                {
-                    int amt = val;
-                    if (st == StatusEffectType.Poison) amt += GetPoisonBonus();
-                    GetEnemy()?.AddStatus(st, amt, dur);
-                }
-                else
-                {
-                    player.AddStatus(st, val, dur);
-                }
-                break;
-            }
-            case "CardRankShift":
-                // 等待玩家点选手牌后应用
-                PendingRankShift = val;
-                Debug.Log($"[药水] 请选择一张手牌进行点数 {(val >= 0 ? "+" : "")}{val}");
-                break;
-            case "SetHandSuit":
-            {
-                // 把手中的牌全部变为指定花色（判定花色）
-                string suitName = potion.effect.value != null ? potion.effect.value.ToString() : "Heart";
-                if (!System.Enum.TryParse<Suit>(suitName, true, out var targetSuit))
-                    targetSuit = Suit.Heart;
-
-                int changed = 0;
-                foreach (var c in handArea.HandCards)
-                {
-                    if (c.EffectiveSuit == targetSuit) continue;
-                    c.SetSuitOverride((int)targetSuit);
-                    changed++;
-                }
-                NotifyEnchantmentsChanged();
-                Debug.Log($"[药水] {changed} 张手牌变为 {targetSuit}");
-                break;
-            }
-        }
-
-        runData.TryRemovePotion(potionId);
-        OnPotionsChanged?.Invoke();
-        Debug.Log($"[药水] 使用 {potion.name}");
-        return true;
-    }
-
-    /// <summary>待处理的卡牌点数修正（药水 +1/-1，等待玩家点选手牌）</summary>
-    public int PendingRankShift { get; private set; } = 0;
-    public bool HasPendingRankShift => PendingRankShift != 0;
-
-    /// <summary>把待处理的点数修正应用到指定手牌</summary>
-    public bool ApplyPendingRankShift(CardData card)
-    {
-        if (PendingRankShift == 0 || card == null) return false;
-
-        int newRank = Mathf.Clamp(card.EffectiveRank + PendingRankShift, 2, 14);
-        card.SetJudgeOverride(newRank, (int)card.EffectiveSuit);
-        PendingRankShift = 0;
-        NotifyEnchantmentsChanged();
-        Debug.Log($"[药水] 点数修正完成：{card.DisplayName}");
-        return true;
-    }
-
-    private static int GetIntValue(object value)
-    {
-        if (value == null) return 0;
-        if (value is int i) return i;
-        if (value is long l) return (int)l;
-        if (value is double d) return (int)d;
-        if (value is float f) return (int)f;
-        if (int.TryParse(value.ToString(), out var p)) return p;
-        return 0;
-    }
-
-    private static float GetFloatValue(object value)
-    {
-        if (value == null) return 0f;
-        if (value is float f) return f;
-        if (value is double d) return (float)d;
-        if (value is int i) return i;
-        if (value is long l) return l;
-        if (float.TryParse(value.ToString(), out var p)) return p;
-        return 0f;
-    }
 
     /// <summary>释放主命格主动技能（需命运之力攒满）</summary>
     public bool ActivateDestinySkill()
