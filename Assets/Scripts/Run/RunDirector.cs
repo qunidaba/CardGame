@@ -508,8 +508,8 @@ namespace Roguelike
             if (!hadMain && RunData.HasMainDestiny)
                 Debug.Log($"[命格] 主命格确立：{DestinyInfo.SuitName((Suit)RunData.mainDestinySuit)}");
 
-            // 命格：战斗结束类被动（红桃 Lv1 回血 / 方块 Lv3 金币）——数值集中在 DestinyEffects
-            DestinyEffects.ApplyBattleWin(RunData);
+            // 命格：战斗结束类被动（红桃 Lv1 回血 / 方块 Lv3 金币）——数值集中在 DestinyPassiveSystem
+            DestinyPassiveSystem.ApplyBattleWin(RunData);
 
             // 遗物「四色祭仪」：其余三花色与命运花色的出牌数差值都 ≤3 → 额外 +1 命格值
             if (relicSystem != null && relicSystem.GetFlatBonus("FourColorRite", 0) > 0)

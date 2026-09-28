@@ -82,8 +82,8 @@ namespace Roguelike
                     reward.potionId = potions[UnityEngine.Random.Range(0, potions.Count)].id;
             }
 
-            // 附魔三选一（梅花 Lv2 → 四选一）——选项数集中在 DestinyEffects
-            int optCount = DestinyEffects.GetEnchantOptionCount(runData);
+            // 附魔三选一（梅花 Lv2 → 四选一）——选项数集中在 DestinyPassiveSystem
+            int optCount = DestinyPassiveSystem.GetEnchantOptionCount(runData);
             reward.enchantmentOptions = GenerateEnchantmentOptions(runData, optCount);
 
             return reward;

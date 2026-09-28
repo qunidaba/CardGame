@@ -26,12 +26,16 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     /// <summary>命格主动技系统</summary>
     public DestinySkillSystem DestinySkills { get; private set; }
 
+    /// <summary>命格被动系统（开局被动）</summary>
+    public DestinyPassiveSystem DestinyPassives { get; private set; }
+
     public BattleManager()
     {
         Potions = new PotionSystem(this);
         EnemyAbilities = new EnemyAbilitySystem(this);
         Suits = new SuitTally((suit, count) => OnSuitTallyChanged?.Invoke(suit, count));
         DestinySkills = new DestinySkillSystem(this);
+        DestinyPassives = new DestinyPassiveSystem();
     }
 
     // ===== IPotionContext 实现（供药水系统回调）=====
@@ -358,8 +362,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             if (bonus > 0) HandEffectUtil.AddDamageToEffects(effects, bonus);
         }
 
-        // 命格：黑桃被动（每回合第 1 手翻倍 / 第 2 手起 +N）——数值集中在 DestinyEffects
-        DestinyEffects.GetSpadePlayBonus(runData, playIndex, out int spadeAdd, out float spadeMult);
+        // 命格：黑桃被动（每回合第 1 手翻倍 / 第 2 手起 +N）——数值集中在 DestinyPassiveSystem
+        DestinyPassiveSystem.GetSpadePlayBonus(runData, playIndex, out int spadeAdd, out float spadeMult);
         if (spadeMult != 1f) HandEffectUtil.MultiplyDamageEffect(effects, spadeMult);
         if (spadeAdd > 0) HandEffectUtil.AddDamageToEffects(effects, spadeAdd);
 
@@ -479,8 +483,6 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
     // --- 命格 ---
     public event Action OnDestinyChanged;   // 命格/命运之力变化（UI 刷新）
-    private int firstTurnBonusDraw = 0;     // 梅花 Lv1：第一回合额外抽牌
-    private int clubOpeningEnchant = 0;     // 梅花 Lv3：开局随机附魔张数
     private int playsThisTurn = 0;          // 本回合出牌次数（黑桃 Lv2/Lv3）
 
     /// <summary>
@@ -658,7 +660,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
         // 命格：战斗开始类被动
         TurnsElapsed = 0;
-        ApplyDestinyCombatStart();
+        ApplyBattleStartEffects();
 
         IsPlayerTurn = true;
         IsBattleOver = false;
@@ -835,14 +837,14 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         // 命格：梅花 Lv1 第一回合额外抽牌 / Lv3 开局附魔
         if (isFirstTurn)
         {
-            if (firstTurnBonusDraw > 0)
+            if (DestinyPassives.FirstTurnBonusDraw > 0)
             {
-                var bonus = deckPile.Draw(firstTurnBonusDraw);
+                var bonus = deckPile.Draw(DestinyPassives.FirstTurnBonusDraw);
                 yield return DrawStaggered(bonus);
                 Debug.Log($"[命格] 梅花 Lv1：开局额外抽 {bonus.Count} 张");
             }
-            if (clubOpeningEnchant > 0)
-                GrantRandomEnchantsToCards(new List<CardData>(handArea.HandCards), clubOpeningEnchant, 1);
+            if (DestinyPassives.ClubOpeningEnchant > 0)
+                GrantRandomEnchantsToCards(new List<CardData>(handArea.HandCards), DestinyPassives.ClubOpeningEnchant, 1);
         }
         yield return new WaitForSeconds(phaseDelay);
 
@@ -1094,14 +1096,14 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         playsThisTurn++;
         ApplyPlayBonuses(effects, selected, result, playsThisTurn, consumeRage: true);
 
-        // 命格：红桃 Lv3 吸血（百分比集中在 DestinyEffects）
-        if (DestinyEffects.HasHeartLifesteal(runData))
+        // 命格：红桃 Lv3 吸血（百分比集中在 DestinyPassiveSystem）
+        if (DestinyPassiveSystem.HasHeartLifesteal(runData))
         {
             effects.Add(new HandEffectTable.HandEffect
             {
                 effectType = HandEffectTable.EffectType.HealPercentOfDamage,
-                value = DestinyEffects.HeartLv3LifestealPercent,
-                description = $"回复伤害的 {DestinyEffects.HeartLv3LifestealPercent}%"
+                value = DestinyPassiveSystem.HeartLv3LifestealPercent,
+                description = $"回复伤害的 {DestinyPassiveSystem.HeartLv3LifestealPercent}%"
             });
         }
 
@@ -1475,12 +1477,12 @@ else
 
         if (player.IsDead)
         {
-            // 命格：红桃 Lv2 免死（每局一次）——数值集中在 DestinyEffects
-            if (DestinyEffects.CanDeathSave(runData))
+            // 命格：红桃 Lv2 免死（每局一次）——数值集中在 DestinyPassiveSystem
+            if (DestinyPassiveSystem.CanDeathSave(runData))
             {
                 runData.heartDeathSaveUsed = true;
-                player.CurrentHp = Mathf.Max(1, DestinyEffects.GetDeathSaveHealAmount(player));
-                Debug.Log($"[命格] 红桃 Lv2：致命伤害无效，回复 {Mathf.RoundToInt(DestinyEffects.HeartLv2DeathSavePercent * 100)}% 生命");
+                player.CurrentHp = Mathf.Max(1, DestinyPassiveSystem.GetDeathSaveHealAmount(player));
+                Debug.Log($"[命格] 红桃 Lv2：致命伤害无效，回复 {Mathf.RoundToInt(DestinyPassiveSystem.HeartLv2DeathSavePercent * 100)}% 生命");
                 runData.NotifyDestinyChanged();
                 OnDestinyChanged?.Invoke();
                 return;
@@ -1617,19 +1619,17 @@ public float GetNextPlayDamageMultiplier()
             return mult;
         }
 
-    // ===== 命格 =====
+    // ===== 战斗开始设置（命格被动 + 事件/遗物开局效果）=====
 
-    /// <summary>战斗开始类命格被动</summary>
-    private void ApplyDestinyCombatStart()
+    /// <summary>战斗开始设置：命格开局被动 + 事件/遗物的开局效果</summary>
+    private void ApplyBattleStartEffects()
     {
         if (runData == null) return;
 
-        firstTurnBonusDraw = 0;
-        clubOpeningEnchant = 0;
         playsThisTurn = 0;
 
-        // 命格：战斗开始类被动（数值与判定集中在 DestinyEffects）
-        DestinyEffects.ApplyCombatStart(runData, player, out firstTurnBonusDraw, out clubOpeningEnchant);
+        // 命格：战斗开始类被动（数值/判定在 DestinyPassiveSystem，开局状态在 DestinyPassiveSystem）
+        DestinyPassives.ApplyCombatStart(runData, player);
 
         // 事件永久效果：每场战斗开局 +N 力量
         if (runData.permanentStartStrength > 0)
@@ -1693,7 +1693,7 @@ public float GetNextPlayDamageMultiplier()
             runData.nextBattleStartStatuses.Clear();
         }
 
-        // 方块 Lv2 / 梅花 Lv1 / 梅花 Lv3 已由 DestinyEffects.ApplyCombatStart 处理（见本方法开头）
+        // 方块 Lv2 / 梅花 Lv1 / 梅花 Lv3 已由 DestinyPassives.ApplyCombatStart 处理（见本方法开头）
 
         // 遗物「圣锤」：三条 + 比它大 1 的牌 视为四条
         HandEvaluator.HammerEnabled = relicSystem != null && relicSystem.GetFlatBonus("Hammer", 0) > 0;

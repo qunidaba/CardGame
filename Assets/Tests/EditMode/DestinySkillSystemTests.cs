@@ -67,6 +67,6 @@ public class DestinySkillSystemTests
         var sys = new DestinySkillSystem(ctx);
 
         Assert.IsTrue(sys.Activate());
-        Assert.AreEqual(DestinyEffects.ActiveDiamondGoldLv1, run.Gold, "聚宝 Lv1 加金币");
+        Assert.AreEqual(DestinyPassiveSystem.ActiveDiamondGoldLv1, run.Gold, "聚宝 Lv1 加金币");
     }
 }

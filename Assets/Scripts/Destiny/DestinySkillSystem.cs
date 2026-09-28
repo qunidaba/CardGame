@@ -58,7 +58,7 @@ namespace Roguelike
             switch (suit)
             {
                 case Suit.Spade: // 破军：对随机敌人打 N 次 1 点伤害（协程，避免同时结算）
-                    CoroutineRunner.Instance.StartCoroutine(SpadeRoutine(DestinyEffects.GetActiveSpadeHits(rank)));
+                    CoroutineRunner.Instance.StartCoroutine(SpadeRoutine(DestinyPassiveSystem.GetActiveSpadeHits(rank)));
                     return true;
 
                 case Suit.Heart: // 回春：清除负面 + 再生
@@ -67,13 +67,13 @@ namespace Roguelike
                     ctx.Player.RemoveStatus(StatusEffectType.Weaken);
                     ctx.Player.RemoveStatus(StatusEffectType.Vulnerable);
                     ctx.Player.AddStatus(StatusEffectType.Regeneration,
-                        DestinyEffects.ActiveHeartRegenBase + rank, DestinyEffects.ActiveHeartRegenTurns);
+                        DestinyPassiveSystem.ActiveHeartRegenBase + rank, DestinyPassiveSystem.ActiveHeartRegenTurns);
                     break;
 
                 case Suit.Club: // 顿悟：抽 N 张，按等级附魔
                 {
-                    var drawn = ctx.DrawToHand(DestinyEffects.ActiveClubDraw);
-                    int enchCount = rank == 1 ? 0 : (rank == 2 ? DestinyEffects.ActiveClubEnchantLv2 : DestinyEffects.ActiveClubEnchantLv3);
+                    var drawn = ctx.DrawToHand(DestinyPassiveSystem.ActiveClubDraw);
+                    int enchCount = rank == 1 ? 0 : (rank == 2 ? DestinyPassiveSystem.ActiveClubEnchantLv2 : DestinyPassiveSystem.ActiveClubEnchantLv3);
                     int minTier = rank >= 3 ? 2 : 1;
                     ctx.GrantRandomEnchants(drawn, enchCount, minTier);
                     break;
@@ -81,13 +81,13 @@ namespace Roguelike
 
                 case Suit.Diamond: // 聚宝：金币 + 伤害
                 {
-                    int gold = rank == 1 ? DestinyEffects.ActiveDiamondGoldLv1
-                             : (rank == 2 ? DestinyEffects.ActiveDiamondGoldLv2 : DestinyEffects.ActiveDiamondGoldLv3);
+                    int gold = rank == 1 ? DestinyPassiveSystem.ActiveDiamondGoldLv1
+                             : (rank == 2 ? DestinyPassiveSystem.ActiveDiamondGoldLv2 : DestinyPassiveSystem.ActiveDiamondGoldLv3);
                     run.Gold += gold;
                     var goldTarget = ctx.CurrentEnemy;
                     if (rank >= 2 && goldTarget != null && !goldTarget.IsDead)
                     {
-                        int dmg = run.Gold / DestinyEffects.ActiveDiamondDamagePerGold;
+                        int dmg = run.Gold / DestinyPassiveSystem.ActiveDiamondDamagePerGold;
                         if (dmg > 0) goldTarget.TakeDamage(ctx.Player.DealDamage(dmg), ctx.Player);
                     }
                     break;
