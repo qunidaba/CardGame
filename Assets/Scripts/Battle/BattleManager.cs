@@ -8,7 +8,7 @@ using Roguelike.Data;
 
 /// <summary>
 /// 战斗管理器：核心战斗逻辑
-/// 由 BattleUI 创建和持有，不负责单例
+/// 由 RunDirector 创建和持有，不负责单例
 /// 纯逻辑层，只转发数据层事件，不手动 Invoke UI 更新
 /// </summary>
 public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDestinySkillContext

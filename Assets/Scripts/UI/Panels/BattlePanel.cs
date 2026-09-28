@@ -1197,7 +1197,7 @@ private void OnEnemyTurnStart()
 
     private void OnBattleOver(bool isWin)
     {
-        // 战斗结束由 BattleUI 处理面板切换
+        // 战斗结束由 RunDirector 处理面板切换
     }
 
     // --- 飘字/动画事件处理 ---
