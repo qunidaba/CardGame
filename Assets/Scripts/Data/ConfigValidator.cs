@@ -11,7 +11,8 @@ namespace Roguelike.Data
     public static class ConfigValidator
     {
         /// <summary>校验全部配置，返回错误数量（0 = 通过，>0 有错误）</summary>
-        public static int Validate(AllConfig cfg)
+        /// <param name="log">是否把结果打到 Console（测试时传 false，避免触发 Unity Test 的日志失败规则）</param>
+        public static int Validate(AllConfig cfg, bool log = true)
         {
             if (cfg == null) return 0;
 
@@ -26,19 +27,20 @@ namespace Roguelike.Data
             ValidateEvents(cfg, errors, warns);
             ValidatePotions(cfg, errors, warns);
 
-            // 先打印警告（提示），再打印错误
-            if (warns.Count > 0)
-                Debug.LogWarning($"[ConfigValidator] 发现 {warns.Count} 个提示：\n  " + string.Join("\n  ", warns));
-            if (errors.Count > 0)
+            if (log)
             {
-                Debug.LogError($"[ConfigValidator] 发现 {errors.Count} 个错误：\n  " + string.Join("\n  ", errors));
-            }
-            if (errors.Count == 0)
-            {
-                if (warns.Count == 0)
-                    Debug.Log("[ConfigValidator] 配置校验通过");
-                else
-                    Debug.Log("[ConfigValidator] 校验通过（含提示）");
+                // 先打印警告（提示），再打印错误
+                if (warns.Count > 0)
+                    Debug.LogWarning($"[ConfigValidator] 发现 {warns.Count} 个提示：\n  " + string.Join("\n  ", warns));
+                if (errors.Count > 0)
+                    Debug.LogError($"[ConfigValidator] 发现 {errors.Count} 个错误：\n  " + string.Join("\n  ", errors));
+                if (errors.Count == 0)
+                {
+                    if (warns.Count == 0)
+                        Debug.Log("[ConfigValidator] 配置校验通过");
+                    else
+                        Debug.Log("[ConfigValidator] 校验通过（含提示）");
+                }
             }
             return errors.Count; // 只返回错误数
         }
