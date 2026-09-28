@@ -264,21 +264,10 @@ namespace Roguelike
         }
 
         /// <summary>
-        /// 是否为负面状态（会被神器抵消）
+        /// 是否为负面状态（会被神器抵消）——统一走状态注册表
         /// </summary>
         private static bool IsNegativeStatus(StatusEffectType type)
-        {
-            switch (type)
-            {
-                case StatusEffectType.Poison:
-                case StatusEffectType.Burn:
-                case StatusEffectType.Weaken:
-                case StatusEffectType.Vulnerable:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            => StatusEffectRegistry.IsNegative(type);
 
         /// <summary>
         /// 按「类型 + 花色维度」查找状态
@@ -505,46 +494,8 @@ namespace Roguelike
     {
         public static string Name(StatusEffectType type)
         {
-            switch (type)
-            {
-                case StatusEffectType.None: return "无";
-                case StatusEffectType.Poison: return "中毒";
-                case StatusEffectType.Burn: return "灼烧";
-                case StatusEffectType.Weaken: return "虚弱";
-                case StatusEffectType.Strength: return "力量";
-                case StatusEffectType.Dexterity: return "敏捷";
-                case StatusEffectType.Focus: return "专注";
-                case StatusEffectType.Artifact: return "神器";
-                case StatusEffectType.Thorns: return "荆棘";
-                case StatusEffectType.Regeneration: return "再生";
-                case StatusEffectType.Metallicize: return "金属化";
-                case StatusEffectType.Intangible: return "无形";
-                case StatusEffectType.Vulnerable: return "易伤";
-                case StatusEffectType.Rage: return "暴怒";
-                case StatusEffectType.DefenseUp: return "坚壁";
-                case StatusEffectType.TurnDamageBonus: return "顺风耳";
-                case StatusEffectType.NextTurnDraw: return "同花之魂";
-                case StatusEffectType.SuitDamageBonus: return "同花顺之巅";
-                case StatusEffectType.SelfDamage: return "双刃剑";
-                case StatusEffectType.DrawBonus: return "抽牌+";
-                case StatusEffectType.MulliganBonus: return "重抽+";
-                case StatusEffectType.NoMulligan: return "封印重抽";
-                case StatusEffectType.SuitSeal: return "封禁花色";
-                case StatusEffectType.StraightDrawBonus: return "顺子抽牌(永久)";
-                case StatusEffectType.StraightDrawTemp: return "顺子抽牌(本场)";
-                case StatusEffectType.FlushDrawBonus: return "同花抽牌";
-                case StatusEffectType.FlushDamageBonus: return "同花伤害";
-                case StatusEffectType.DamageMultiplierMod: return "伤害倍率";
-                case StatusEffectType.FatePowerBonus: return "命运积攒";
-                case StatusEffectType.FateGainSeal: return "命运封禁";
-                case StatusEffectType.Challenge: return "挑战";
-                case StatusEffectType.Taunt: return "嘲讽";
-                case StatusEffectType.Charge: return "蓄力";
-                case StatusEffectType.Swallow: return "吞噬";
-                case StatusEffectType.Weakness: return "弱点";
-                case StatusEffectType.Burrow: return "遁地";
-                default: return type.ToString();
-            }
+            if (type == StatusEffectType.None) return "无";
+            return StatusEffectRegistry.Name(type);
         }
     }
 }

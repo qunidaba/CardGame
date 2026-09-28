@@ -2934,25 +2934,15 @@ txtObj.transform.SetParent(damageTextContainer, false);
     private static string StatusLabel(string status, int value, int duration = -1)
     {
         string name;
-        switch (status)
+        if (!string.IsNullOrEmpty(status) &&
+            System.Enum.TryParse(status, true, out StatusEffectType type) &&
+            type != StatusEffectType.None)
         {
-            case "Weaken": name = "虚弱"; break;
-            case "Vulnerable": name = "易伤"; break;
-            case "Poison": name = "中毒"; break;
-            case "Burn": name = "灼烧"; break;
-            case "Strength": name = "力量"; break;
-            case "Dexterity": name = "敏捷"; break;
-            case "Focus": name = "专注"; break;
-            case "Regeneration": name = "再生"; break;
-            case "Thorns": name = "荆棘"; break;
-            case "Metallicize": name = "金属化"; break;
-            case "Intangible": name = "无形"; break;
-            case "Artifact": name = "神器"; break;
-            case "NoMulligan": name = "封印重抽"; break;
-            case "SuitSeal": name = "封禁花色"; break;
-            case "DrawBonus": name = "抽牌+"; break;
-            case "MulliganBonus": name = "重抽+"; break;
-            default: name = string.IsNullOrEmpty(status) ? "异常状态" : status; break;
+            name = Roguelike.StatusEffectRegistry.Name(type);
+        }
+        else
+        {
+            name = string.IsNullOrEmpty(status) ? "异常状态" : status;
         }
 
         string text = value > 1 ? $"{name} {value}" : name;

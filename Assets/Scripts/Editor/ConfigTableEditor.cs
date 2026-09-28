@@ -1043,44 +1043,15 @@ public class ConfigTableEditor : EditorWindow
             }
         }
 
-        // 状态效果（Buff 选择）
+        // 状态效果（Buff 选择）——名字统一走状态注册表
         if (enumType == typeof(Roguelike.StatusEffectType))
         {
-            switch (name)
+            if (name == "None") return "无";
+            if (System.Enum.TryParse<Roguelike.StatusEffectType>(name, out var st))
             {
-                case "None": return "无";
-                case "Poison": return "中毒";
-                case "Burn": return "灼烧";
-                case "Weaken": return "虚弱";
-                case "Strength": return "力量";
-                case "Dexterity": return "敏捷";
-                case "Focus": return "专注";
-                case "Artifact": return "神器";
-                case "Thorns": return "荆棘";
-                case "Regeneration": return "再生";
-                case "Metallicize": return "金属化";
-                case "Intangible": return "无形";
-                case "Vulnerable": return "易伤";
-                case "Rage": return "暴怒";
-                case "DefenseUp": return "坚壁";
-                case "TurnDamageBonus": return "顺风耳（本回合出牌加伤）";
-                case "NextTurnDraw": return "同花之魂（下回合抽牌）";
-                case "SuitDamageBonus": return "同花顺之巅（花色加伤）";
-                case "SelfDamage": return "双刃剑（每回合自伤）";
-                case "DrawBonus": return "抽牌+";
-                case "MulliganBonus": return "重抽+";
-                case "NoMulligan": return "封印（不可重抽）";
-                case "SuitSeal": return "封禁（不可出该花色）";
-                case "StraightDrawBonus": return "顺子抽牌（永久）";
-                case "StraightDrawTemp": return "顺子抽牌（仅本场）";
-                case "FlushDrawBonus": return "同花抽牌（永久）";
-                case "FlushDamageBonus": return "同花伤害（永久）";
-                case "DamageMultiplierMod": return "伤害倍率";
-                case "FatePowerBonus": return "命运积攒";
-                case "FateGainSeal": return "命运封禁";
-                case "Challenge": return "挑战";
-                case "Taunt": return "嘲讽（敌人主动技，勿手动配）";
-                case "Charge": return "蓄力（敌人主动技，勿手动配）";
+                string n = Roguelike.StatusEffectRegistry.Name(st);
+                if (name == "Taunt" || name == "Charge") n += "（敌人主动技，勿手动配）";
+                return n;
             }
         }
 
