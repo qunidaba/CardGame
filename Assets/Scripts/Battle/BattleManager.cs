@@ -11,7 +11,7 @@ using Roguelike.Data;
 /// 由 BattleUI 创建和持有，不负责单例
 /// 纯逻辑层，只转发数据层事件，不手动 Invoke UI 更新
 /// </summary>
-public partial class BattleManager : IPotionContext, IEnemyAbilityContext
+public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDestinySkillContext
 {
     // ===== 子系统 =====
     /// <summary>药水系统（使用药水 / 点数修正）</summary>
@@ -23,11 +23,15 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
     /// <summary>花色统计（本场战斗）</summary>
     public SuitTally Suits { get; private set; }
 
+    /// <summary>命格主动技系统</summary>
+    public DestinySkillSystem DestinySkills { get; private set; }
+
     public BattleManager()
     {
         Potions = new PotionSystem(this);
         EnemyAbilities = new EnemyAbilitySystem(this);
         Suits = new SuitTally((suit, count) => OnSuitTallyChanged?.Invoke(suit, count));
+        DestinySkills = new DestinySkillSystem(this);
     }
 
     // ===== IPotionContext 实现（供药水系统回调）=====
@@ -36,7 +40,12 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
     public BattleUnit CurrentEnemy => GetEnemy();
     public IReadOnlyList<CardData> HandCards => handArea != null ? handArea.HandCards : null;
     public int PoisonBonus => GetPoisonBonus();
-    public void DrawToHand(int count) => AddToHand(deckPile.Draw(count));
+    public List<CardData> DrawToHand(int count)
+    {
+        var drawn = deckPile.Draw(count);
+        AddToHand(drawn);
+        return drawn;
+    }
     public void NotifyCardVisualsChanged() => NotifyEnchantmentsChanged();
     public void NotifyPotionsChanged() => OnPotionsChanged?.Invoke();
 
@@ -45,6 +54,13 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext
     public DeckPile Deck => deckPile;
     // 注意：BattleManager 已有同名 CurrentTarget（玩家选中目标，语义不同），故显式实现
     BattleUnit IEnemyAbilityContext.CurrentTarget => GetEnemy();
+
+    // ===== IDestinySkillContext 实现（供命格主动技回调；Run/Player/CurrentEnemy/IsBattleOver/GetAliveEnemies 已公开）=====
+    float IDestinySkillContext.HitInterval => hitInterval;
+    void IDestinySkillContext.GrantRandomEnchants(List<CardData> cards, int count, int minTier) => GrantRandomEnchantsToCards(cards, count, minTier);
+    void IDestinySkillContext.NotifyDestinyChanged() => OnDestinyChanged?.Invoke();
+    void IDestinySkillContext.NotifyHandChanged() => OnHandChanged?.Invoke();
+    void IDestinySkillContext.CheckBattleEnd() => CheckBattleEnd();
 
     // ===== 对外转发（供 Handler / 状态注册表调用）=====
     public void ApplySwallow(int count, BattleUnit attacker) => EnemyAbilities.ApplySwallow(count, attacker);
@@ -1696,87 +1712,8 @@ public float GetNextPlayDamageMultiplier()
     /// <summary>遗物「瘟疫之心」：施加中毒时的额外层数</summary>
     public int GetPoisonBonus() => relicSystem != null ? relicSystem.GetFlatBonus("PoisonBonus", 0) : 0;
 
-    /// <summary>释放主命格主动技能（需命运之力攒满）</summary>
-    public bool ActivateDestinySkill()
-    {
-        if (runData == null || !runData.HasMainDestiny) return false;
-        if (runData.fatePower < RunData.FatePowerMax) return false;
-
-        var suit = (Suit)runData.mainDestinySuit;
-        int rank = runData.GetDestinyRank(suit);
-        if (rank < 1) rank = 1;
-
-        // 释放：清空命运之力
-        runData.fatePower = 0;
-        runData.NotifyDestinyChanged();
-        OnDestinyChanged?.Invoke();
-        Debug.Log($"[命格] 释放主动技能 {DestinyInfo.GetActiveName(suit)}（Lv{rank}）");
-
-        switch (suit)
-        {
-            case Suit.Spade: // 破军：对随机敌人打 N 次 1 点伤害（协程，避免同时结算）
-                CoroutineRunner.Instance.StartCoroutine(SpadeActiveRoutine(DestinyEffects.GetActiveSpadeHits(rank)));
-                return true;
-
-            case Suit.Heart: // 回春：清除负面 + 再生
-                player.RemoveStatus(StatusEffectType.Poison);
-                player.RemoveStatus(StatusEffectType.Burn);
-                player.RemoveStatus(StatusEffectType.Weaken);
-                player.RemoveStatus(StatusEffectType.Vulnerable);
-                player.AddStatus(StatusEffectType.Regeneration,
-                    DestinyEffects.ActiveHeartRegenBase + rank, DestinyEffects.ActiveHeartRegenTurns);
-                break;
-
-            case Suit.Club: // 顿悟：抽 N 张，按等级附魔
-            {
-                var drawn = deckPile.Draw(DestinyEffects.ActiveClubDraw);
-                AddToHand(drawn);
-                int enchCount = rank == 1 ? 0 : (rank == 2 ? DestinyEffects.ActiveClubEnchantLv2 : DestinyEffects.ActiveClubEnchantLv3);
-                int minTier = rank >= 3 ? 2 : 1;
-                GrantRandomEnchantsToCards(drawn, enchCount, minTier);
-                break;
-            }
-
-            case Suit.Diamond: // 聚宝：金币 + 伤害
-            {
-                int gold = rank == 1 ? DestinyEffects.ActiveDiamondGoldLv1
-                         : (rank == 2 ? DestinyEffects.ActiveDiamondGoldLv2 : DestinyEffects.ActiveDiamondGoldLv3);
-                runData.Gold += gold;
-                var goldTarget = GetEnemy();
-                if (rank >= 2 && goldTarget != null && !goldTarget.IsDead)
-                {
-                    int dmg = runData.Gold / DestinyEffects.ActiveDiamondDamagePerGold;
-                    if (dmg > 0) goldTarget.TakeDamage(player.DealDamage(dmg), player);
-                }
-                break;
-            }
-        }
-
-        OnHandChanged?.Invoke();
-        CheckBattleEnd();
-        return true;
-    }
-
-    /// <summary>黑桃主动技「破军」：对随机敌人造成 hits 次 1 点伤害（每次目标重新随机，可联动力量）</summary>
-    private IEnumerator SpadeActiveRoutine(int hits)
-    {
-        for (int i = 0; i < hits; i++)
-        {
-            if (IsBattleOver) break;
-
-            var alive = GetAliveEnemies();
-            if (alive.Count == 0) break;
-
-            // 每一击都重新随机选一个存活敌人
-            var skillTarget = alive[UnityEngine.Random.Range(0, alive.Count)];
-            skillTarget.TakeDamage(player.DealDamage(1), player);
-
-            if (i < hits - 1)
-                yield return new WaitForSeconds(hitInterval);
-        }
-        OnHandChanged?.Invoke();
-        CheckBattleEnd();
-    }
+    /// <summary>释放主命格主动技能（需命运之力攒满）—— 逻辑在 DestinySkillSystem</summary>
+    public bool ActivateDestinySkill() => DestinySkills.Activate();
 
     /// <summary>给指定牌各随机附魔（用于梅花顿悟/开局）</summary>
     private void GrantRandomEnchantsToCards(List<CardData> cards, int count, int minTier)

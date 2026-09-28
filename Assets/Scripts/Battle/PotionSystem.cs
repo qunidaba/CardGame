@@ -19,7 +19,7 @@ namespace Roguelike
 
         int PoisonBonus { get; }
         void SetNextPlayDamageMultiplier(float mult);
-        void DrawToHand(int count);
+        List<CardData> DrawToHand(int count);
         void NotifyCardVisualsChanged();
         void NotifyPotionsChanged();
     }
