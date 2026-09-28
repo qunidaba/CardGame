@@ -71,6 +71,11 @@ public class MainMenuPanel : BasePanel
         vlg.childForceExpandHeight = false;
 
         CreateButton(container.transform, "开始游戏", new Vector2(400, 74), OnStartGame, font, true);
+        if (RunSaveSystem.HasSave())
+        {
+            // 只有存在存档时才显示「继续游戏」，位置在「开始游戏」下方
+            CreateButton(container.transform, "继续游戏", new Vector2(400, 74), OnContinueGame, font, true);
+        }
         CreateButton(container.transform, "退出游戏", new Vector2(400, 74), OnQuit, font, false);
 
         // 版本号
@@ -91,6 +96,21 @@ public class MainMenuPanel : BasePanel
         }
 
         RunDirector.Instance.StartNewRun();
+    }
+
+    private void OnContinueGame()
+    {
+        if (!RunSaveSystem.HasSave()) return;
+
+        if (UIManager.Instance != null) UIManager.Instance.Destroy<MainMenuPanel>();
+
+        if (RunDirector.Instance == null)
+        {
+            Debug.LogError("[MainMenu] RunDirector 不存在，无法继续游戏");
+            return;
+        }
+
+        RunDirector.Instance.ContinueFromSave();
     }
 
     private void OnQuit()

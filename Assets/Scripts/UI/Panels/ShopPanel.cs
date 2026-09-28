@@ -16,18 +16,20 @@ public class ShopPanel : BasePanel
     private RunData runData;
     private RelicSystem relicSystem;
     private Action onCloseCb;
+    private Action onChangedCb;
 
     private TextMeshProUGUI goldText;
     private Transform content;
 
     private bool built;
 
-    public void ShowShop(ShopInventory inv, RunData rd, RelicSystem rs, Action onClose)
+    public void ShowShop(ShopInventory inv, RunData rd, RelicSystem rs, Action onClose, Action onChanged = null)
     {
         inventory = inv;
         runData = rd;
         relicSystem = rs;
         onCloseCb = onClose;
+        onChangedCb = onChanged;
         shopSystem = new ShopSystem();
 
         EnsureBuilt();
@@ -62,6 +64,7 @@ public class ShopPanel : BasePanel
                     // 随机牌：弹面板告诉玩家附魔到了哪张牌
                     ShowEnchantResult(entry.enchantmentId, rr, rs);
                     Refresh();
+                    onChangedCb?.Invoke();
                 }
             });
             btnRandom.interactable = !entry.sold && runData.Gold >= entry.priceRandom;
@@ -75,7 +78,10 @@ public class ShopPanel : BasePanel
                     (rank, suit) =>
                     {
                         if (shopSystem.BuyEnchant(entry, runData, true, rank, suit, out _, out _))
+                        {
                             Refresh();
+                            onChangedCb?.Invoke();
+                        }
                     },
                     () => { });
             });
@@ -235,7 +241,7 @@ public class ShopPanel : BasePanel
             // 药水槽没满直接买；满了让玩家选一个替换掉
             if (runData.PotionIds.Count < RunData.MaxPotions)
             {
-                if (shopSystem.BuyPotion(e, runData)) Refresh();
+                if (shopSystem.BuyPotion(e, runData)) { Refresh(); onChangedCb?.Invoke(); }
                 return;
             }
 
@@ -251,7 +257,7 @@ public class ShopPanel : BasePanel
                 ReplacePickerPanel.BuildPotionEntries(runData),
                 replacedId =>
                 {
-                    if (shopSystem.BuyPotion(pEntry, runData, replacedId)) Refresh();
+                    if (shopSystem.BuyPotion(pEntry, runData, replacedId)) { Refresh(); onChangedCb?.Invoke(); }
                 },
                 () => { },
                 "取消购买");
@@ -261,7 +267,7 @@ public class ShopPanel : BasePanel
         // 遗物：槽位没满直接买；满了让玩家选一个替换掉
         if (runData.RelicIds.Count < RelicSystem.MaxSlots)
         {
-            if (shopSystem.BuyRelic(e, runData, relicSystem)) Refresh();
+            if (shopSystem.BuyRelic(e, runData, relicSystem)) { Refresh(); onChangedCb?.Invoke(); }
             return;
         }
 
@@ -277,7 +283,7 @@ public class ShopPanel : BasePanel
             ReplacePickerPanel.BuildRelicEntries(runData),
             replacedId =>
             {
-                if (shopSystem.BuyRelic(entry, runData, relicSystem, replacedId)) Refresh();
+                if (shopSystem.BuyRelic(entry, runData, relicSystem, replacedId)) { Refresh(); onChangedCb?.Invoke(); }
             },
             () => { },
             "取消购买");

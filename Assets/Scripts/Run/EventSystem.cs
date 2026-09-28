@@ -55,6 +55,15 @@ namespace Roguelike
         public int relicId;
     }
 
+    /// <summary>事件预抽物品的存档记录（按选项/结果下标定位）</summary>
+    public class PreparedItemSave
+    {
+        public int optionIndex;
+        public int resultIndex;
+        public bool isPotion;
+        public int id;
+    }
+
     /// <summary>牌引用（点数 + 花色）</summary>
     public struct CardRef
     {
@@ -341,6 +350,49 @@ namespace Roguelike
 
         private readonly Dictionary<EventOptionData, Dictionary<int, PreparedItem>> preparedItems =
             new Dictionary<EventOptionData, Dictionary<int, PreparedItem>>();
+
+        /// <summary>导出预抽结果（存档用；按选项/结果写下标，读档可原样还原，不再重抽）</summary>
+        public List<PreparedItemSave> ExportPrepared(EventData ev)
+        {
+            var list = new List<PreparedItemSave>();
+            if (ev?.options == null) return list;
+
+            for (int i = 0; i < ev.options.Count; i++)
+            {
+                var opt = ev.options[i];
+                if (opt == null || !preparedItems.TryGetValue(opt, out var map)) continue;
+                foreach (var kv in map)
+                    list.Add(new PreparedItemSave
+                    {
+                        optionIndex = i,
+                        resultIndex = kv.Key,
+                        isPotion = kv.Value.isPotion,
+                        id = kv.Value.id
+                    });
+            }
+            return list;
+        }
+
+        /// <summary>还原预抽结果（读档用）</summary>
+        public void ImportPrepared(EventData ev, List<PreparedItemSave> list)
+        {
+            preparedItems.Clear();
+            if (ev?.options == null || list == null) return;
+
+            foreach (var s in list)
+            {
+                if (s.optionIndex < 0 || s.optionIndex >= ev.options.Count) continue;
+                var opt = ev.options[s.optionIndex];
+                if (opt == null) continue;
+
+                if (!preparedItems.TryGetValue(opt, out var map))
+                {
+                    map = new Dictionary<int, PreparedItem>();
+                    preparedItems[opt] = map;
+                }
+                map[s.resultIndex] = new PreparedItem { isPotion = s.isPotion, id = s.id };
+            }
+        }
 
         /// <summary>为事件的所有选项预抽「可获得的具体物品」（GainRelic / GainPotion），供展示与执行共用</summary>
         public void PrepareEvent(EventData ev, RunData runData)

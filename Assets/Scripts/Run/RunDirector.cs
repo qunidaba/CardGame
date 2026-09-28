@@ -171,6 +171,148 @@ namespace Roguelike
             EnterNextBattle();
         }
 
+        /// <summary>从存档继续（主菜单「继续游戏」）：按存档阶段还原到 战斗开头 / 事件选项 / 事件结果。</summary>
+        public void ContinueFromSave()
+        {
+            var save = RunSaveSystem.Load();
+            if (save == null || save.run == null)
+            {
+                Debug.LogWarning("[RunDirector] 存档无效，改为新开一局");
+                RunSaveSystem.Delete();
+                StartNewRun();
+                return;
+            }
+
+            RunData = save.run;
+            RunSaveSystem.RestoreRng(save.rng);   // 恢复全局随机状态（不重设种子），保证后续随机与退出前一致
+
+            // 恢复进度
+            battleCount = RunData.battleIndex;
+            inEventBattle = false;
+            pendingEventOutcome = null;
+
+            // 重建系统绑定
+            relicSystem = new RelicSystem();
+            relicSystem.Initialize(RunData);
+            eventSystem = new EventSystem();
+            rewardSystem = new RewardSystem();
+            shopSystem = new ShopSystem();
+
+            Debug.Log($"[RunDirector] 继续游戏 phase={save.phase} 章节={RunData.actId} 战斗={battleCount} 血={RunData.currentHp}/{RunData.maxHp}");
+
+            switch (save.phase)
+            {
+                case SavePhase.Battle: ResumeBattle(save); break;
+                case SavePhase.Event: ResumeEvent(save); break;
+                case SavePhase.EventResult: ResumeEventResult(save); break;
+                case SavePhase.Shop: ResumeShop(save); break;
+            }
+        }
+
+        /// <summary>读档：还原到本场战斗开头（用存档里记录的基础敌人 + 强化等级重建，不重新随机）</summary>
+        private void ResumeBattle(RunSave save)
+        {
+            var list = new List<EnemyData>();
+            if (save.battleEnemyIds != null)
+            {
+                foreach (var id in save.battleEnemyIds)
+                {
+                    var e = ConfigLoader.GetEnemy(id);
+                    if (e == null) { Debug.LogWarning($"[RunDirector] 读档：敌人 {id} 不存在，跳过"); continue; }
+                    if (save.battleBuff > 0) e = ApplyEnemyBuff(e, save.battleBuff);
+                    if (save.battleDebuff > 0) e = ApplyEnemyDebuff(e, save.battleDebuff);
+                    list.Add(e);
+                }
+            }
+
+            if (list.Count == 0)
+            {
+                Debug.LogWarning("[RunDirector] 读档：本场敌人为空，进入下一战");
+                EnterNextBattle();
+                return;
+            }
+
+            RunData.isBossBattle = save.battleIsBoss;
+            CreateBattleManager(list, RunData, save.battleIsElite);
+        }
+
+        /// <summary>读档：还原到商店（库存原样还原，物品不变）</summary>
+        private void ResumeShop(RunSave save)
+        {
+            if (save.shopInventory == null)
+            {
+                Debug.LogWarning("[RunDirector] 读档：商店库存为空，进入下一战");
+                EnterNextBattle();
+                return;
+            }
+            OpenShopInternal(save.shopInventory, EnterNextBattle);
+        }
+
+        /// <summary>读档：还原到事件选项</summary>
+        private void ResumeEvent(RunSave save)
+        {
+            var ev = ConfigLoader.GetEvent(save.eventId);
+            if (ev == null)
+            {
+                Debug.LogWarning($"[RunDirector] 读档：事件 {save.eventId} 不存在，进入下一战");
+                EnterNextBattle();
+                return;
+            }
+
+            currentEvent = ev;
+
+            if (uiManager != null)
+            {
+                uiManager.Hide<FatePanel>();
+                uiManager.Hide<EventResultPanel>();
+                uiManager.Hide<CardModifierPanel>();
+                uiManager.Hide<DestinyPanel>();
+                uiManager.Hide<ShopPanel>();
+                uiManager.Hide<BattlePanel>();
+
+                var panel = uiManager.ShowPanel<EventPanel>();
+                if (panel != null)
+                {
+                    eventSystem.ImportPrepared(ev, save.preparedItems);   // 还原预抽物品，不再重新随机
+                    panel.ShowEvent(ev, idx => OnEventOptionChosen(ev, idx));
+                    return;
+                }
+            }
+            EnterNextBattle();
+        }
+
+        /// <summary>读档：还原到事件结果</summary>
+        private void ResumeEventResult(RunSave save)
+        {
+            var outcome = new EventOutcome
+            {
+                messages = new List<string>(save.resultMessages),
+                pendingRelicIds = new List<int>(save.resultPendingRelicIds),
+                pendingPotionIds = new List<int>(save.resultPendingPotionIds),
+                enchantments = new List<GrantedEnchantment>(save.resultEnchantments),
+                reopenEvent = save.resultReopenEvent
+            };
+
+            // 多阶段事件的结果：展示后要回到事件，需要 currentEvent
+            if (save.resultReopenEvent && save.eventId > 0)
+                currentEvent = ConfigLoader.GetEvent(save.eventId);
+
+            Action after = save.resultReopenEvent
+                ? (Action)ReopenCurrentEvent
+                : () => ResolvePendingRelics(outcome, () => ResolvePendingPotions(outcome, EnterNextBattle));
+
+            if (!outcome.IsEmpty && uiManager != null)
+            {
+                var panel = uiManager.ShowPanel<EventResultPanel>();
+                if (panel != null)
+                {
+                    panel.ShowOutcome(outcome, after);
+                    return;
+                }
+            }
+            after();
+        }
+
         /// <summary>
         /// 进入下一场战斗
         /// </summary>
@@ -296,6 +438,11 @@ namespace Roguelike
                 return;
             }
 
+            // 存档用：记录本场「基础敌人 + 强化等级」（读档时原样还原，不重新随机）
+            var saveBaseIds = encounter.ConvertAll(e => e.id);
+            int saveBuff = RunData.nextBattleEnemyBuff;
+            int saveDebuff = RunData.nextBattleEnemyDebuff;
+
             // 应用敌人强化（作用于本场所有敌人）
             if (RunData.nextBattleEnemyBuff > 0)
             {
@@ -326,6 +473,9 @@ namespace Roguelike
             RunData.currentHp = playerStartHp;
 
             Debug.Log($"[RunDirector] 战斗开始: {string.Join("、", encounter.ConvertAll(e => e.name))} (精英={isElite})");
+
+            RunData.battleIndex = battleCount;
+            RunSaveSystem.SaveBattle(RunData, saveBaseIds, saveBuff, saveDebuff, isElite, false);
 
             CreateBattleManager(encounter, RunData, isElite);
         }
@@ -660,6 +810,9 @@ namespace Roguelike
             }
 
             RunData.isBossBattle = true;
+            RunData.battleIndex = battleCount;
+            RunSaveSystem.SaveBattle(RunData, bossList.ConvertAll(e => e.id), 0, 0, false, true);
+
             CreateBattleManager(bossList, RunData, false);
         }
 
@@ -874,6 +1027,7 @@ namespace Roguelike
                 if (OpenShop(EnterNextBattle))
                 {
                     RunData.battlesSinceShop = 0;
+                    RunSaveSystem.SaveShop(RunData, currentShopInv);   // 重置保底计数后再存一次
                     Debug.Log(guaranteed
                         ? $"[RunDirector] 保底商店已开启（花色槽 {suit}）"
                         : $"[RunDirector] 命运事件刷出商店（花色槽 {suit}）");
@@ -916,6 +1070,7 @@ namespace Roguelike
                 {
                     eventSystem.PrepareEvent(ev, RunData);   // 预抽可获得的具体物品（拍卖会等）
                     panel.ShowEvent(ev, idx => OnEventOptionChosen(ev, idx));
+                    RunSaveSystem.SaveEvent(RunData, ev.id, eventSystem.ExportPrepared(ev));   // 存档点：事件选项
                     return;
                 }
             }
@@ -1123,6 +1278,7 @@ namespace Roguelike
                     if (reopenPanel != null)
                     {
                         reopenPanel.ShowOutcome(outcome, ReopenCurrentEvent);
+                        RunSaveSystem.SaveEventResult(RunData, currentEvent != null ? currentEvent.id : 0, outcome, true);   // 存档点：事件结果（回事件）
                         return;
                     }
                 }
@@ -1154,6 +1310,7 @@ namespace Roguelike
 
             Debug.Log($"[RunDirector] 多阶段事件「{currentEvent.title}」进入阶段 {RunData.currentEventStage}");
             uiManager.ShowPanel<EventPanel>()?.ShowEvent(currentEvent, idx => OnEventOptionChosen(currentEvent, idx));
+            RunSaveSystem.SaveEvent(RunData, currentEvent.id, eventSystem.ExportPrepared(currentEvent));   // 存档点：事件选项（多阶段）
         }
 
         /// <summary>展示事件结算面板；没有内容则直接进入下一战</summary>
@@ -1169,6 +1326,7 @@ namespace Roguelike
                 if (resultPanel != null)
                 {
                     resultPanel.ShowOutcome(outcome, after);
+                    RunSaveSystem.SaveEventResult(RunData, currentEvent != null ? currentEvent.id : 0, outcome, false);   // 存档点：事件结果
                     return;
                 }
             }
@@ -1192,8 +1350,14 @@ namespace Roguelike
             CreateBattleManager(new List<EnemyData> { enemy }, RunData, false);
         }
 
+        /// <summary>商店库存（购买后刷新存档用）</summary>
+        private ShopInventory currentShopInv;
+
         /// <summary>打开商店（onClose 为离开后的回调）</summary>
-        public bool OpenShop(System.Action onClose = null)
+        public bool OpenShop(System.Action onClose = null) => OpenShopInternal(null, onClose);
+
+        /// <summary>打开商店；prebuilt 非空时直接用它（读档还原商店库存，物品不变）</summary>
+        private bool OpenShopInternal(ShopInventory prebuilt, System.Action onClose)
         {
             if (RunData == null)
             {
@@ -1216,7 +1380,9 @@ namespace Roguelike
             uiManager.Hide<DestinyPanel>();
             uiManager.Hide<BattlePanel>();
 
-            var inv = shopSystem.Generate(RunData);
+            var inv = prebuilt ?? shopSystem.Generate(RunData);
+            currentShopInv = inv;
+
             var panel = uiManager.ShowPanel<ShopPanel>();
             if (panel == null)
             {
@@ -1227,13 +1393,19 @@ namespace Roguelike
 
             // 置于最前，确保商店不被其它面板遮挡
             panel.transform.SetAsLastSibling();
-            panel.ShowShop(inv, RunData, relicSystem, onClose);
+            // 每次购买后刷新存档（已售标记 / 金币），读档时商店库存不变
+            panel.ShowShop(inv, RunData, relicSystem, onClose,
+                () => RunSaveSystem.SaveShop(RunData, currentShopInv));
+
+            // 存档点：商店（生成 / 还原库存后立即存一次）
+            RunSaveSystem.SaveShop(RunData, inv);
             return true;
         }
 
         public void OnBattleLose()
         {
             Debug.Log("[RunDirector] 战斗失败，游戏结束");
+            RunSaveSystem.Delete();   // 一局结束：清除存档
             // 兜底获取 uiManager，防止 Awake/Start 前被调用
             var ui = uiManager ?? UIManager.Instance;
             if (ui != null)
@@ -1250,6 +1422,7 @@ namespace Roguelike
     private void ShowVictory()
         {
             Debug.Log("[RunDirector] 通关胜利！");
+            RunSaveSystem.Delete();   // 通关：清除存档
             var ui = uiManager ?? UIManager.Instance;
             if (ui != null)
             {
