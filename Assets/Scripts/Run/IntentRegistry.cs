@@ -89,6 +89,7 @@ namespace Roguelike
             Register(new SunderHandler());
             Register(new CurseHandler());
             Register(new SwallowHandler());
+            Register(new BurrowHandler());
             Register(new SummonHandler());
             Register(new HealAlliesHandler());
         }

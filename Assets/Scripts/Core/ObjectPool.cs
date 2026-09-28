@@ -36,14 +36,17 @@ namespace Roguelike.Core
 
         public T Get()
         {
-            T obj;
-            if (_pool.Count > 0)
+            T obj = null;
+            // 池里的对象可能被外部（如 ClearChildren）销毁过，跳过已销毁的
+            while (_pool.Count > 0)
             {
-                obj = _pool.Dequeue();
+                var candidate = _pool.Dequeue();
+                if (candidate != null) { obj = candidate; break; }
             }
-            else
+            if (obj == null)
             {
                 obj = CreateInstance();
+                if (obj == null) return null;   // 预制体缺失：返回 null，调用方自行降级
             }
             obj.gameObject.SetActive(true);
             _onGet?.Invoke(obj);
@@ -64,6 +67,11 @@ namespace Roguelike.Core
 
         private T CreateInstance()
         {
+            if (_prefab == null)
+            {
+                Debug.LogError("[ObjectPool] 预制体为空，无法创建实例");
+                return null;
+            }
             var obj = UnityEngine.Object.Instantiate(_prefab);
             if (_parent != null) obj.transform.SetParent(_parent, false);
             return obj;
@@ -138,8 +146,15 @@ namespace Roguelike.Core
                 return null;
             }
 
-            var parent = cfg.parent != null ? cfg.parent : PoolManager._root;
-            var pool = new ObjectPool<T>(cfg.prefab.GetComponent<T>(), cfg.parent, cfg.initialSize, cfg.maxSize,
+            // 组件必须挂在预制体根节点上（挂在子节点会导致 clone 丢失层级）
+            var prefabComp = cfg.prefab.GetComponent<T>();
+            if (prefabComp == null)
+            {
+                Debug.LogError($"[PoolManager] 预制体「{cfg.prefab.name}」根节点上没有 {typeof(T).Name} 组件（池: {key}）");
+                return null;
+            }
+
+            var pool = new ObjectPool<T>(prefabComp, cfg.parent, cfg.initialSize, cfg.maxSize,
                                          cfg.onGet as Action<T>, cfg.onReturn as Action<T>);
             _pools[key] = pool;
             return pool;

@@ -1304,23 +1304,22 @@ private void OnEnemyTurnStart()
 
     private void SpawnFloatingText(Vector3 worldPos, string text, Color color, float fontSize, float popScale)
     {
-        var txtObj = Roguelike.Core.PoolManager.Get<TextMeshProUGUI>("DamageText");
-if (txtObj == null)
+        var rectT = Roguelike.Core.PoolManager.Get<RectTransform>("DamageText");
+        if (rectT == null)
         {
             // 池未就绪时降级
             GameObject fallback = UnityEngine.Object.Instantiate(damageTextPrefab, damageTextContainer);
             SetupFloatingText(fallback, worldPos, text, color, fontSize, popScale);
             var tmpText = fallback.GetComponentInChildren<TextMeshProUGUI>();
-            var rectT = fallback.GetComponent<RectTransform>();
-            StartCoroutine(FloatingTextAnim(fallback.gameObject, tmpText, fallback.GetComponent<RectTransform>(), popScale));
+            var rectT2 = fallback.GetComponent<RectTransform>();
+            StartCoroutine(FloatingTextAnim(fallback, tmpText, rectT2, popScale));
             return;
         }
 
-txtObj.transform.SetParent(damageTextContainer, false);
-        SetupFloatingText(txtObj.gameObject, worldPos, text, color, fontSize, popScale);
-        var tmp = txtObj.GetComponentInChildren<TextMeshProUGUI>();
-        var rect = txtObj.GetComponent<RectTransform>();
-        StartCoroutine(FloatingTextAnim(txtObj.gameObject, tmp, txtObj.GetComponent<RectTransform>(), popScale));
+        rectT.transform.SetParent(damageTextContainer, false);
+        SetupFloatingText(rectT.gameObject, worldPos, text, color, fontSize, popScale);
+        var tmp = rectT.GetComponentInChildren<TextMeshProUGUI>();
+        StartCoroutine(FloatingTextAnim(rectT.gameObject, tmp, rectT, popScale));
     }
 
     /// <summary>把飘字文本/颜色/位置等初始化到对象上（从池取出后调用）</summary>
@@ -1396,7 +1395,8 @@ txtObj.transform.SetParent(damageTextContainer, false);
 
             yield return null;
         }
-        Roguelike.Core.PoolManager.Return("DamageText", obj.GetComponent<TextMeshProUGUI>());
+        if (obj != null)
+            Roguelike.Core.PoolManager.Return("DamageText", obj.GetComponent<RectTransform>());
     }
 
     /// <summary>按伤害值取分档样式（字号 / 弹出缩放 / 颜色）</summary>
@@ -1471,8 +1471,8 @@ txtObj.transform.SetParent(damageTextContainer, false);
         {
             if (damageTextContainer == null || damageTextPrefab == null) return;
 
-            // 伤害/治疗/防御飘字
-            Roguelike.Core.PoolManager.RegisterPool<TextMeshProUGUI>("DamageText", damageTextPrefab, 10, 30, damageTextContainer);
+            // 伤害/治疗/防御飘字（池化根节点 RectTransform：TextMeshProUGUI 可能挂在子节点上）
+            Roguelike.Core.PoolManager.RegisterPool<RectTransform>("DamageText", damageTextPrefab, 10, 30, damageTextContainer);
 
             // 命中特效（序列帧动画）
             if (hitEffectFrames != null && hitEffectFrames.Length > 0)
@@ -1533,7 +1533,8 @@ txtObj.transform.SetParent(damageTextContainer, false);
             var go = new GameObject("CardTrail_Prefab", typeof(RectTransform), typeof(Image));
             go.SetActive(false);
             var img = go.GetComponent<Image>();
-            img.sprite = GetTrailFrames().Length > 0 ? GetTrailFrames()[0] : null;
+            var tf = GetTrailFrames();
+            img.sprite = (tf != null && tf.Length > 0) ? tf[0] : null;
             img.raycastTarget = false;
             return go;
         }

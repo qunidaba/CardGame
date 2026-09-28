@@ -1703,7 +1703,7 @@ else
     /// <summary>
     /// 蓄力：攻击行动伤害翻倍，并消耗 1 层（每层对应一次攻击行动）
     /// </summary>
-    private int ApplyCharge(BattleUnit attacker, int damage)
+    public int ApplyCharge(BattleUnit attacker, int damage)
     {
         if (attacker == null || damage <= 0) return damage;
         if (attacker.GetStatusAmount(StatusEffectType.Charge) <= 0) return damage;

@@ -5,19 +5,19 @@ using Roguelike.Data;
 
 namespace Roguelike
 {
-    /// <summary>破防：对防御伤害翻倍（防御只能抵消一半，向上取整）</summary>
+    /// <summary>破防：对玩家的防御伤害翻倍（防御只能抵消一半，向上取整）</summary>
     public class SunderHandler : BaseIntentHandler
     {
         public override string TypeName => "Sunder";
         public override string DisplayName => "破防（对防御伤害翻倍）";
-        public override bool RequiresTarget => true;
+        public override bool RequiresTarget => false;
 
         public override IEnumerator Execute(BattleManager mgr, IntentData intent, BattleUnit attacker)
         {
-            var target = mgr.GetEnemy();
+            var target = mgr.GetPlayer();
             if (target == null) yield break;
 
-            int damage = attacker.DealDamage(GetValue(intent));
+            int damage = mgr.ApplyCharge(attacker, attacker.DealDamage(GetValue(intent)));
             int hits = GetHitCount(intent);
 
             for (int i = 0; i < hits; i++)

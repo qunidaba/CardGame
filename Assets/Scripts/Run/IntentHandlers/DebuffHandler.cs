@@ -10,11 +10,11 @@ namespace Roguelike
     {
         public override string TypeName => "Debuff";
         public override string DisplayName => "减益（给玩家上状态）";
-        public override bool RequiresTarget => true;
+        public override bool RequiresTarget => false;
 
         public override IEnumerator Execute(BattleManager mgr, IntentData intent, BattleUnit attacker)
         {
-            var target = mgr.GetEnemy();
+            var target = mgr.GetPlayer();
             if (target == null) yield break;
 
             var statusType = !string.IsNullOrEmpty(GetStatus(intent))
