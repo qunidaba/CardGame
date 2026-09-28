@@ -80,7 +80,8 @@ public class BattleManager
     private DeckPile deckPile;
     private HandArea handArea;
     private BattleUnit player;
-    private readonly List<BattleUnit> enemies = new List<BattleUnit>();
+    /// <summary>当前战场上的所有敌人（公开供 Handler 遍历）</summary>
+    public readonly List<BattleUnit> enemies = new List<BattleUnit>();
     private readonly List<Roguelike.Data.EnemyData> enemyDatas = new List<Roguelike.Data.EnemyData>();
 
     /// <summary>当前目标下标：所有「单体」效果（出牌伤害/附魔/遗物/药水）都作用于它</summary>
@@ -497,6 +498,8 @@ public class BattleManager
     private EnchantmentSystem enchantmentSystem;
     private RelicSystem relicSystem;
     private RelicEffectProcessor relicProcessor;
+    /// <summary>遗物效果处理器（供 Handler 使用）</summary>
+    public RelicEffectProcessor RelicProcessor => relicProcessor;
     private bool isFirstTurn = true;
 
     // 事件效果（本场战斗，开场时从 RunData 读取并消耗）
@@ -1519,7 +1522,7 @@ else
     /// 根据权重从敌人数据中选择意图
     /// </summary>
     // 每个敌人各自的「序列行动」剩余队列（本场战斗内有效）
-    private readonly Dictionary<BattleUnit, List<Roguelike.Data.IntentData>> queuedIntents =
+    public readonly Dictionary<BattleUnit, List<Roguelike.Data.IntentData>> queuedIntents =
         new Dictionary<BattleUnit, List<Roguelike.Data.IntentData>>();
 
     // 「吞噬」：每个敌人吞掉的牌（本场战斗内有效；敌人死亡时归还到抽牌堆）
@@ -1676,146 +1679,20 @@ else
             yield break;
         }
 
-        switch (intent.type)
+// 通过 IntentRegistry 分发执行（所有具体意图逻辑已移至对应 Handler）
+        var handler = Roguelike.IntentRegistry.Get(intent.type);
+        if (handler != null)
         {
-            case "Attack":
-            {
-                int damage = ApplyCharge(attacker, attacker.DealDamage(intent.value));   // 敌人力量/虚弱 + 蓄力
-                int hits = Mathf.Max(1, intent.hitCount);
-                for (int i = 0; i < hits; i++)
-                {
-                    if (attacker.IsDead || player.IsDead) break;   // 荆棘反伤可能先打死敌人
-                    Debug.Log($"{attacker.Name} 发动攻击，造成 {damage} 点伤害！");
-                    player.TakeDamage(damage, attacker);
-                    relicProcessor?.ApplyEffects("OnTakeDamage", BuildContext());
-                    if (i < hits - 1) yield return new WaitForSeconds(hitInterval);
-                }
-                break;
-            }
-            case "Sunder":
-            {
-                // 破防：防御只能抵消一半（向上取整），剩余直接打进血量
-                int damage = ApplyCharge(attacker, attacker.DealDamage(intent.value));
-                int hits = Mathf.Max(1, intent.hitCount);
-                for (int i = 0; i < hits; i++)
-                {
-                    if (attacker.IsDead || player.IsDead) break;
-                    Debug.Log($"{attacker.Name} 破防攻击，造成 {damage} 点伤害（防御只能挡一半）");
-                    player.TakeDamage(damage, attacker, halveDefense: true);
-                    relicProcessor?.ApplyEffects("OnTakeDamage", BuildContext());
-                    if (i < hits - 1) yield return new WaitForSeconds(hitInterval);
-                }
-                break;
-            }
-            case "Taunt":
-            {
-                // 嘲讽：强制玩家只能选它，持续 1 回合；多个敌人嘲讽时以最后使用者为准
-                int idx = enemies.IndexOf(attacker);
-                if (idx >= 0)
-                {
-                    player.SetStatus(StatusEffectType.Taunt, idx + 1, 1);
-                    SetTarget(idx);   // 立刻强制选中
-                    Debug.Log($"{attacker.Name} 嘲讽：玩家本回合只能攻击它");
-                }
-                break;
-            }
-            case "Charge":
-            {
-                // 蓄力：下次攻击行动伤害翻倍（可叠多层）
-                attacker.AddStatus(StatusEffectType.Charge, 1, -1);
-                Debug.Log($"{attacker.Name} 蓄力：下次攻击伤害翻倍");
-                break;
-            }
-            case "Curse":
-            {
-                // 诅咒：给玩家随机 N 张牌附加指定诅咒（value = 附魔 id，hitCount = 张数；本场战斗临时）
-                ApplyRandomCurse(intent.value, Mathf.Max(1, intent.hitCount), attacker);
-                break;
-            }
-            case "Swallow":
-            {
-                // 吞噬：吞掉玩家抽牌堆里 N 张牌（value = 张数），敌人死亡时归还
-                ApplySwallow(Mathf.Max(1, intent.value), attacker);
-                break;
-            }
-            case "Burrow":
-            {
-                // 遁地：受到的攻击伤害固定为 1，层数 = 还需被攻击的次数（value = 次数）
-                if (attacker.GetStatusAmount(StatusEffectType.Burrow) > 0)
-                {
-                    Debug.Log($"{attacker.Name} 已经遁地，无法再次遁地");
-                    break;
-                }
-                int burrowHits = Mathf.Max(1, intent.value);
-                attacker.AddStatus(StatusEffectType.Burrow, burrowHits, -1);
-                Debug.Log($"{attacker.Name} 遁地：受到的攻击伤害固定为 1，还需 {burrowHits} 次攻击才会出来");
-                break;
-            }
-            case "Summon":
-            {
-                // 召唤：value = 敌人 id，hitCount = 数量；敌人上限 3，满员时用不了
-                SummonEnemies(intent.value, Mathf.Max(1, intent.hitCount), attacker);
-                break;
-            }
-            case "HealAllies":
-            {
-                // 全体回血：给所有活着的友方（含自己）回复 value 点生命
-                int amount = Mathf.Max(0, intent.value);
-                int count = 0;
-                foreach (var unit in enemies)
-                {
-                    if (unit == null || unit.IsDead) continue;
-                    unit.Heal(amount);
-                    count++;
-                }
-                Debug.Log($"{attacker.Name} 为全体队友回复 {amount} 生命（{count} 个）");
-                break;
-            }
-            case "Defense":
-                attacker.AddDefense(intent.value);
-                Debug.Log($"{attacker.Name} 进入防御姿态，获得 {intent.value} 点防御！");
-                break;
-            case "Buff":
-            {
-                // 给自己加 Buff（状态由配置指定，留空默认力量）
-                var statusType = ParseStatus(intent.status, StatusEffectType.Strength);
-                attacker.AddStatus(statusType, intent.value, intent.duration);
-                Debug.Log($"{attacker.Name} 获得状态 {statusType} x{intent.value}（持续 {intent.duration}）");
-                break;
-            }
-            case "Debuff":
-            {
-                // 给玩家上状态（留空默认虚弱）
-                var statusType = ParseStatus(intent.status, StatusEffectType.Weaken);
-                player.AddStatus(statusType, intent.value, intent.duration);
-                Debug.Log($"玩家获得状态 {statusType} x{intent.value}（持续 {intent.duration}）");
-                break;
-            }
-            case "MultiAttack":
-            {
-                int multiDamage = ApplyCharge(attacker, attacker.DealDamage(intent.value));
-                int hits = Mathf.Max(1, intent.hitCount);
-                for (int i = 0; i < hits; i++)
-                {
-                    if (attacker.IsDead || player.IsDead) break;
-                    Debug.Log($"{attacker.Name} 多重攻击，造成 {multiDamage} 点伤害！");
-                    player.TakeDamage(multiDamage, attacker);
-                    relicProcessor?.ApplyEffects("OnTakeDamage", BuildContext());
-                    if (i < hits - 1) yield return new WaitForSeconds(hitInterval);
-                }
-                break;
-            }
-            case "Special":
-                // 特殊行为，留给子类或特定敌人实现
-                Debug.Log($"{attacker.Name} 使用特殊技能: {intent.description}");
-                break;
-            default:
-                Debug.LogWarning($"[BattleManager] 敌人意图类型无效（请在配置里选择类型）: '{intent.type}'");
-                break;
+            yield return handler.Execute(this, intent, attacker);
+        }
+        else
+        {
+            Debug.LogWarning($"[BattleManager] 敌人意图类型无效（请在配置里选择类型）: '{intent.type}'");
         }
     }
 
-    private static StatusEffectType ParseStatus(string status, StatusEffectType fallback)
+    /// <summary>字符串转 StatusEffectType（不区分大小写），失败返回 fallback</summary>
+        public static StatusEffectType ParseStatus(string status, StatusEffectType fallback)
     {
         if (!string.IsNullOrEmpty(status) &&
             System.Enum.TryParse(status, true, out StatusEffectType parsed))
@@ -1840,7 +1717,8 @@ else
     /// 给玩家随机 N 张牌附加指定诅咒（本场战斗临时，战斗结束自动消失）。
     /// curseId = 附魔表里 Curse 稀有度的附魔 id（如 68 禁锢 / 69 割裂 / 71 无力）。
     /// </summary>
-    private void ApplyRandomCurse(int curseId, int count, BattleUnit attacker)
+    /// <summary>给玩家随机 N 张牌附加指定诅咒（供 Handler 调用）</summary>
+        public void ApplyRandomCurse(int curseId, int count, BattleUnit attacker)
     {
         if (runData == null || count <= 0) return;
 
@@ -1925,7 +1803,7 @@ else
     /// <summary>
     /// 召唤敌人：最多补到上限（MaxEnemyCount）。满员时召唤失败。
     /// </summary>
-    private void SummonEnemies(int enemyId, int count, BattleUnit summoner)
+    public void SummonEnemies(int enemyId, int count, BattleUnit summoner)
     {
         int room = MaxEnemyCount - enemies.Count;
         if (room <= 0)
@@ -2201,7 +2079,8 @@ else
     /// <summary>
     /// 构建遗物效果上下文
     /// </summary>
-    private RelicEffectProcessor.Context BuildContext()
+    /// <summary>构建遗物效果上下文（供 Handler 使用）</summary>
+        public RelicEffectProcessor.Context BuildContext()
     {
         return new RelicEffectProcessor.Context
         {
