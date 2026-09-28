@@ -76,6 +76,7 @@ public class MainMenuPanel : BasePanel
             // 只有存在存档时才显示「继续游戏」，位置在「开始游戏」下方
             CreateButton(container.transform, "继续游戏", new Vector2(400, 74), OnContinueGame, font, true);
         }
+        CreateButton(container.transform, "设置", new Vector2(400, 74), OnOpenSettings, font, false);
         CreateButton(container.transform, "退出游戏", new Vector2(400, 74), OnQuit, font, false);
 
         // 版本号
@@ -101,7 +102,6 @@ public class MainMenuPanel : BasePanel
     private void OnContinueGame()
     {
         if (!RunSaveSystem.HasSave()) return;
-
         if (UIManager.Instance != null) UIManager.Instance.Destroy<MainMenuPanel>();
 
         if (RunDirector.Instance == null)
@@ -111,6 +111,11 @@ public class MainMenuPanel : BasePanel
         }
 
         RunDirector.Instance.ContinueFromSave();
+    }
+
+    private void OnOpenSettings()
+    {
+        if (UIManager.Instance != null) UIManager.Instance.ShowPanel<SettingsPanel>();
     }
 
     private void OnQuit()

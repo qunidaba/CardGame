@@ -21,6 +21,10 @@ public class GameBootstrap : MonoBehaviour
             return;
         }
 
+        // 应用存档设置（音量 / 分辨率 / 全屏）
+        GameSettings.Load();
+        GameSettings.Apply();
+
         // 进入主菜单（在菜单里点「开始游戏」才会 StartNewRun）
         UIManager.Instance.ShowPanel<MainMenuPanel>();
     }
