@@ -96,13 +96,13 @@ public class SettingsPanel : BasePanel
         // ---- 分辨率 ----
         var resRow = AddRow(content.transform);
         AddLabel(resRow, "分辨率", font);
-        AddButton(resRow, "◀", 70, font, () =>
+        AddButton(resRow, "<", 70, font, () =>
         {
             GameSettings.CycleResolution(-1);
             RefreshLabels();
         });
         resolutionValue = AddValue(resRow, font);
-        AddButton(resRow, "▶", 70, font, () =>
+        AddButton(resRow, ">", 70, font, () =>
         {
             GameSettings.CycleResolution(1);
             RefreshLabels();
