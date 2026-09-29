@@ -34,6 +34,9 @@ namespace Roguelike
         // 当前战斗奖励缓存
         private CombatReward currentCombatReward;
 
+        /// <summary>是否处于一局对局中（主菜单时为 false）——ESC 暂停据此判断</summary>
+        public bool InRun { get; private set; }
+
         // 事件专属战斗：打完后要展示的事件结算
         private EventOutcome pendingEventOutcome;
 
@@ -99,6 +102,7 @@ namespace Roguelike
 
         public void StartNewRun(int seed = 0)
         {
+            InRun = true;
             RunData = new RunData
             {
                 seed = seed != 0 ? seed : (int)DateTime.Now.Ticks,
@@ -184,6 +188,7 @@ namespace Roguelike
             }
 
             RunData = save.run;
+            InRun = true;
             RunSaveSystem.RestoreRng(save.rng);   // 恢复全局随机状态（不重设种子），保证后续随机与退出前一致
 
             // 恢复进度
@@ -207,6 +212,30 @@ namespace Roguelike
                 case SavePhase.EventResult: ResumeEventResult(save); break;
                 case SavePhase.Shop: ResumeShop(save); break;
             }
+        }
+
+        /// <summary>
+        /// 保存并返回主菜单：各检查点（战斗开头 / 事件 / 商店）已自动存档，
+        /// 返回后主菜单的「继续游戏」可回到最近的检查点。
+        /// </summary>
+        public void SaveAndReturnToMainMenu()
+        {
+            Debug.Log($"[RunDirector] 保存并返回主菜单（已有存档: {RunSaveSystem.HasSave()}）");
+            ReturnToMainMenu();
+        }
+
+        /// <summary>返回主菜单：中止当前战斗、关闭所有面板、显示标题</summary>
+        public void ReturnToMainMenu()
+        {
+            BattleManager?.AbortBattle();
+            BattleManager = null;
+            InRun = false;
+            pendingEventOutcome = null;
+            inEventBattle = false;
+
+            var ui = uiManager ?? UIManager.Instance;
+            ui?.DestroyAllPanels();
+            ui?.ShowPanel<MainMenuPanel>();
         }
 
         /// <summary>读档：还原到本场战斗开头（用存档里记录的基础敌人 + 强化等级重建，不重新随机）</summary>
@@ -615,6 +644,7 @@ namespace Roguelike
                 }
 
                 ApplyDestinyOnWin();
+                RunData.battlesWon++;   // 统计：战斗胜利场数
 
                 // 生成战斗奖励（金币 = 本场每个敌人各滚一次之和；isBoss 取本场敌人里是否有 boss）
                 var isElite = BattleManager != null && BattleManager.IsElite;
@@ -1414,34 +1444,17 @@ namespace Roguelike
         {
             Debug.Log("[RunDirector] 战斗失败，游戏结束");
             RunSaveSystem.Delete();   // 一局结束：清除存档
-            // 兜底获取 uiManager，防止 Awake/Start 前被调用
+            InRun = false;
             var ui = uiManager ?? UIManager.Instance;
-            if (ui != null)
-            {
-                var panel = ui.ShowPanel<ResultPanel>();
-                panel?.ShowResult(false);
-                panel?.SetRestartAction(() =>
-                {
-                    ui.Hide<ResultPanel>();
-                    StartNewRun();
-                });
-            }
+            ui?.ShowPanel<ResultPanel>()?.ShowResult(false);
         }
     private void ShowVictory()
         {
             Debug.Log("[RunDirector] 通关胜利！");
             RunSaveSystem.Delete();   // 通关：清除存档
+            InRun = false;
             var ui = uiManager ?? UIManager.Instance;
-            if (ui != null)
-            {
-                var panel = ui.ShowPanel<ResultPanel>();
-                panel?.ShowResult(true);
-                panel?.SetRestartAction(() =>
-                {
-                    ui.Hide<ResultPanel>();
-                    StartNewRun();
-                });
-            }
+            ui?.ShowPanel<ResultPanel>()?.ShowResult(true);
         }
     }
 }

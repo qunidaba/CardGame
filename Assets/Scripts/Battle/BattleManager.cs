@@ -738,7 +738,11 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         var u = unit;
 
         u.OnHpChanged += (unitRef, delta) => OnEnemyHpChanged?.Invoke(unitRef, delta);
-        u.OnDamageTaken += (unitRef, dmg) => OnEnemyDamageTaken?.Invoke(unitRef, dmg);
+        u.OnDamageTaken += (unitRef, dmg) =>
+        {
+            if (runData != null && dmg > 0) runData.totalDamageDealt += dmg;   // 统计：总伤害
+            OnEnemyDamageTaken?.Invoke(unitRef, dmg);
+        };
         u.OnMaxHpChanged += hp => OnEnemyMaxHpChanged?.Invoke(u, hp);
         u.OnDefenseChanged += (unitRef, delta) => OnEnemyDefenseChanged?.Invoke(unitRef, delta);
 

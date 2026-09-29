@@ -25,6 +25,10 @@ public class GameBootstrap : MonoBehaviour
         GameSettings.Load();
         GameSettings.Apply();
 
+        // ESC 暂停（局内生效）
+        if (GetComponent<PauseController>() == null)
+            gameObject.AddComponent<PauseController>();
+
         // 进入主菜单（在菜单里点「开始游戏」才会 StartNewRun）
         UIManager.Instance.ShowPanel<MainMenuPanel>();
     }
