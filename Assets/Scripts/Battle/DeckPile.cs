@@ -73,6 +73,7 @@ public class DeckPile
     {
         if (discarded == null || discarded.Count == 0) return;
 
+        // 判定覆盖（万能/变色/镜牌等）在本场战斗内持续，进弃牌堆时保留
         discard.AddRange(discarded);
         OnDiscardCountChanged?.Invoke(discard.Count);
     }

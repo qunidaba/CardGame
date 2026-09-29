@@ -190,7 +190,8 @@ public class DiscardPickerPanel : BasePanel
         {
             for (int rank = 2; rank <= 14; rank++)
             {
-                int idx = pool.FindIndex(c => c != null && c.EffectiveRank == rank && c.EffectiveSuit == suit);
+                // 按「原始花色点数」定位（判定覆盖只影响牌面/效果，不影响摆放位置），保证一格一张不撞位
+                int idx = pool.FindIndex(c => c != null && c.rank == rank && c.suit == suit);
                 if (idx < 0)
                 {
                     new GameObject("Empty", typeof(RectTransform)).transform.SetParent(grid, false);
@@ -199,70 +200,78 @@ public class DiscardPickerPanel : BasePanel
 
                 var c = pool[idx];
                 pool.RemoveAt(idx);
-
-                var go = new GameObject("Cell", typeof(RectTransform), typeof(Image), typeof(Button));
-                go.transform.SetParent(grid, false);
-
-                var img = go.GetComponent<Image>();
-                var sprite = Resources.Load<Sprite>($"Poker/{ResourceName(c.EffectiveRank, c.EffectiveSuit)}");
-                if (sprite != null)
-                {
-                    img.sprite = sprite;
-                    img.color = Color.white;
-                    img.preserveAspect = true;
-                }
-                else
-                {
-                    img.color = new Color(0.18f, 0.19f, 0.25f, 1f);
-                }
-
-                var btn = go.GetComponent<Button>();
-                btn.targetGraphic = img;
-                btn.onClick.AddListener(() =>
-                {
-                    if (viewerMode)
-                    {
-                        ShowDetail(c);
-                        return;
-                    }
-                    Hide();
-                    onPick?.Invoke(c);
-                });
-
-                // 右键看详情
-                var rc = go.AddComponent<RightClickable>();
-                rc.OnRightClick = () => ShowDetail(c);
-
-                var names = c.GetEnchantmentNames();
-                if (names.Count > 0)
-                {
-                    var strip = new GameObject("Strip", typeof(RectTransform), typeof(Image));
-                    strip.transform.SetParent(go.transform, false);
-                    var srt = strip.GetComponent<RectTransform>();
-                    srt.anchorMin = new Vector2(0f, 0f);
-                    srt.anchorMax = new Vector2(1f, 0f);
-                    srt.pivot = new Vector2(0.5f, 0f);
-                    srt.sizeDelta = new Vector2(0f, names.Count > 2 ? 46f : 30f);
-                    srt.anchoredPosition = Vector2.zero;
-                    var simg = strip.GetComponent<Image>();
-                    simg.color = new Color(0f, 0f, 0f, 0.72f);
-                    simg.raycastTarget = false;
-
-                    string text = string.Join("\n", names.GetRange(0, Mathf.Min(2, names.Count)));
-                    if (names.Count > 2) text += $"\n+{names.Count - 2}";
-
-                    var label = CreateText(strip.transform, "Ench", font, 13, TextAlignmentOptions.Center, new Vector2(84f, 46f));
-                    var lrt = label.rectTransform;
-                    lrt.anchorMin = Vector2.zero;
-                    lrt.anchorMax = Vector2.one;
-                    lrt.offsetMin = new Vector2(1f, 0f);
-                    lrt.offsetMax = new Vector2(-1f, 0f);
-                    label.text = text;
-                    label.color = new Color(1f, 0.92f, 0.55f);
-                    label.raycastTarget = false;
-                    label.enableWordWrapping = false;
-                }
+                CreateCell(c, font);
             }
+        }
+
+        // 兜底：判定坐标重复 / 越界的牌直接追加，避免漏显示或相互覆盖
+        foreach (var c in pool)
+            CreateCell(c, font);
+    }
+
+    private void CreateCell(CardData c, TMP_FontAsset font)
+    {
+        var go = new GameObject("Cell", typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(grid, false);
+
+        var img = go.GetComponent<Image>();
+        var sprite = Resources.Load<Sprite>($"Poker/{ResourceName(c.EffectiveRank, c.EffectiveSuit)}");
+        if (sprite != null)
+        {
+            img.sprite = sprite;
+            img.color = Color.white;
+            img.preserveAspect = true;
+        }
+        else
+        {
+            img.color = new Color(0.18f, 0.19f, 0.25f, 1f);
+        }
+
+        var btn = go.GetComponent<Button>();
+        btn.targetGraphic = img;
+        btn.onClick.AddListener(() =>
+        {
+            if (viewerMode)
+            {
+                ShowDetail(c);
+                return;
+            }
+            Hide();
+            onPick?.Invoke(c);
+        });
+
+        // 右键看详情
+        var rc = go.AddComponent<RightClickable>();
+        rc.OnRightClick = () => ShowDetail(c);
+
+        var names = c.GetEnchantmentNames();
+        if (names.Count > 0)
+        {
+            var strip = new GameObject("Strip", typeof(RectTransform), typeof(Image));
+            strip.transform.SetParent(go.transform, false);
+            var srt = strip.GetComponent<RectTransform>();
+            srt.anchorMin = new Vector2(0f, 0f);
+            srt.anchorMax = new Vector2(1f, 0f);
+            srt.pivot = new Vector2(0.5f, 0f);
+            srt.sizeDelta = new Vector2(0f, names.Count > 2 ? 46f : 30f);
+            srt.anchoredPosition = Vector2.zero;
+            var simg = strip.GetComponent<Image>();
+            simg.color = new Color(0f, 0f, 0f, 0.72f);
+            simg.raycastTarget = false;
+
+            string text = string.Join("\n", names.GetRange(0, Mathf.Min(2, names.Count)));
+            if (names.Count > 2) text += $"\n+{names.Count - 2}";
+
+            var label = CreateText(strip.transform, "Ench", font, 13, TextAlignmentOptions.Center, new Vector2(84f, 46f));
+            var lrt = label.rectTransform;
+            lrt.anchorMin = Vector2.zero;
+            lrt.anchorMax = Vector2.one;
+            lrt.offsetMin = new Vector2(1f, 0f);
+            lrt.offsetMax = new Vector2(-1f, 0f);
+            label.text = text;
+            label.color = new Color(1f, 0.92f, 0.55f);
+            label.raycastTarget = false;
+            label.enableWordWrapping = false;
         }
     }
 
