@@ -20,6 +20,7 @@ public class PauseController : MonoBehaviour
         if (ui.IsPanelActive(nameof(SettingsPanel))) { ui.Hide<SettingsPanel>(); return; }
         if (ui.IsPanelActive(nameof(HelpPanel))) { ui.Hide<HelpPanel>(); return; }
         if (ui.IsPanelActive(nameof(CodexPanel))) { ui.Hide<CodexPanel>(); return; }
+        if (ui.IsPanelActive(nameof(HandTypePanel))) { ui.Hide<HandTypePanel>(); return; }
 
         // 暂停面板开着 → 关闭（继续游戏）
         if (ui.IsPanelActive(nameof(PausePanel))) { ui.Hide<PausePanel>(); return; }

@@ -170,6 +170,7 @@ public partial class BattlePanel : BasePanel
     private int lastHandVersion = -1;
     private Button fateButton;
     private Button modifyButton;
+    private Button pauseButton;
     private Button destinyButton;
     private Button activeSkillButton;
     private TextMeshProUGUI destinyHudText;
@@ -219,6 +220,7 @@ public partial class BattlePanel : BasePanel
 
         EnsureSuitHud();
         EnsureModifyButton();
+        EnsurePauseButton();
         EnsureDestinyHud();
         EnsurePileTextClicks();
         EnsurePotionBar();
@@ -2747,6 +2749,49 @@ private void OnEnemyTurnStart()
         var ltmp = label.AddComponent<TextMeshProUGUI>();
         if (font != null) ltmp.font = font;
         ltmp.text = "改造";
+        ltmp.fontSize = 24;
+        ltmp.alignment = TextAlignmentOptions.Center;
+        ltmp.color = Color.white;
+        var lrt = ltmp.rectTransform;
+        lrt.anchorMin = Vector2.zero;
+        lrt.anchorMax = Vector2.one;
+        lrt.offsetMin = Vector2.zero;
+        lrt.offsetMax = Vector2.zero;
+    }
+
+    private void EnsurePauseButton()
+    {
+        if (pauseButton != null) return;
+
+        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var go = new GameObject("PauseButton", typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(transform, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(1f, 1f);
+        rt.anchoredPosition = new Vector2(-20f, -96f);
+        rt.sizeDelta = new Vector2(120f, 48f);
+
+        var img = go.GetComponent<Image>();
+        img.color = new Color(0.22f, 0.24f, 0.32f, 1f);
+
+        pauseButton = go.GetComponent<Button>();
+        pauseButton.targetGraphic = img;
+        var colors = pauseButton.colors;
+        colors.highlightedColor = new Color(0.32f, 0.36f, 0.48f, 1f);
+        colors.pressedColor = new Color(0.16f, 0.18f, 0.24f, 1f);
+        pauseButton.colors = colors;
+        pauseButton.onClick.AddListener(() =>
+        {
+            if (UIManager.Instance != null) UIManager.Instance.ShowPanel<PausePanel>();
+        });
+
+        var label = new GameObject("Label", typeof(RectTransform));
+        label.transform.SetParent(go.transform, false);
+        var ltmp = label.AddComponent<TextMeshProUGUI>();
+        if (font != null) ltmp.font = font;
+        ltmp.text = "暂停";
         ltmp.fontSize = 24;
         ltmp.alignment = TextAlignmentOptions.Center;
         ltmp.color = Color.white;

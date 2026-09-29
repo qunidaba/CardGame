@@ -51,6 +51,7 @@ namespace Roguelike
         {
             public BattleUnit Player;
             public BattleUnit Enemy;
+            public List<BattleUnit> Enemies;         // 全部存活敌人（群体效果用）
             public HandArea HandArea;
             public DeckPile DeckPile;
             public RunData RunData;
@@ -245,9 +246,20 @@ namespace Roguelike
                     break;
 
                 case "ApplyVulnerable":
-                    if (ctx.Enemy != null && !ctx.Enemy.IsDead)
-                        ctx.Enemy.AddStatus(StatusEffectType.Vulnerable, GetIntValue(effect.value), effect.duration);
+                {
+                    // 对敌方所有存活角色生效
+                    int vulnAmount = GetIntValue(effect.value);
+                    if (ctx.Enemies != null && ctx.Enemies.Count > 0)
+                    {
+                        foreach (var e in ctx.Enemies)
+                            if (e != null && !e.IsDead) e.AddStatus(StatusEffectType.Vulnerable, vulnAmount, effect.duration);
+                    }
+                    else if (ctx.Enemy != null && !ctx.Enemy.IsDead)
+                    {
+                        ctx.Enemy.AddStatus(StatusEffectType.Vulnerable, vulnAmount, effect.duration);
+                    }
                     break;
+                }
 
                 case "ApplyThorns":
                     ctx.Player.AddStatus(StatusEffectType.Thorns, GetIntValue(effect.value), -1);

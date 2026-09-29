@@ -49,7 +49,7 @@ public class PausePanel : BasePanel
         crt.anchorMin = new Vector2(0.5f, 0.5f);
         crt.anchorMax = new Vector2(0.5f, 0.5f);
         crt.pivot = new Vector2(0.5f, 0.5f);
-        crt.sizeDelta = new Vector2(620f, 440f);
+        crt.sizeDelta = new Vector2(620f, 520f);
         crt.anchoredPosition = Vector2.zero;
         card.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.16f, 0.98f);
 
@@ -66,7 +66,7 @@ public class PausePanel : BasePanel
         brt.anchorMax = new Vector2(0.5f, 0.5f);
         brt.pivot = new Vector2(0.5f, 0.5f);
         brt.anchoredPosition = new Vector2(0, -30);
-        brt.sizeDelta = new Vector2(420f, 210f);
+        brt.sizeDelta = new Vector2(420f, 320f);
         var vlg = buttons.GetComponent<VerticalLayoutGroup>();
         vlg.spacing = 18;
         vlg.childAlignment = TextAnchor.MiddleCenter;
@@ -84,6 +84,11 @@ public class PausePanel : BasePanel
         AddButton(buttons.transform, "设置", font, () =>
         {
             UIManager.Instance?.ShowPanel<SettingsPanel>();
+        }, false);
+
+        AddButton(buttons.transform, "牌型效果", font, () =>
+        {
+            UIManager.Instance?.ShowPanel<HandTypePanel>();
         }, false);
 
         AddButton(buttons.transform, "保存并返回主菜单", font, () =>

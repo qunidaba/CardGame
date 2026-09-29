@@ -1724,7 +1724,8 @@ else
         return new RelicEffectProcessor.Context
         {
             Player = player,
-            Enemy = GetEnemy(),
+            Enemy = GetEnemy() ?? FirstAliveEnemy(),   // 未选中目标时回退到第一个存活敌人（遗物如「易伤标记」开局触发）
+            Enemies = GetAliveEnemies(),
             HandArea = handArea,
             DeckPile = deckPile,
             RunData = runData,
@@ -1732,6 +1733,13 @@ else
             NextPlayDamageMultiplier = GetNextPlayDamageMultiplier(),
             HandTypeResult = currentHandTypeResult
         };
+    }
+
+    /// <summary>第一个存活敌人（没有则 null）</summary>
+    private BattleUnit FirstAliveEnemy()
+    {
+        var alive = GetAliveEnemies();
+        return alive.Count > 0 ? alive[0] : null;
     }
 
     /// <summary>
