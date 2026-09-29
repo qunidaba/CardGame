@@ -275,6 +275,7 @@ namespace Roguelike
         /// </summary>
         public List<int> GetCardEnchantments(int rank, Suit suit)
         {
+            if (IsPolluted(rank, suit)) return new List<int>();   // 被污染：所有附魔失效
             string key = GetCardKey(rank, suit);
             if (cardEnchantmentIds.TryGetValue(key, out var list))
                 return list;
@@ -285,6 +286,7 @@ namespace Roguelike
         /// <summary>某张牌是否已有附魔</summary>
         public bool HasCardEnchantment(int rank, Suit suit)
         {
+            if (IsPolluted(rank, suit)) return false;
             return cardEnchantmentIds.TryGetValue(GetCardKey(rank, suit), out var list) && list != null && list.Count > 0;
         }
 
@@ -401,6 +403,27 @@ namespace Roguelike
             }
             tempCardEnchantments.Clear();
         }
+
+        // ===== 本场战斗「污染」（Boss 深渊之主）：被污染的牌附魔全部失效、参与牌型伤害 -1、打出后解除 =====
+
+        private readonly HashSet<string> pollutedCardKeys = new HashSet<string>();
+
+        /// <summary>某张牌是否被污染（按物理牌 rank_suit 判定）</summary>
+        public bool IsPolluted(int rank, Suit suit) => pollutedCardKeys.Contains(GetCardKey(rank, suit));
+
+        public int PollutedCount => pollutedCardKeys.Count;
+
+        public void Pollute(int rank, Suit suit)
+        {
+            if (rank <= 0) return;
+            pollutedCardKeys.Add(GetCardKey(rank, suit));
+        }
+
+        /// <summary>解除某张牌的污染</summary>
+        public void CleansePollution(int rank, Suit suit) => pollutedCardKeys.Remove(GetCardKey(rank, suit));
+
+        /// <summary>清空所有污染（战斗开始 / 结束）</summary>
+        public void ClearPollution() => pollutedCardKeys.Clear();
 
         /// <summary>牌组里是否有某张牌拥有指定附魔</summary>
         public bool HasAnyCardWithEnchant(int enchantmentId)

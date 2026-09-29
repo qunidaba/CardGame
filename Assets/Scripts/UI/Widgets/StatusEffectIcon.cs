@@ -36,7 +36,10 @@ public class StatusEffectIcon : MonoBehaviour, IPointerEnterHandler, IPointerExi
         currentUseSuit = useSuit;
         currentOwner = owner;
 
-        nameText.text = GetShortLabel(type, suit, useSuit);
+        var info = Roguelike.StatusEffectRegistry.Get(type);
+        nameText.text = (info != null && info.LabelFunc != null)
+            ? info.LabelFunc(amount)
+            : GetShortLabel(type, suit, useSuit);
         // 「挑战」层数为 0 时也要显示（表示还没失去生命）；是否显示层数由注册表决定
         bool allowCount = Roguelike.StatusEffectRegistry.Get(type)?.ShowCount ?? true;
         bool showCount = amount > 0 || type == StatusEffectType.Challenge;

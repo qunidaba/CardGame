@@ -33,17 +33,18 @@ public class HandEffectTable
         switch (result.type)
         {
             case HandType.OnePair:
-                effects.Add(CreateEffect(EffectType.Damage, 6, "造成 6 点伤害"));
+                effects.Add(CreateEffect(EffectType.Damage, 2, "造成 2 点伤害"));
+                effects.Add(CreateEffect(EffectType.Defense, 3, "获得 3 点防御"));
                 break;
 
             case HandType.TwoConsecutivePairs:
-                effects.Add(CreateEffect(EffectType.Damage, 14, "造成 14 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 5, "获得 5 点防御"));
+                effects.Add(CreateEffect(EffectType.Damage, 6, "造成 6 点伤害"));
+                effects.Add(CreateEffect(EffectType.Defense, 9, "获得 9 点防御"));
                 break;
 
             case HandType.ThreeOfAKind:
-                effects.Add(CreateEffect(EffectType.Damage, 9, "造成 9 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 4, "获得 4 点防御"));
+                effects.Add(CreateEffect(EffectType.Damage, 6, "造成 6 点伤害"));
+                effects.Add(CreateEffect(EffectType.Defense, 6, "获得 6 点防御"));
                 break;
 
             case HandType.Straight3:
@@ -54,33 +55,33 @@ public class HandEffectTable
             case HandType.Straight4:
                 effects.Add(CreateEffect(EffectType.Damage, 11, "造成 11 点伤害"));
                 effects.Add(CreateEffect(EffectType.DrawCard, 2, "额外抽 2 张牌"));
-                effects.Add(CreateEffect(EffectType.Defense, 3, "获得 3 点防御"));
+                effects.Add(CreateEffect(EffectType.Defense, 1, "获得 1 点防御"));
                 break;
 
             case HandType.Straight5:
                 effects.Add(CreateEffect(EffectType.Damage, 14, "造成 14 点伤害"));
                 effects.Add(CreateEffect(EffectType.DrawCard, 3, "额外抽 3 张牌"));
-                effects.Add(CreateEffect(EffectType.Defense, 4, "获得 4 点防御"));
+                effects.Add(CreateEffect(EffectType.Defense, 2, "获得 2 点防御"));
                 break;
 
             case HandType.Flush3:
                 effects.Add(CreateEffect(EffectType.Damage, 12, "造成 12 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 2, "获得 2 点防御"));
+                effects.Add(CreateEffect(EffectType.Defense, 1, "获得 1 点防御"));
                 break;
 
             case HandType.Flush4:
                 effects.Add(CreateEffect(EffectType.Damage, 15, "造成 15 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 4, "获得 4 点防御"));
+                effects.Add(CreateEffect(EffectType.Defense, 2, "获得 2 点防御"));
                 break;
 
             case HandType.Flush5:
                 effects.Add(CreateEffect(EffectType.Damage, 18, "造成 18 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 6, "获得 6 点防御"));
+                effects.Add(CreateEffect(EffectType.Defense, 4, "获得 4 点防御"));
                 break;
 
             case HandType.FullHouse:
-                effects.Add(CreateEffect(EffectType.Damage, 13, "造成 13 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 5, "获得 5 点防御"));
+                effects.Add(CreateEffect(EffectType.Damage, 10, "造成 10 点伤害"));
+                effects.Add(CreateEffect(EffectType.Defense, 10, "获得 10 点防御"));
                 break;
 
             case HandType.FourOfAKind:

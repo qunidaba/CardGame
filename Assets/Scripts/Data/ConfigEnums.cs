@@ -54,7 +54,9 @@ namespace Roguelike.Data
     public enum EnemyPassive
     {
         None,       // 无
-        Weakness    // 弱点：每回合刷新 2 个弱点牌型；被非弱点牌型攻击时 +1 力量
+        Weakness,   // 弱点：每回合刷新 2 个弱点牌型；被非弱点牌型攻击时 +1 力量
+        Repeat,     // 复读：记住玩家上一手牌型，重复该牌型时伤害减半
+        Pollute     // 污染：每回合给玩家的牌污染若干张（附魔失效 / 参与牌型伤害-1 / 打出解除）
     }
 
     public enum PotionEffectType

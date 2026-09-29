@@ -129,7 +129,10 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     public event Action<bool> OnCanPlayerActChanged;
 
     // 敌人意图就绪（玩家回合开始时触发，用于显示意图）
-    public event Action OnEnemyIntentReady;
+        public event Action OnEnemyIntentReady;
+
+        /// <summary>Boss「污染」：本回合污染了 N 张牌（UI 提示用）</summary>
+        public event Action<int> OnPolluted;
 
     /// <summary>敌人行动完毕，隐藏意图显示（等下次刷新再出现）</summary>
     public event Action OnEnemyIntentHidden;
@@ -391,6 +394,97 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             if (runData.permanentFlushDamageBonus > 0 && HandEffectUtil.IsFlushHand(result))
                 HandEffectUtil.AddDamageToEffects(effects, runData.permanentFlushDamageBonus);
         }
+
+        // Boss「污染」：每张被污染的牌参与牌型 → 伤害 -1
+        if (runData != null && selected != null)
+        {
+            int polluted = 0;
+            foreach (var card in selected)
+                if (runData.IsPolluted(card.rank, card.suit)) polluted++;
+
+            if (polluted > 0)
+            {
+                var dmg = effects.Find(e => e.effectType == HandEffectTable.EffectType.Damage);
+                if (dmg != null)
+                {
+                    dmg.value = Mathf.Max(0, dmg.value - polluted);
+                    dmg.description = $"造成 {dmg.value} 点伤害";
+                }
+            }
+        }
+
+        // Boss「凝视」：与上一手同类牌型 → 伤害减半（顺子/同花/同花顺不分张数）
+        if (hasGazeCategory && result != null &&
+            WeaknessInfo.FromHandType(result.type) == lastGazeCategory &&
+            AnyAliveEnemyHasPassive("Repeat"))
+        {
+            HandEffectUtil.MultiplyDamageEffect(effects, 0.5f);
+        }
+    }
+
+    /// <summary>是否有存活敌人拥有指定被动（按 EnemyData.passive 名称）</summary>
+    private bool AnyAliveEnemyHasPassive(string passive)
+    {
+        foreach (var e in enemies)
+        {
+            if (e == null || e.IsDead) continue;
+            var data = GetEnemyData(e);
+            if (data != null && data.passive == passive) return true;
+        }
+        return false;
+    }
+
+    /// <summary>开局给 Boss 的被动挂上展示用状态（凝视 / 污染）</summary>
+    private void InitializeEnemyPassiveStatuses()
+    {
+        foreach (var e in enemies)
+        {
+            if (e == null || e.IsDead) continue;
+            var data = GetEnemyData(e);
+            if (data == null) continue;
+
+            if (data.passive == "Repeat")
+                e.StatusEffects.SetStatus(StatusEffectType.Gaze, 0, -1);   // 0 = 尚未出牌
+            else if (data.passive == "Pollute")
+                e.StatusEffects.SetStatus(StatusEffectType.Pollute, Mathf.Max(1, data.polluteCount), -1);
+        }
+    }
+
+    /// <summary>Boss 被动「污染」：每回合污染玩家手牌 / 抽牌堆里若干张牌（附魔失效 / 参与牌型-1 / 打出解除）</summary>
+    private void ApplyPollution()
+    {
+        if (runData == null) return;
+
+        int count = 0;
+        foreach (var e in enemies)
+        {
+            if (e == null || e.IsDead) continue;
+            var data = GetEnemyData(e);
+            if (data != null && data.passive == "Pollute")
+                count += Mathf.Max(1, data.polluteCount);
+        }
+        if (count <= 0) return;
+
+        // 候选：手牌 + 抽牌堆中尚未被污染的牌
+        var candidates = new List<CardData>();
+        if (handArea != null) candidates.AddRange(handArea.HandCards);
+        if (deckPile != null) candidates.AddRange(deckPile.GetCards());
+        candidates.RemoveAll(c => c == null || runData.IsPolluted(c.rank, c.suit));
+        if (candidates.Count == 0) return;
+
+        for (int i = candidates.Count - 1; i > 0; i--)
+        {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            (candidates[i], candidates[j]) = (candidates[j], candidates[i]);
+        }
+
+        int n = Mathf.Min(count, candidates.Count);
+        for (int i = 0; i < n; i++)
+            runData.Pollute(candidates[i].rank, candidates[i].suit);
+
+        Debug.Log($"[污染] 深渊污染了 {n} 张牌（本场已污染 {runData.PollutedCount}）");
+        OnPolluted?.Invoke(n);
+        OnCardEnchantmentsChanged?.Invoke();   // 刷新手牌（污染标记）
     }
 
     /// <summary>
@@ -487,7 +581,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
     // --- 命格 ---
     public event Action OnDestinyChanged;   // 命格/命运之力变化（UI 刷新）
-    private int playsThisTurn = 0;          // 本回合出牌次数（黑桃 Lv2/Lv3）
+        private int playsThisTurn = 0;          // 本回合出牌次数（黑桃 Lv2/Lv3）
+        private WeaknessType lastGazeCategory;   // Boss「凝视」：上一手牌型（同类归一）
+        private bool hasGazeCategory;
 
     /// <summary>
     /// 初始化一场新战斗（兼容旧接口）
@@ -592,12 +688,15 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             Debug.LogWarning("[BattleManager] 敌人列表为空，使用占位敌人");
         }
 
+        InitializeEnemyPassiveStatuses();   // Boss 被动展示状态（凝视 / 污染）：开局就显示
+
         Debug.Log($"[BattleManager] 战斗开始，敌人 {enemies.Count} 个：{string.Join("、", enemyDatas.ConvertAll(d => d.name))}");
 
         deckPile = new DeckPile();
 
-        // 使用带附魔的牌组（先清掉上一场遗留的临时附魔）
+        // 使用带附魔的牌组（先清掉上一场遗留的临时附魔 / 污染）
         runData.ClearTempEnchantments();
+        runData.ClearPollution();
         var fullDeck = DeckBuilder.BuildDeckWithEnchantments(runData);
         deckPile.Init(fullDeck);
 
@@ -1104,6 +1203,20 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         playsThisTurn++;
         ApplyPlayBonuses(effects, selected, result, playsThisTurn, consumeRage: true);
 
+        // Boss「凝视」：记住这一手（同类牌型 → 伤害减半，判定在 ApplyPlayBonuses 里）
+        var gazeCategory = WeaknessInfo.FromHandType(result.type);
+        lastGazeCategory = gazeCategory;
+        hasGazeCategory = true;
+
+        // 把「凝视」挂成状态显示在敌人身上（amount = 类别 + 1，0 = 尚未出牌）
+        foreach (var e in enemies)
+        {
+            if (e == null || e.IsDead) continue;
+            var data = GetEnemyData(e);
+            if (data != null && data.passive == "Repeat")
+                e.StatusEffects.SetStatus(StatusEffectType.Gaze, (int)gazeCategory + 1, -1);
+        }
+
         // 命格：红桃 Lv3 吸血（百分比集中在 DestinyPassiveSystem）
         if (DestinyPassiveSystem.HasHeartLifesteal(runData))
         {
@@ -1145,6 +1258,11 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
         // 先把打出的牌从手牌移除（这样「出牌后抽牌」能按出牌后的手牌数判断余量）
         handArea.RemoveCards(selected);
+
+        // Boss「污染」：打出的牌解除污染
+        if (runData != null)
+            foreach (var card in selected)
+                runData.CleansePollution(card.rank, card.suit);
 
         // 应用基础牌型效果（伤害/防御/抽牌/治疗，包含遗物额外伤害）
         relicProcessor.ApplyHandTypeEffects(effects, ctx);
@@ -1346,6 +1464,9 @@ else
         enchantmentSystem?.OnTurnStart();
         yield return new WaitForSeconds(phaseDelay);
 
+        // Boss 被动「污染」：每回合污染玩家若干张牌
+        ApplyPollution();
+
         // 阶段 2: DoT 逐个结算 (中毒/灼烧/再生)，逐个敌人处理
         // 放在清除防御之前，让敌人残留的防御能吸收这部分伤害
         OnEnemyPhaseChanged?.Invoke("DoT");
@@ -1531,6 +1652,7 @@ else
             player?.OnCombatEnd();
             foreach (var unit in enemies) unit?.OnCombatEnd();
             runData.ClearTempEnchantments();
+            runData.ClearPollution();
         }
         else if (GetAliveEnemies().Count == 0)
         {
@@ -1580,6 +1702,7 @@ else
         player?.OnCombatEnd();
         foreach (var unit in enemies) unit?.OnCombatEnd();
         runData.ClearTempEnchantments();
+        runData.ClearPollution();
     }
 
     /// <summary>

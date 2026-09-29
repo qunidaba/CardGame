@@ -370,6 +370,7 @@ public partial class BattlePanel : BasePanel
         battleManager.OnTargetChanged += OnTargetChanged;
         battleManager.OnEnemyIntentHidden += OnEnemyIntentHidden;
         battleManager.OnEnemyActing += OnEnemyActing;
+        battleManager.OnPolluted += OnPolluted;
         battleManager.OnSuitTallyChanged += OnSuitTallyChanged;
         battleManager.OnCardEnchantmentsChanged += ForceRefreshHand;
         battleManager.OnDestinyChanged += RefreshDestinyHud;
@@ -419,6 +420,7 @@ public partial class BattlePanel : BasePanel
         battleManager.OnTargetChanged -= OnTargetChanged;
         battleManager.OnEnemyIntentHidden -= OnEnemyIntentHidden;
         battleManager.OnEnemyActing -= OnEnemyActing;
+        battleManager.OnPolluted -= OnPolluted;
         battleManager.OnSuitTallyChanged -= OnSuitTallyChanged;
         battleManager.OnCardEnchantmentsChanged -= ForceRefreshHand;
         battleManager.OnDestinyChanged -= RefreshDestinyHud;
@@ -492,6 +494,11 @@ public partial class BattlePanel : BasePanel
     private void OnEnemyActing(BattleUnit unit, Roguelike.Data.IntentData intent)
     {
         FindSlot(unit)?.PlayWindup();   // 出手前摇：放大 + 变红 + 意图闪烁
+    }
+
+    private void OnPolluted(int count)
+    {
+        ShowToast($"深渊污染了 {count} 张牌");   // Boss「污染」
     }
 
     private void OnEnemyDamageTaken(BattleUnit unit, int damage)

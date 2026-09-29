@@ -21,6 +21,7 @@ namespace Roguelike
         // 动态生成（可为 null，用默认实现）
         public Func<Suit, bool, string> NameFunc;
         public Func<Suit, bool, string> ShortLabelFunc;
+        public Func<int, string> LabelFunc;   // 图标文字（按层数/数值动态，如「凝视」显示牌型单字）
         public Func<int, Suit, BattleUnit, string> DescriptionFunc;
 
         public string GetName(Suit suit, bool useSuit)
@@ -177,6 +178,18 @@ namespace Roguelike
                     return $"本回合弱点：{sb}（用其它牌型攻击它会使其 +1 力量）";
                 });
             Reg(StatusEffectType.Burrow, "遁地", "遁", desc: (a, s, o) => $"受到的攻击伤害固定为 1；还需 {a} 次攻击才会出来");
+            Reg(StatusEffectType.Gaze, "凝视", "凝", showCount: false, showDuration: false,
+                labelFunc: a => a >= 1 ? WeaknessInfo.Short((WeaknessType)(a - 1)) : "凝",
+                desc: (a, s, o) => a >= 1
+                    ? $"已记住你上一手：{WeaknessInfo.Name((WeaknessType)(a - 1))}；再打出同类牌型时伤害减半"
+                    : "尚未出牌；打出一手后会记住该牌型（同类牌型伤害减半）");
+            Reg(StatusEffectType.Pollute, "污染", "污", showDuration: false,
+                desc: (a, s, o) =>
+                {
+                    int polluted = Roguelike.RunDirector.Instance != null && Roguelike.RunDirector.Instance.RunData != null
+                        ? Roguelike.RunDirector.Instance.RunData.PollutedCount : 0;
+                    return $"每回合污染玩家 {a} 张牌；当前已污染 {polluted} 张\n（被污染的牌附魔失效、参与牌型伤害 -1、打出后解除）";
+                });
         }
 
         // ===== 注册辅助 =====
@@ -186,7 +199,8 @@ namespace Roguelike
             Func<Suit, bool, string> nameFunc = null,
             Func<Suit, bool, string> shortLabelFunc = null,
             Func<int, Suit, BattleUnit, string> desc = null,
-            bool showCount = true, bool showDuration = true, bool neg = false)
+            bool showCount = true, bool showDuration = true, bool neg = false,
+            Func<int, string> labelFunc = null)
         {
             _infos[type] = new StatusEffectInfo
             {
@@ -195,6 +209,7 @@ namespace Roguelike
                 ShortLabel = shortLabel,
                 NameFunc = nameFunc,
                 ShortLabelFunc = shortLabelFunc,
+                LabelFunc = labelFunc,
                 DescriptionFunc = desc,
                 ShowCount = showCount,
                 ShowDuration = showDuration,

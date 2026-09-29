@@ -96,48 +96,65 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     {
         if (cardData == null) return;
 
-        // 文本显示附魔名称（压缩：最多显示 maxNamesOnCard 个，超出显示 +N）
+        bool polluted = Roguelike.RunDirector.Instance?.RunData?.IsPolluted(cardData.rank, cardData.suit) ?? false;
+
+        // 污染：立绘变暗紫
+        if (artworkImage != null)
+            artworkImage.color = polluted ? new Color(0.55f, 0.35f, 0.7f) : Color.white;
+
+        // 文本显示附魔名称（污染时显示「污染」，否则最多显示 maxNamesOnCard 个，超出显示 +N）
         if (enchantmentText != null)
         {
-            var names = cardData.GetEnchantmentNames();
-            if (names.Count > 0)
+            if (polluted)
             {
-                int show = Mathf.Min(names.Count, Mathf.Max(1, maxNamesOnCard));
-                string text = string.Join("\n", names.GetRange(0, show));
-                if (names.Count > show)
-                    text += $"\n<size=80%>+{names.Count - show}</size>";
-                enchantmentText.text = text;
+                enchantmentText.text = "<color=#C060FF>污染</color>";
                 enchantmentText.enabled = true;
             }
             else
             {
-                enchantmentText.text = "";
-                enchantmentText.enabled = false;
+                var names = cardData.GetEnchantmentNames();
+                if (names.Count > 0)
+                {
+                    int show = Mathf.Min(names.Count, Mathf.Max(1, maxNamesOnCard));
+                    string text = string.Join("\n", names.GetRange(0, show));
+                    if (names.Count > show)
+                        text += $"\n<size=80%>+{names.Count - show}</size>";
+                    enchantmentText.text = text;
+                    enchantmentText.enabled = true;
+                }
+                else
+                {
+                    enchantmentText.text = "";
+                    enchantmentText.enabled = false;
+                }
             }
         }
 
-        // 图标显示（如果有容器和预制体）
+        // 图标显示（如果有容器和预制体）；污染时不显示附魔图标
         if (enchantmentIconContainer != null && enchantmentIconPrefab != null)
         {
             // 清空旧图标
             foreach (Transform child in enchantmentIconContainer)
                 Destroy(child.gameObject);
 
-            foreach (int enchId in cardData.GetLiveEnchantmentIds())
+            if (!polluted)
             {
-                var ench = Roguelike.Data.ConfigLoader.GetEnchantment(enchId);
-                if (ench != null)
+                foreach (int enchId in cardData.GetLiveEnchantmentIds())
                 {
-                    var iconObj = Instantiate(enchantmentIconPrefab, enchantmentIconContainer);
-                    var iconImage = iconObj.GetComponent<Image>();
-                    var nameText = iconObj.GetComponentInChildren<TextMeshProUGUI>();
-                    if (iconImage != null)
+                    var ench = Roguelike.Data.ConfigLoader.GetEnchantment(enchId);
+                    if (ench != null)
                     {
-                        // 这里可以加载附魔图标 Sprite
-                        // iconImage.sprite = Resources.Load<Sprite>($"Enchantments/{ench.name}");
+                        var iconObj = Instantiate(enchantmentIconPrefab, enchantmentIconContainer);
+                        var iconImage = iconObj.GetComponent<Image>();
+                        var nameText = iconObj.GetComponentInChildren<TextMeshProUGUI>();
+                        if (iconImage != null)
+                        {
+                            // 这里可以加载附魔图标 Sprite
+                            // iconImage.sprite = Resources.Load<Sprite>($"Enchantments/{ench.name}");
+                        }
+                        if (nameText != null)
+                            nameText.text = ench.name;
                     }
-                    if (nameText != null)
-                        nameText.text = ench.name;
                 }
             }
         }
@@ -183,16 +200,22 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
 
     private string BuildTooltip()
     {
-        var ids = cardData.GetLiveEnchantmentIds();
-        if (ids == null || ids.Count == 0) return "无附魔";
+        bool polluted = Roguelike.RunDirector.Instance?.RunData?.IsPolluted(cardData.rank, cardData.suit) ?? false;
 
         var sb = new System.Text.StringBuilder();
-        foreach (int id in ids)
+        if (polluted)
+            sb.Append("<color=#C060FF>污染</color>\n附魔失效；参与牌型伤害 -1；打出后解除污染");
+
+        var ids = cardData.GetLiveEnchantmentIds();
+        if (ids != null)
         {
-            var ench = Roguelike.Data.ConfigLoader.GetEnchantment(id);
-            if (ench == null) continue;
-            if (sb.Length > 0) sb.Append("\n");
-            sb.Append($"<color=#FFD700>{ench.name}</color>\n{ench.description}");
+            foreach (int id in ids)
+            {
+                var ench = Roguelike.Data.ConfigLoader.GetEnchantment(id);
+                if (ench == null) continue;
+                if (sb.Length > 0) sb.Append("\n");
+                sb.Append($"<color=#FFD700>{ench.name}</color>\n{ench.description}");
+            }
         }
         return sb.Length > 0 ? sb.ToString() : "无附魔";
     }

@@ -110,6 +110,7 @@ public class EnemySlotUI : MonoBehaviour, IPointerClickHandler
         selectionBox.raycastTarget = false;         // 不挡点击
         selectionBox.preserveAspect = true;
         selectionBox.enabled = false;
+        ringGo.transform.SetAsFirstSibling();   // 选择框放到最下面（压在立绘背后）
 
         // ---- 血条 + 压在血条上的血量数字 ----
         float barWidth = Mathf.Max(90f, width - 96f);

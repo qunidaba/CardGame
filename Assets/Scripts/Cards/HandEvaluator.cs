@@ -292,4 +292,71 @@ public static class WeaknessInfo
             default: return w.ToString();
         }
     }
+
+    /// <summary>单字（图标用）</summary>
+    public static string Short(WeaknessType w)
+    {
+        switch (w)
+        {
+            case WeaknessType.OnePair: return "对";
+            case WeaknessType.TwoConsecutivePairs: return "连";
+            case WeaknessType.ThreeOfAKind: return "三";
+            case WeaknessType.Straight: return "顺";
+            case WeaknessType.Flush: return "同";
+            case WeaknessType.FullHouse: return "葫";
+            case WeaknessType.FourOfAKind: return "四";
+            case WeaknessType.StraightFlush: return "花";
+            default: return "?";
+        }
+    }
+}
+
+/// <summary>牌型中文名（Boss「凝视」状态显示用）</summary>
+public static class HandTypeNames
+{
+    /// <summary>完整名</summary>
+    public static string Full(HandType t)
+    {
+        switch (t)
+        {
+            case HandType.OnePair: return "一对";
+            case HandType.TwoConsecutivePairs: return "两连对";
+            case HandType.ThreeOfAKind: return "三条";
+            case HandType.Straight3: return "顺子(3)";
+            case HandType.Straight4: return "顺子(4)";
+            case HandType.Straight5: return "顺子(5)";
+            case HandType.Flush3: return "同花(3)";
+            case HandType.Flush4: return "同花(4)";
+            case HandType.Flush5: return "同花(5)";
+            case HandType.FullHouse: return "葫芦";
+            case HandType.FourOfAKind: return "四条";
+            case HandType.StraightFlush3: return "同花顺(3)";
+            case HandType.StraightFlush4: return "同花顺(4)";
+            case HandType.StraightFlush5: return "同花顺(5)";
+            default: return t.ToString();
+        }
+    }
+
+    /// <summary>单字（图标上显示）</summary>
+    public static string Short(HandType t)
+    {
+        switch (t)
+        {
+            case HandType.OnePair: return "对";
+            case HandType.TwoConsecutivePairs: return "连";
+            case HandType.ThreeOfAKind: return "三";
+            case HandType.Straight3:
+            case HandType.Straight4:
+            case HandType.Straight5: return "顺";
+            case HandType.Flush3:
+            case HandType.Flush4:
+            case HandType.Flush5: return "同";
+            case HandType.FullHouse: return "葫";
+            case HandType.FourOfAKind: return "四";
+            case HandType.StraightFlush3:
+            case HandType.StraightFlush4:
+            case HandType.StraightFlush5: return "花";
+            default: return "?";
+        }
+    }
 }

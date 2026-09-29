@@ -28,6 +28,7 @@ namespace Roguelike.Data
         public bool isBoss;
         public List<string> pools = new List<string>();
         public string passive;                            // 被动（EnemyPassive 名称，如 Weakness；留空 = 无）
+        public int polluteCount = 2;                       // 被动 Pollute：每回合污染的牌数
     }
 
     public class IntentData

@@ -98,7 +98,8 @@ namespace Roguelike.Data
                 relicDrop = GetBool(d, "relicDrop"),
                 bossRelic = GetBool(d, "bossRelic"),
                 isBoss = GetBool(d, "isBoss"),
-                passive = GetString(d, "passive")
+                passive = GetString(d, "passive"),
+                polluteCount = GetInt(d, "polluteCount", 2)
             };
 
             if (d.TryGetValue("frames", out var fr) && fr is List<object> frList)
