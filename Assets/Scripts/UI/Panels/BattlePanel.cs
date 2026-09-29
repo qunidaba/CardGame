@@ -369,6 +369,7 @@ public partial class BattlePanel : BasePanel
         battleManager.OnEnemyIntentReady += OnEnemyIntentReady;
         battleManager.OnTargetChanged += OnTargetChanged;
         battleManager.OnEnemyIntentHidden += OnEnemyIntentHidden;
+        battleManager.OnEnemyActing += OnEnemyActing;
         battleManager.OnSuitTallyChanged += OnSuitTallyChanged;
         battleManager.OnCardEnchantmentsChanged += ForceRefreshHand;
         battleManager.OnDestinyChanged += RefreshDestinyHud;
@@ -417,6 +418,7 @@ public partial class BattlePanel : BasePanel
         battleManager.OnEnemyIntentReady -= OnEnemyIntentReady;
         battleManager.OnTargetChanged -= OnTargetChanged;
         battleManager.OnEnemyIntentHidden -= OnEnemyIntentHidden;
+        battleManager.OnEnemyActing -= OnEnemyActing;
         battleManager.OnSuitTallyChanged -= OnSuitTallyChanged;
         battleManager.OnCardEnchantmentsChanged -= ForceRefreshHand;
         battleManager.OnDestinyChanged -= RefreshDestinyHud;
@@ -485,6 +487,11 @@ public partial class BattlePanel : BasePanel
             if (slot == null) return;
             slot.RefreshHp();
         }, refreshEnemyUi: false);
+    }
+
+    private void OnEnemyActing(BattleUnit unit, Roguelike.Data.IntentData intent)
+    {
+        FindSlot(unit)?.PlayWindup();   // 出手前摇：放大 + 变红 + 意图闪烁
     }
 
     private void OnEnemyDamageTaken(BattleUnit unit, int damage)

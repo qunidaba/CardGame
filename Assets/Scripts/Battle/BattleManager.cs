@@ -120,7 +120,10 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
     // --- 回合阶段事件（UI 订阅做动画/提示）---
     public event Action<string> OnPlayerPhaseChanged;   // phase name: "ClearDefense", "DrawCards", "TurnStartEffects", "WaitInput", "DiscardHand", "TurnEndEffects"
-    public event Action<string> OnEnemyPhaseChanged;    // phase name: "TurnStart", "ClearDefense", "TurnStartEffects", "DoT", "ShowIntent", "Act", "TurnEndEffects", "TurnEnd"
+        public event Action<string> OnEnemyPhaseChanged;    // phase name: "TurnStart", "ClearDefense", "TurnStartEffects", "DoT", "ShowIntent", "Act", "TurnEndEffects", "TurnEnd"
+
+        /// <summary>敌人出手前（前摇）：unit = 出手的敌人，intent = 它将执行的意图。UI 播放大/变红/意图闪烁。</summary>
+        public event Action<BattleUnit, Roguelike.Data.IntentData> OnEnemyActing;
 
     // --- 玩家可操作状态变化 ---
     public event Action<bool> OnCanPlayerActChanged;
@@ -158,7 +161,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     public float phaseDelay = 0.5f;           // 通用阶段间隔
     public float dotInterval = 0.3f;          // DoT 逐个结算间隔
     public float hitInterval = 0.25f;         // 多段伤害每段间隔
-    public float intentDisplayDuration = 1.0f; // 意图显示时长
+        public float intentDisplayDuration = 1.0f; // 意图显示时长
+        public float enemyWindupDelay = 0.2f;      // 敌人出手前摇时长（前摇动画在 UI 侧播）
     public float drawCardInterval = 0.06f;    // 抽牌逐张间隔（0 = 一次性）
 
     // --- 状态 ---
@@ -1388,6 +1392,10 @@ else
 
             var intent = GetIntentOf(unit);
             if (intent == null) continue;
+
+            // 出手前摇：让 UI 播放预警（放大 / 变红 / 意图闪烁），停一小会儿再真正行动
+            OnEnemyActing?.Invoke(unit, intent);
+            if (enemyWindupDelay > 0f) yield return new WaitForSeconds(enemyWindupDelay);
 
             yield return ExecuteOneIntent(intent, unit);
 

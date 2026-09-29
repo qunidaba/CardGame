@@ -278,6 +278,58 @@ public class EnemySlotUI : MonoBehaviour, IPointerClickHandler
         if (intentText != null) intentText.text = text ?? "";
     }
 
+    private Coroutine windupRoutine;
+
+    /// <summary>出手前摇：立绘放大→回弹 + 变红 + 意图闪烁</summary>
+    public void PlayWindup()
+    {
+        if (!isActiveAndEnabled) return;
+        if (windupRoutine != null) StopCoroutine(windupRoutine);
+        windupRoutine = StartCoroutine(WindupRoutine());
+    }
+
+    private IEnumerator WindupRoutine()
+    {
+        var art = artwork != null ? artwork.rectTransform : null;
+        Color artBase = artwork != null ? artwork.color : Color.white;
+        Color intentBase = intentText != null ? intentText.color : Color.white;
+        Color warn = new Color(1f, 0.42f, 0.34f);
+
+        Vector3 baseScale = art != null ? art.localScale : Vector3.one;
+        Vector3 peak = baseScale * 1.18f;
+
+        const float up = 0.1f;
+        const float hold = 0.04f;
+        const float down = 0.1f;
+
+        float t = 0f;
+        while (t < up)
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / up);
+            if (art != null) art.localScale = Vector3.Lerp(baseScale, peak, k);
+            if (artwork != null) artwork.color = Color.Lerp(artBase, warn, k);
+            if (intentText != null) intentText.color = Color.Lerp(intentBase, warn, k);
+            yield return null;
+        }
+        if (hold > 0f) yield return new WaitForSeconds(hold);
+        t = 0f;
+        while (t < down)
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / down);
+            if (art != null) art.localScale = Vector3.Lerp(peak, baseScale, k);
+            if (artwork != null) artwork.color = Color.Lerp(warn, artBase, k);
+            if (intentText != null) intentText.color = Color.Lerp(warn, intentBase, k);
+            yield return null;
+        }
+
+        if (art != null) art.localScale = baseScale;
+        if (artwork != null) artwork.color = artBase;
+        if (intentText != null) intentText.color = intentBase;
+        windupRoutine = null;
+    }
+
     /// <summary>选中高亮：立绘背后播放两帧选择框动画 + 名字变金</summary>
     public void SetSelected(bool value)
     {
