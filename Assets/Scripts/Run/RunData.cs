@@ -293,6 +293,7 @@ namespace Roguelike
         /// </summary>
         public void AddEnchantment(int rank, Suit suit, int enchantmentId)
         {
+            CodexData.DiscoverEnchantment(enchantmentId);   // 图鉴：获得即算发现
             string key = GetCardKey(rank, suit);
             if (!cardEnchantmentIds.ContainsKey(key))
                 cardEnchantmentIds[key] = new List<int>();
@@ -446,6 +447,7 @@ namespace Roguelike
             if (_relicIds.Contains(relicId)) return false;
             if (_relicIds.Count >= RelicSystem.MaxSlots) return false;
             _relicIds.Add(relicId);
+            CodexData.DiscoverRelic(relicId);   // 图鉴
             ApplyRelicAcquireEffects(relicId);   // 应用 OnAcquire 效果（如 神之血 +10 最大生命）
             OnRelicsChanged?.Invoke();
             return true;
@@ -501,6 +503,7 @@ namespace Roguelike
             if (!_relicIds.Contains(oldRelicId)) return false;
             _relicIds.Remove(oldRelicId);
             _relicIds.Add(newRelicId);
+            CodexData.DiscoverRelic(newRelicId);   // 图鉴
             ApplyRelicAcquireEffects(newRelicId);
             OnRelicsChanged?.Invoke();
             return true;
@@ -516,6 +519,7 @@ namespace Roguelike
         {
             if (_potionIds.Count >= MaxPotions) return false;
             _potionIds.Add(potionId);
+            CodexData.DiscoverPotion(potionId);   // 图鉴
             OnPotionsChanged?.Invoke();
             return true;
         }
@@ -537,6 +541,7 @@ namespace Roguelike
 
             _potionIds.Remove(oldPotionId);
             _potionIds.Add(newPotionId);
+            CodexData.DiscoverPotion(newPotionId);   // 图鉴
             OnPotionsChanged?.Invoke();
             return true;
         }

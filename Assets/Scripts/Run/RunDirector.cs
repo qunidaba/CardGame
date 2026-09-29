@@ -1383,6 +1383,14 @@ namespace Roguelike
             var inv = prebuilt ?? shopSystem.Generate(RunData);
             currentShopInv = inv;
 
+            // 图鉴：商店里出现过的附魔 / 遗物 / 药水都算「发现」
+            if (inv != null)
+            {
+                foreach (var e in inv.relics) CodexData.DiscoverRelic(e.id);
+                foreach (var e in inv.potions) CodexData.DiscoverPotion(e.id);
+                foreach (var e in inv.enchantments) CodexData.DiscoverEnchantment(e.enchantmentId);
+            }
+
             var panel = uiManager.ShowPanel<ShopPanel>();
             if (panel == null)
             {

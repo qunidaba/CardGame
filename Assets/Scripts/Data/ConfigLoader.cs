@@ -401,6 +401,7 @@ namespace Roguelike.Data
                 id = GetInt(d, "id"),
                 name = GetString(d, "name"),
                 description = GetString(d, "description"),
+                rarity = GetString(d, "rarity", "Common"),
                 icon = GetString(d, "icon")
             };
 

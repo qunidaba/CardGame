@@ -133,6 +133,7 @@ namespace Roguelike.Data
         public int id;
         public string name;
         public string description;
+        public string rarity = "Common";   // Common 普通 / Rare 稀有 / Epic 史诗
         public PotionEffectData effect = new PotionEffectData();
         public string icon;
     }

@@ -76,6 +76,7 @@ public class MainMenuPanel : BasePanel
             // 只有存在存档时才显示「继续游戏」，位置在「开始游戏」下方
             CreateButton(container.transform, "继续游戏", new Vector2(400, 74), OnContinueGame, font, true);
         }
+        CreateButton(container.transform, "图鉴", new Vector2(400, 74), OnOpenCodex, font, false);
         CreateButton(container.transform, "玩法说明", new Vector2(400, 74), OnOpenHelp, font, false);
         CreateButton(container.transform, "设置", new Vector2(400, 74), OnOpenSettings, font, false);
         CreateButton(container.transform, "退出游戏", new Vector2(400, 74), OnQuit, font, false);
@@ -122,6 +123,11 @@ public class MainMenuPanel : BasePanel
     private void OnOpenHelp()
     {
         if (UIManager.Instance != null) UIManager.Instance.ShowPanel<HelpPanel>();
+    }
+
+    private void OnOpenCodex()
+    {
+        if (UIManager.Instance != null) UIManager.Instance.ShowPanel<CodexPanel>();
     }
 
     private void OnQuit()

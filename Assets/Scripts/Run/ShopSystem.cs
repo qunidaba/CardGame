@@ -65,7 +65,9 @@ namespace Roguelike
             }
 
             // ===== 药水：随机 2~3 个（同种药水可重复，所以不排除已拥有）=====
+            // 事件专属药水（rarity = Event）不进商店
             var potionPool = new List<PotionData>(ConfigLoader.Config.potions);
+            potionPool.RemoveAll(p => p.rarity == "Event");
             Shuffle(potionPool);
             int potionCount = Mathf.Min(3, potionPool.Count);
             for (int i = 0; i < potionCount; i++)
@@ -75,7 +77,7 @@ namespace Roguelike
                 {
                     kind = "potion",
                     id = p.id,
-                    price = GetPotionPrice(),
+                    price = GetPotionPrice(p.rarity),
                     label = p.name
                 });
             }
@@ -182,8 +184,16 @@ namespace Roguelike
             }
         }
 
-        /// <summary>药水价格</summary>
-        private static int GetPotionPrice() => 50;
+        /// <summary>药水价格（按稀有度：普通 10 / 稀有 20 / 史诗 30）</summary>
+        private static int GetPotionPrice(string rarity)
+        {
+            switch (rarity)
+            {
+                case "Epic": return 30;
+                case "Rare": return 20;
+                default: return 10;
+            }
+        }
 
         /// <summary>附魔基础价（按稀有度等级 1/2/3）</summary>
         private static int GetEnchantBasePrice(int tier)

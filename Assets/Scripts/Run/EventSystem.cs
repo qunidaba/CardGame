@@ -416,7 +416,9 @@ namespace Roguelike
                         if (pool.Count > 0)
                         {
                             if (map == null) map = new Dictionary<int, PreparedItem>();
-                            map[i] = new PreparedItem { isPotion = false, id = pool[UnityEngine.Random.Range(0, pool.Count)].id };
+                            int id = pool[UnityEngine.Random.Range(0, pool.Count)].id;
+                            CodexData.DiscoverRelic(id);   // 图鉴：事件里展示过即算发现
+                            map[i] = new PreparedItem { isPotion = false, id = id };
                         }
                     }
                     else if (r.type == "GainPotion")
@@ -425,7 +427,9 @@ namespace Roguelike
                         if (potions != null && potions.Count > 0)
                         {
                             if (map == null) map = new Dictionary<int, PreparedItem>();
-                            map[i] = new PreparedItem { isPotion = true, id = potions[UnityEngine.Random.Range(0, potions.Count)].id };
+                            int id = potions[UnityEngine.Random.Range(0, potions.Count)].id;
+                            CodexData.DiscoverPotion(id);  // 图鉴
+                            map[i] = new PreparedItem { isPotion = true, id = id };
                         }
                     }
                 }

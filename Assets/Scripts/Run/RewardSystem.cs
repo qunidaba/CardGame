@@ -27,6 +27,12 @@ namespace Roguelike
         public static bool ForceRelicDrop = true;          // 强制掉落遗物（测试用）
         public static bool ForcePotionDrop = false;         // 强制掉落药水（测试用）
 
+        /// <summary>药水稀有度掉落权重：普通 45 / 稀有 30 / 史诗 25</summary>
+        private static readonly (string rarity, int weight)[] PotionRarityWeights =
+        {
+            ("Common", 45), ("Rare", 30), ("Epic", 25)
+        };
+
         public CombatReward GenerateCombatReward(RunData runData, bool isElite, bool isBoss, List<EnemyData> enemies = null)
         {
             var reward = new CombatReward();
@@ -77,14 +83,19 @@ namespace Roguelike
             potionChance *= PotionDropRateMultiplier;
             if (ForcePotionDrop || potionChance >= 1f || UnityEngine.Random.value < potionChance)
             {
-                var potions = ConfigLoader.Config.potions;
-                if (potions != null && potions.Count > 0)
-                    reward.potionId = potions[UnityEngine.Random.Range(0, potions.Count)].id;
+                var potion = PickRandomPotionByRarity();
+                if (potion != null) reward.potionId = potion.id;
             }
 
             // 附魔三选一（梅花 Lv2 → 四选一）——选项数集中在 DestinyPassiveSystem
             int optCount = DestinyPassiveSystem.GetEnchantOptionCount(runData);
             reward.enchantmentOptions = GenerateEnchantmentOptions(runData, optCount);
+
+            // 图鉴：战斗奖励里出现过的都算「发现」
+            if (reward.relicId > 0) CodexData.DiscoverRelic(reward.relicId);
+            if (reward.potionId > 0) CodexData.DiscoverPotion(reward.potionId);
+            foreach (var opt in reward.enchantmentOptions)
+                CodexData.DiscoverEnchantment(opt.enchantmentId);
 
             return reward;
         }
@@ -192,6 +203,33 @@ namespace Roguelike
             };
 
             return $"{rankStr}{suitSymbol}";
+        }
+
+        /// <summary>按稀有度权重（普通 45 / 稀有 30 / 史诗 25）随机一种药水；该稀有度为空则跳过。
+        /// 事件专属药水（rarity = Event）不参与随机掉落。</summary>
+        private static PotionData PickRandomPotionByRarity()
+        {
+            var all = ConfigLoader.Config?.potions;
+            if (all == null || all.Count == 0) return null;
+
+            var pool = all.FindAll(p => p.rarity != "Event");
+            if (pool.Count == 0) return null;
+
+            int total = 0;
+            foreach (var w in PotionRarityWeights)
+                if (pool.Exists(p => p.rarity == w.rarity)) total += w.weight;
+
+            if (total <= 0) return pool[UnityEngine.Random.Range(0, pool.Count)];
+
+            int roll = UnityEngine.Random.Range(0, total);
+            foreach (var w in PotionRarityWeights)
+            {
+                var sub = pool.FindAll(p => p.rarity == w.rarity);
+                if (sub.Count == 0) continue;
+                if (roll < w.weight) return sub[UnityEngine.Random.Range(0, sub.Count)];
+                roll -= w.weight;
+            }
+            return pool[UnityEngine.Random.Range(0, pool.Count)];
         }
 
         private EnchantmentData PickRandomEnchantment(RunData runData, int minTier = 1)

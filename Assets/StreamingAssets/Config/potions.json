@@ -4,6 +4,7 @@
             "id": 1,
             "name": "治疗药水",
             "description": "回复 10% 最大生命",
+            "rarity": "Common",
             "effect": {
                 "type": "HealPercent",
                 "value": 0.1,
@@ -17,6 +18,7 @@
             "id": 2,
             "name": "暴怒药水",
             "description": "下一次出牌伤害翻倍",
+            "rarity": "Epic",
             "effect": {
                 "type": "ApplyStatus",
                 "value": 1,
@@ -30,6 +32,7 @@
             "id": 3,
             "name": "铁壁药水",
             "description": "获得 10 防御",
+            "rarity": "Common",
             "effect": {
                 "type": "GainDefense",
                 "value": 10,
@@ -43,6 +46,7 @@
             "id": 4,
             "name": "敏捷药水",
             "description": "抽 3 张牌",
+            "rarity": "Common",
             "effect": {
                 "type": "DrawCards",
                 "value": 3,
@@ -56,6 +60,7 @@
             "id": 5,
             "name": "剧毒药水",
             "description": "给敌人施加 5 层中毒（3 回合）",
+            "rarity": "Rare",
             "effect": {
                 "type": "ApplyStatus",
                 "value": 5,
@@ -69,6 +74,7 @@
             "id": 6,
             "name": "力量药水",
             "description": "获得 2 层力量",
+            "rarity": "Rare",
             "effect": {
                 "type": "ApplyStatus",
                 "value": 2,
@@ -82,6 +88,7 @@
             "id": 7,
             "name": "再生药水",
             "description": "获得 3 回合 3 层再生",
+            "rarity": "Rare",
             "effect": {
                 "type": "ApplyStatus",
                 "value": 3,
@@ -95,6 +102,7 @@
             "id": 8,
             "name": "虚弱药水",
             "description": "给敌人施加 2 层虚弱（2 回合）",
+            "rarity": "Common",
             "effect": {
                 "type": "ApplyStatus",
                 "value": 2,
@@ -108,6 +116,7 @@
             "id": 9,
             "name": "易伤药水",
             "description": "给敌人施加 5 层易伤（2 回合）",
+            "rarity": "Rare",
             "effect": {
                 "type": "ApplyStatus",
                 "value": 5,
@@ -121,6 +130,7 @@
             "id": 10,
             "name": "坚壁药水",
             "description": "本回合获得防御翻倍",
+            "rarity": "Rare",
             "effect": {
                 "type": "ApplyStatus",
                 "value": 1,
@@ -134,6 +144,7 @@
             "id": 11,
             "name": "升格药水",
             "description": "选择一张手牌，点数 +1",
+            "rarity": "Epic",
             "effect": {
                 "type": "CardRankShift",
                 "value": 1,
@@ -147,6 +158,7 @@
             "id": 12,
             "name": "降格药水",
             "description": "选择一张手牌，点数 -1",
+            "rarity": "Epic",
             "effect": {
                 "type": "CardRankShift",
                 "value": -1,
@@ -160,6 +172,7 @@
             "id": 13,
             "name": "心之药水",
             "description": "把手中的牌全部变为红桃",
+            "rarity": "Event",
             "effect": {
                 "type": "SetHandSuit",
                 "value": "Heart",
