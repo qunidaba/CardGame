@@ -333,16 +333,41 @@
             "maxHp": 150,
             "intents": [
                 {
-                    "type": "Buff",
-                    "value": 15,
+                    "type": "Multi",
+                    "value": 0,
                     "multiHit": false,
-                    "hitCount": 2,
-                    "description": "力量+2",
+                    "hitCount": 1,
+                    "description": "",
                     "weight": 30,
                     "status": "Strength",
                     "duration": -1,
                     "battleStart": false,
-                    "actions": null
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 15,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Buff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Strength",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
                 },
                 {
                     "type": "MultiAttack",
@@ -351,18 +376,6 @@
                     "hitCount": 3,
                     "description": null,
                     "weight": 30,
-                    "status": null,
-                    "duration": -1,
-                    "battleStart": false,
-                    "actions": null
-                },
-                {
-                    "type": "Defense",
-                    "value": 12,
-                    "multiHit": false,
-                    "hitCount": 1,
-                    "description": null,
-                    "weight": 40,
                     "status": null,
                     "duration": -1,
                     "battleStart": false,

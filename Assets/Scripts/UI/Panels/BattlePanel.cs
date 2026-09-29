@@ -2987,8 +2987,72 @@ private void OnEnemyTurnStart()
         if (rd == null || index < 0 || index >= rd.PotionIds.Count) return;
 
         int potionId = rd.PotionIds[index];
+
+        // 需要敌人目标但未选中 → 提示，不消耗药水
+        var blockReason = battleManager.Potions.GetUseBlockReason(potionId);
+        if (blockReason != null)
+        {
+            ShowToast(blockReason);
+            return;
+        }
+
         battleManager.Potions.UsePotion(potionId);
         RefreshPotions();
+    }
+
+    private TextMeshProUGUI toastText;
+    private Coroutine toastRoutine;
+
+    /// <summary>战斗中屏幕中部的临时提示（如「请先选中敌人」）</summary>
+    private void ShowToast(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+
+        if (toastText == null)
+        {
+            var go = new GameObject("BattleToast", typeof(RectTransform));
+            go.transform.SetParent(transform, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(1000f, 60f);
+            rt.anchoredPosition = new Vector2(0f, 40f);
+
+            toastText = go.AddComponent<TextMeshProUGUI>();
+            toastText.font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+            toastText.fontSize = 34;
+            toastText.alignment = TextAlignmentOptions.Center;
+            toastText.raycastTarget = false;
+            toastText.enableWordWrapping = false;
+            go.transform.SetAsLastSibling();
+        }
+
+        toastText.text = message;
+        toastText.gameObject.SetActive(true);
+        if (toastRoutine != null) StopCoroutine(toastRoutine);
+        toastRoutine = StartCoroutine(ToastRoutine());
+    }
+
+    private System.Collections.IEnumerator ToastRoutine()
+    {
+        var baseColor = new Color(1f, 0.55f, 0.5f);
+        const float hold = 0.9f;
+        const float fade = 0.45f;
+
+        toastText.color = baseColor;
+        yield return new WaitForSeconds(hold);
+
+        float t = 0f;
+        while (t < fade && toastText != null)
+        {
+            t += Time.deltaTime;
+            toastText.color = new Color(baseColor.r, baseColor.g, baseColor.b, Mathf.Lerp(1f, 0f, t / fade));
+            yield return null;
+        }
+
+        if (toastText != null) toastText.color = new Color(baseColor.r, baseColor.g, baseColor.b, 0f);
+        toastRoutine = null;
     }
 
     private void OnSuitTallyChanged(Suit suit, int count)

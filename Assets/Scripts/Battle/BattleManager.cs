@@ -200,7 +200,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     public BattleUnit GetPlayer() => player;
 
     /// <summary>当前选中的敌人（未选中 / 已阵亡时为 null；所有单体效果打它）</summary>
-    public BattleUnit GetEnemy() => HasTarget ? CurrentTarget : null;
+        public BattleUnit GetEnemy() => HasTarget ? CurrentTarget : null;
 
     /// <summary>当前目标下标指向的单位（可能为 null，也可能已阵亡）</summary>
     public BattleUnit CurrentTarget =>

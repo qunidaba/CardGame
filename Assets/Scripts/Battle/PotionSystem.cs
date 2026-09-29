@@ -41,6 +41,31 @@ namespace Roguelike
         public int PendingRankShift { get; private set; } = 0;
         public bool HasPendingRankShift => PendingRankShift != 0;
 
+        /// <summary>返回「现在不能使用这瓶药水」的原因（null = 可以使用）。目前只拦「需要敌人目标但未选中」。</summary>
+        public string GetUseBlockReason(int potionId)
+        {
+            var run = ctx.Run;
+            if (run == null) return null;
+            if (!run.PotionIds.Contains(potionId)) return null;
+
+            var potion = ConfigLoader.GetPotion(potionId);
+            if (potion == null) return null;
+
+            if (TargetsEnemy(potion) && ctx.CurrentEnemy == null)
+                return "请先选中敌人";
+
+            return null;
+        }
+
+        /// <summary>药水是否作用于敌人（ApplyStatus 且 target 为 enemy/留空）</summary>
+        private static bool TargetsEnemy(PotionData p)
+        {
+            if (p?.effect == null) return false;
+            if (p.effect.type != "ApplyStatus") return false;
+            return string.IsNullOrEmpty(p.effect.target) ||
+                   p.effect.target.Equals("enemy", StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>使用药水（战斗中）</summary>
         public bool UsePotion(int potionId)
         {
@@ -74,13 +99,18 @@ namespace Roguelike
                         !Enum.TryParse<StatusEffectType>(potion.effect.status, true, out var st))
                         break;
 
-                    bool toEnemy = string.IsNullOrEmpty(potion.effect.target) ||
-                                   potion.effect.target.Equals("enemy", StringComparison.OrdinalIgnoreCase);
+                    bool toEnemy = TargetsEnemy(potion);
                     if (toEnemy)
                     {
+                        var target = ctx.CurrentEnemy;
+                        if (target == null)
+                        {
+                            Debug.Log("[药水] 未选中敌人，无法使用（不消耗）");
+                            return false;   // 不消耗药水
+                        }
                         int amt = val;
                         if (st == StatusEffectType.Poison) amt += ctx.PoisonBonus;
-                        ctx.CurrentEnemy?.AddStatus(st, amt, dur);
+                        target.AddStatus(st, amt, dur);
                     }
                     else
                     {
