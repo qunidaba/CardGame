@@ -187,7 +187,7 @@ public class ResultPanel : BasePanel
         colors.highlightedColor = primary ? new Color(0.40f, 0.55f, 0.40f, 1f) : new Color(0.32f, 0.36f, 0.48f, 1f);
         colors.pressedColor = primary ? new Color(0.22f, 0.32f, 0.22f, 1f) : new Color(0.16f, 0.18f, 0.24f, 1f);
         btn.colors = colors;
-        btn.onClick.AddListener(() => onClick?.Invoke());
+        btn.onClick.AddListener(() => { AudioManager.Instance?.Play(Sfx.Click); onClick?.Invoke(); });
 
         var label = CreateText(go.transform, "Label", font, 28, TextAlignmentOptions.Center);
         label.rectTransform.anchorMin = Vector2.zero;

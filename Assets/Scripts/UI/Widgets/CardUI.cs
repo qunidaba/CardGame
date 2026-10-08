@@ -170,6 +170,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        AudioManager.Instance?.Play(Sfx.CardSelect);
         OnClick?.Invoke();
     }
 

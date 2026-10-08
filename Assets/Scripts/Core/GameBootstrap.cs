@@ -29,6 +29,11 @@ public class GameBootstrap : MonoBehaviour
         if (GetComponent<PauseController>() == null)
             gameObject.AddComponent<PauseController>();
 
+        // 音频管理器 + BGM（Resources/Audio/BGM，没有则静默）
+        if (AudioManager.Instance == null)
+            gameObject.AddComponent<AudioManager>();
+        AudioManager.Instance?.PlayBgmFromResources();
+
         // 进入主菜单（在菜单里点「开始游戏」才会 StartNewRun）
         UIManager.Instance.ShowPanel<MainMenuPanel>();
     }

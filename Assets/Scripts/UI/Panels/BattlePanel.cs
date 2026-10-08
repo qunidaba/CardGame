@@ -198,11 +198,13 @@ public partial class BattlePanel : BasePanel
 
         endTurnButton.onClick.AddListener(() =>
         {
+            AudioManager.Instance?.Play(Sfx.Click);
             battleManager.EndPlayerTurn();
         });
 
         mulliganButton.onClick.AddListener(() =>
         {
+            AudioManager.Instance?.Play(Sfx.Click);
             battleManager.TryMulligan();
         });
 
@@ -353,7 +355,7 @@ public partial class BattlePanel : BasePanel
         battleManager.OnDiscardCountChanged += count => RefreshPileCounts();
         battleManager.OnHandChanged += OnHandChanged;
 
-        battleManager.OnGoldChanged += gold => goldText.text = $"金币: {gold}";
+        battleManager.OnGoldChanged += gold => { goldText.text = $"金币: {gold}"; AudioManager.Instance?.Play(Sfx.Coin); };
         battleManager.OnRelicsChanged += RefreshRelics;
         battleManager.OnPotionsChanged += RefreshPotions;
 
@@ -441,7 +443,10 @@ public partial class BattlePanel : BasePanel
         if (playerStatusBar != null) playerStatusBar.Refresh(player);
 
         if (delta > 0)
+        {
+            AudioManager.Instance?.Play(Sfx.Heal);
             ShowFloatingText(GetUnitWorldPosition(unit, false), $"+{delta}", Color.green);
+        }
         // 掉血飘字改由 OnPlayerDamageTaken 负责（显示本次实际伤害）
     }
 
@@ -462,6 +467,7 @@ public partial class BattlePanel : BasePanel
     private void OnPlayerDamageTaken(BattleUnit unit, int damage)
     {
         if (damage <= 0) return;
+        AudioManager.Instance?.Play(Sfx.HitHeavy);
         var tier = GetDamageTier(damage);
         ShowFloatingText(GetUnitWorldPosition(unit, false), damage.ToString(), tier.color, tier.fontSize, tier.popScale);
         FlashText(playerHpText, Color.red);
@@ -516,6 +522,7 @@ public partial class BattlePanel : BasePanel
             var tier = GetDamageTier(damage);
             ShowFloatingText(pos, damage.ToString(), tier.color, tier.fontSize, tier.popScale);
             ShakeScreen(shakeEnemyHitMagnitude, shakeEnemyHitDuration);
+            AudioManager.Instance?.Play(Sfx.Hit);
 
             if (slot == null) return;
             if (unit != null && unit.IsDead) RemoveEnemySlot(slot);   // 阵亡：删掉整个槽位
@@ -559,7 +566,10 @@ public partial class BattlePanel : BasePanel
         var player = battleManager.GetPlayer();
         UpdateShield(playerDefenseText, playerShieldIcon, player.Defense);
         if (delta > 0)
+        {
+            AudioManager.Instance?.Play(Sfx.Shield);
             ShowFloatingText(GetUnitWorldPosition(unit, true), $"+{delta}", Color.cyan);
+        }
     }
 
     private void OnEnemyDefenseChanged(BattleUnit unit, int delta)
@@ -1213,6 +1223,7 @@ private void OnEnemyTurnStart()
 
     private void OnBattleOver(bool isWin)
     {
+        AudioManager.Instance?.Play(isWin ? Sfx.Reward : Sfx.Error);
         // 战斗结束由 RunDirector 处理面板切换
     }
 
@@ -2252,8 +2263,11 @@ private void OnEnemyTurnStart()
         if (!battleManager.CanPlaySelection(out var reason))
         {
             Debug.Log($"[出牌失败] {reason}");
+            AudioManager.Instance?.Play(Sfx.Error);
             return;
         }
+
+        AudioManager.Instance?.Play(Sfx.CardPlay);
 
         var selected = battleManager.GetHandArea().GetSelectedCards();
         if (selected != null && selected.Count > 0)
@@ -2784,6 +2798,7 @@ private void OnEnemyTurnStart()
         pauseButton.colors = colors;
         pauseButton.onClick.AddListener(() =>
         {
+            AudioManager.Instance?.Play(Sfx.Click);
             if (UIManager.Instance != null) UIManager.Instance.ShowPanel<PausePanel>();
         });
 

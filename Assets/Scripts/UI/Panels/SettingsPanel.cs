@@ -200,7 +200,7 @@ public class SettingsPanel : BasePanel
         colors.highlightedColor = new Color(0.32f, 0.36f, 0.48f, 1f);
         colors.pressedColor = new Color(0.16f, 0.18f, 0.24f, 1f);
         btn.colors = colors;
-        btn.onClick.AddListener(() => onClick?.Invoke());
+        btn.onClick.AddListener(() => { AudioManager.Instance?.Play(Sfx.Click); onClick?.Invoke(); });
 
         var t = CreateText(go.transform, "Label", font, 26, TextAlignmentOptions.Center);
         var trt = t.rectTransform;

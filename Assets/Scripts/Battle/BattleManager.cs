@@ -1017,7 +1017,10 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         }
 
         if (triggerOnDraw)
+        {
             foreach (var c in added) enchantmentSystem?.OnDrawn(c);
+            if (added.Count > 0) AudioManager.Instance?.Play(Sfx.Draw);   // 抽牌音效（搜寻/回手不触发）
+        }
 
         return added;
     }
