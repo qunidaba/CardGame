@@ -82,6 +82,7 @@ public partial class BattlePanel : BasePanel
     public float drawFlyToHandDuration = 0.22f;   // 飞向手牌阶段时长（秒）
     public float drawArrivePopScale = 1.15f;      // 到达手牌时弹出缩放
     public float drawAnimStagger = 0.06f;         // 一次新增多张时，每张起飞错开的间隔
+    public float drawPauseDuration = 0f;       // 「向上抽出」到「飞向手牌」之间的停顿（秒）
 
     [Header("药水栏布局")]
     public Vector2 potionBarStart = new Vector2(-800f, 300f);  // 第一个药水槽位置（遗物栏下方最左）
@@ -1846,6 +1847,9 @@ private void OnEnemyTurnStart()
 
     private readonly Dictionary<CardData, CardUI> cardUis = new Dictionary<CardData, CardUI>();
 
+    // 正在播放"落地"动画、但还没创建真实牌的牌（防止刷新把同一张牌重复批处理）
+    private readonly HashSet<CardData> pendingLanding = new HashSet<CardData>();
+
     private void RefreshHandCards()
     {
         var handArea = battleManager.GetHandArea();
@@ -1878,32 +1882,19 @@ private void OnEnemyTurnStart()
         foreach (var kv in cardUis)
             if (kv.Value != null) beforePos[kv.Value] = ((RectTransform)kv.Value.transform).anchoredPosition;
 
-        // 2) 新增的牌：创建 UI（先不播放动画）
-        var newCards = new List<CardData>();
+        // 2) 新增的牌：先不创建 UI（落地时才创建），只按抽牌顺序记下来
+        var ordered = new List<CardData>();
+        var handSet = new HashSet<CardData>(handArea.HandCards);
+        var drawOrder = battleManager != null ? battleManager.LastDrawOrder : null;
+        if (drawOrder != null)
+            foreach (var c in drawOrder)
+                if (c != null && handSet.Contains(c) && !cardUis.ContainsKey(c) && !pendingLanding.Contains(c) && !ordered.Contains(c))
+                    ordered.Add(c);
         foreach (var card in handArea.HandCards)
-        {
-            if (cardUis.ContainsKey(card)) continue;
+            if (!cardUis.ContainsKey(card) && !pendingLanding.Contains(card) && !ordered.Contains(card))
+                ordered.Add(card);
 
-            var cardObj = Instantiate(cardPrefab, handContainer);
-            var cardUI = cardObj.GetComponent<CardUI>();
-            cardUI.Init(card);
-
-            var cardData = card;
-            cardUI.OnClick = () =>
-            {
-                // 点数修正药水：待选牌状态 → 点哪张就改哪张
-                if (battleManager != null && battleManager.Potions.HasPendingRankShift)
-                {
-                    battleManager.Potions.ApplyPendingRankShift(cardData);
-                    return;
-                }
-                handArea.ToggleSelect(cardData);
-                battleManager.OnCardSelectionChanged(); // 通知选中变化
-            };
-
-            cardUis[card] = cardUI;
-            newCards.Add(card);
-        }
+        var newCards = new List<CardData>(ordered);
 
         // 3) 按手牌顺序排列
         for (int i = 0; i < handArea.HandCards.Count; i++)
@@ -1918,27 +1909,20 @@ private void OnEnemyTurnStart()
         // 出牌后的抽牌：等投射物命中后再播抽牌动画
         bool deferDraws = activeProjectiles > 0;
 
-        // 5) 新牌：先摆到目标位置（隐藏），再从牌堆飞出
-        float stagger = Mathf.Max(0f, drawAnimStagger);
-        for (int i = 0; i < newCards.Count; i++)
+        // 5) 新牌：不预创建 UI，交给批量动画（落地时创建并实时定位）
+        if (newCards.Count > 0)
         {
-            if (cardUis.TryGetValue(newCards[i], out var ui) && ui != null)
-            {
-                if (handTargets.TryGetValue(ui, out var t))
-                    ((RectTransform)ui.transform).anchoredPosition = t;
+            var drawReqs = new List<DrawReq>();
+            foreach (var card in newCards) { drawReqs.Add(new DrawReq { card = card }); pendingLanding.Add(card); }
 
-                var uiCap = ui;
-                var cardCap = newCards[i];
-                float d = i * stagger;
-                if (deferDraws)
-                {
-                    HideCard(ui.gameObject);   // 立刻隐藏，等命中后再飞进来
-                    pendingDrawAnims.Add(() => { if (uiCap != null) PlayDrawInAnim(uiCap.gameObject, cardCap, d); });
-                }
-                else
-                {
-                    PlayDrawInAnim(ui.gameObject, newCards[i], d);
-                }
+            if (deferDraws)
+            {
+                var reqsCap = drawReqs;
+                pendingDrawAnims.Add(() => PlayDrawBatch(reqsCap));
+            }
+            else
+            {
+                PlayDrawBatch(drawReqs);
             }
         }
 
@@ -2009,9 +1993,76 @@ private void OnEnemyTurnStart()
     private readonly List<System.Action> pendingDrawAnims = new List<System.Action>();
     private readonly List<CardUI> deferredOldShift = new List<CardUI>();
 
+    /// <summary>手牌单张宽度（取现有牌或预制体宽度，默认 150）</summary>
+    private float HandCardWidth()
+    {
+        var handRt = handContainer as RectTransform;
+        if (handRt != null && handRt.childCount > 0 && handRt.GetChild(0) is RectTransform rt0 && rt0.rect.width > 1f)
+            return rt0.rect.width;
+        if (cardPrefab != null && cardPrefab.transform is RectTransform prt && prt.rect.width > 1f)
+            return prt.rect.width;
+        return 150f;
+    }
+
+    /// <summary>手牌第 index 张（共 total 张）的目标锚点位置</summary>
+    private Vector2 ComputeHandSlot(int index, int total)
+    {
+        float cardWidth = HandCardWidth();
+        float maxWidth = handMaxWidth;
+        if (transform is RectTransform panelRt && panelRt.rect.width > 1f)
+            maxWidth = Mathf.Min(maxWidth, panelRt.rect.width - 80f);
+
+        float spacing = total <= 1 ? 0f : Mathf.Min(handMaxSpacing, (maxWidth - total * cardWidth) / (total - 1));
+        float totalWidth = total * cardWidth + (total - 1) * spacing;
+        float startX = -totalWidth * 0.5f + cardWidth * 0.5f;
+        return new Vector2(startX + index * (cardWidth + spacing), 0f);
+    }
+
+    private int HandIndexOf(CardData card)
+    {
+        var hand = battleManager != null ? battleManager.GetHandArea() : null;
+        if (hand == null || card == null) return 0;
+        var list = hand.HandCards;
+        for (int i = 0; i < list.Count; i++) if (list[i] == card) return i;
+        return 0;
+    }
+
+    /// <summary>某张牌在手牌里的目标世界坐标（按当前手牌实时算）</summary>
+    private Vector3 SlotWorld(CardData card)
+    {
+        var handRt = handContainer as RectTransform;
+        int total = battleManager != null ? battleManager.GetHandArea().HandCards.Count : 1;
+        Vector2 slot = ComputeHandSlot(HandIndexOf(card), Mathf.Max(1, total));
+        return handRt != null ? handRt.TransformPoint(new Vector3(slot.x, slot.y, 0f)) : handContainer.position;
+    }
+
+    /// <summary>落地时创建一张真实手牌（含点击回调）</summary>
+    private CardUI CreateHandCardUi(CardData card)
+    {
+        if (cardPrefab == null || handContainer == null) return null;
+        var cardObj = Instantiate(cardPrefab, handContainer);
+        var cardUI = cardObj.GetComponent<CardUI>();
+        cardUI.Init(card);
+
+        var cardData = card;
+        cardUI.OnClick = () =>
+        {
+            if (battleManager != null && battleManager.Potions.HasPendingRankShift)
+            {
+                battleManager.Potions.ApplyPendingRankShift(cardData);
+                return;
+            }
+            battleManager.GetHandArea().ToggleSelect(cardData);
+            battleManager.OnCardSelectionChanged();
+        };
+
+        cardUis[card] = cardUI;
+        return cardUI;
+    }
+
     /// <summary>
     /// 手动计算手牌目标位置：以 handContainer 中心为基准，向两边展开。
-    /// 不依赖 HorizontalLayoutGroup（若场景里还留着会被自动禁用）。
+    /// 基于「完整手牌」（含尚未创建 UI 的牌）计算，这样已有牌会为新牌让位。
     /// </summary>
     private void UpdateHandLayoutTargets()
     {
@@ -2021,38 +2072,16 @@ private void OnEnemyTurnStart()
         var handRt = handContainer as RectTransform;
         if (handRt == null) return;
 
-        int n = handRt.childCount;
-        if (n == 0) return;
+        var hand = battleManager != null ? battleManager.GetHandArea() : null;
+        if (hand == null) return;
 
-        float cardWidth = 150f;
-        if (handRt.GetChild(0) is RectTransform rt0 && rt0.rect.width > 1f)
-            cardWidth = rt0.rect.width;
-
-        // 手牌最大总宽：不能超过面板实际宽度（窄屏/4:3 时 handMaxWidth 会溢出屏幕）
-        float maxWidth = handMaxWidth;
-        if (transform is RectTransform panelRt && panelRt.rect.width > 1f)
-            maxWidth = Mathf.Min(maxWidth, panelRt.rect.width - 80f);
-
-        float spacing;
-        if (n <= 1)
-        {
-            spacing = 0f;
-        }
-        else
-        {
-            spacing = (maxWidth - n * cardWidth) / (n - 1);
-            spacing = Mathf.Min(handMaxSpacing, spacing);
-        }
-
-        float totalWidth = n * cardWidth + (n - 1) * spacing;
-        float startX = -totalWidth * 0.5f + cardWidth * 0.5f;
+        int n = hand.HandCards.Count;
+        if (n == 0) { handTargets.Clear(); return; }
 
         for (int i = 0; i < n; i++)
         {
-            if (!(handRt.GetChild(i) is RectTransform child)) continue;
-            var ui = child.GetComponent<CardUI>();
-            if (ui == null) continue;
-            handTargets[ui] = new Vector2(startX + i * (cardWidth + spacing), 0f);
+            if (!cardUis.TryGetValue(hand.HandCards[i], out var ui) || ui == null) continue;
+            handTargets[ui] = ComputeHandSlot(i, n);
         }
     }
 
@@ -2112,38 +2141,150 @@ private void OnEnemyTurnStart()
         cg.blocksRaycasts = false;
     }
 
-    private void PlayDrawInAnim(GameObject cardObj, CardData card, float delay = 0f)
+    /// <summary>一批要抽的牌（按抽牌顺序；落地时才创建真实牌）</summary>
+    private class DrawReq { public CardData card; }
+
+    /// <summary>批量抽牌动画：先逐张从牌堆抽到上方，全部到位并停顿后，再逐张飞进手牌。</summary>
+    private void PlayDrawBatch(List<DrawReq> reqs)
     {
-        // 先消费来源标记（「搜寻」回手的牌从弃牌堆飞出）
-        bool fromDiscard = battleManager != null && battleManager.ConsumeFromDiscard(card);
-
-        if (cardObj == null) return;
-        if (!isActiveAndEnabled) return;
-        var rt = cardObj.GetComponent<RectTransform>();
-        if (rt == null) return;
-        var cg = cardObj.GetComponent<CanvasGroup>();
-        if (cg == null) cg = cardObj.AddComponent<CanvasGroup>();
-
-        cg.alpha = 0f;              // 真实牌先隐藏，等幻影飞到再显示
-        cg.blocksRaycasts = false;  // 飞行中不可点
-
-        StartCoroutine(PlayDrawInAnimRoutine(rt, cg, card, delay, fromDiscard));
+        if (reqs == null || reqs.Count == 0) return;
+        StartCoroutine(DrawBatchRoutine(reqs));
     }
 
-    private System.Collections.IEnumerator PlayDrawInAnimRoutine(RectTransform rt, CanvasGroup cg, CardData card, float delay, bool fromDiscard)
+    private System.Collections.IEnumerator DrawBatchRoutine(List<DrawReq> reqs)
     {
-        if (delay > 0f) yield return new WaitForSeconds(delay);
+        if (reqs == null || reqs.Count == 0) yield break;
 
-        bool hasOrigin = fromDiscard
-            ? TryGetDiscardWorldPosition(out var origin)
-            : TryGetDeckWorldPosition(out origin);
+        // 兜底：没有牌堆锚点就直接落地
+        if (!isActiveAndEnabled || cardPrefab == null || damageTextContainer == null ||
+            !TryGetDeckWorldPosition(out var deckWorld))
+        {
+            foreach (var r in reqs) LandCard(r.card);
+            UpdateHandLayoutTargets();
+            StartHandDriver();
+            yield break;
+        }
 
-        if (!hasOrigin)
-            yield return SimpleFadeIn(cg);
-        else
-            yield return DrawFlyRoutine(rt, cg, card, origin);
+        int n = reqs.Count;
+        float stagger = Mathf.Max(0f, drawAnimStagger);
+        var ghosts = new RectTransform[n];
 
-        if (cg != null) cg.blocksRaycasts = true;
+        // ===== 阶段 1：逐张「生成」并从各自来源（牌堆 / 弃牌堆）抽到上方 =====
+        int createdA = 0, arrivedA = 0;
+        for (int i = 0; i < n; i++)
+        {
+            var r = reqs[i];
+            bool fromDiscard = battleManager != null && battleManager.ConsumeFromDiscard(r.card);
+            Vector3 startWorld = (fromDiscard && TryGetDiscardWorldPosition(out var dw)) ? dw : deckWorld;
+            Vector3 stage = startWorld + new Vector3(0f, drawFlyUpHeight, 0f);   // 按各自来源的上方（同类会叠在一起）
+
+            var ghost = CreateGhost(r.card);   // 这一张现在才生成
+            if (ghost != null)
+            {
+                ghosts[i] = ghost;
+                ghost.position = startWorld;
+                createdA++;
+                StartCoroutine(MoveGhost(ghost, startWorld, stage, drawFlyUpDuration, false, () => arrivedA++));
+                AudioManager.Instance?.Play(Sfx.Draw, 1f, 1f + i * 0.03f);   // 每张抽出时播放
+            }
+
+            if (i < n - 1 && stagger > 0f) yield return new WaitForSeconds(stagger);   // 下一张稍后再生成
+        }
+
+        while (arrivedA < createdA) yield return null;
+
+        // 本次抽牌全部抽出后，停顿一下再飞进手牌
+        if (drawPauseDuration > 0f) yield return new WaitForSeconds(drawPauseDuration);
+
+        // ===== 阶段 2：逐张从上方飞进手牌（落地时创建真实牌并实时定位）=====
+        int createdB = 0, arrivedB = 0;
+        for (int i = 0; i < n; i++)
+        {
+            var ghost = ghosts[i];
+            if (ghost == null) continue;
+
+            var r = reqs[i];
+            int idxB = i;
+            Vector3 from = ghost.position;
+            Vector3 target = SlotWorld(r.card);
+            createdB++;
+            StartCoroutine(MoveGhost(ghost, from, target, drawFlyToHandDuration, true, () =>
+            {
+                if (ghost != null) Destroy(ghost.gameObject);
+                LandCard(r.card);   // 落地时才创建真实牌
+                AudioManager.Instance?.Play(Sfx.CardLand, 1f, 1f + idxB * 0.03f);
+                arrivedB++;
+            }));
+
+            if (i < n - 1 && stagger > 0f) yield return new WaitForSeconds(stagger);
+        }
+
+        while (arrivedB < createdB) yield return null;
+
+        UpdateHandLayoutTargets();
+        StartHandDriver();
+    }
+
+    /// <summary>某张牌「落地」：即时创建真实手牌、按当前手牌实时算位置并弹一下</summary>
+    private void LandCard(CardData card)
+    {
+        if (card == null) return;
+        pendingLanding.Remove(card);
+        if (cardUis.ContainsKey(card)) return;   // 已在手牌：防止重复创建
+
+        var ui = CreateHandCardUi(card);
+        if (ui == null) return;
+
+        var rt = (RectTransform)ui.transform;
+        int total = battleManager != null ? battleManager.GetHandArea().HandCards.Count : 1;
+        rt.anchoredPosition = ComputeHandSlot(HandIndexOf(card), Mathf.Max(1, total));   // 落地实时算位置
+        int idx = Mathf.Clamp(HandIndexOf(card), 0, Mathf.Max(0, handContainer.childCount - 1));
+        rt.SetSiblingIndex(idx);
+        handTargets[ui] = rt.anchoredPosition;
+
+        StartCoroutine(PopRoutine(rt));
+        UpdateHandLayoutTargets();   // 让已有牌重新为它让位/归位
+    }
+
+    private RectTransform CreateGhost(CardData card)
+    {
+        if (cardPrefab == null || damageTextContainer == null) return null;
+        var ghost = Instantiate(cardPrefab, damageTextContainer);
+        ghost.name = "DrawGhost";
+        ghost.transform.SetAsLastSibling();
+        var ui = ghost.GetComponent<CardUI>();
+        if (ui != null) { ui.Init(card); ui.enabled = false; }
+        foreach (var g in ghost.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
+        var rt = ghost.GetComponent<RectTransform>();
+        if (rt != null) rt.localScale = Vector3.one;
+        return rt;
+    }
+
+    private void RevealCard(CardUI ui)
+    {
+        if (ui == null) return;
+        var cg = ui.GetComponent<CanvasGroup>();
+        if (cg == null) cg = ui.gameObject.AddComponent<CanvasGroup>();
+        cg.alpha = 1f;
+        cg.blocksRaycasts = true;
+    }
+
+    private System.Collections.IEnumerator MoveGhost(RectTransform ghost, Vector3 from, Vector3 to, float duration, bool smoothStep, System.Action onArrive)
+    {
+        if (ghost == null) { onArrive?.Invoke(); yield break; }
+
+        float dur = Mathf.Max(0.01f, duration);
+        float e = 0f;
+        while (e < dur && ghost != null)
+        {
+            e += Time.deltaTime;
+            float t = Mathf.Clamp01(e / dur);
+            float s = smoothStep ? (t * t * (3f - 2f * t)) : (1f - Mathf.Pow(1f - t, 2f));   // 上飞=原版缓动；进手牌=smoothstep
+            ghost.position = Vector3.Lerp(from, to, s);
+            yield return null;
+        }
+        if (ghost != null) ghost.position = to;
+        onArrive?.Invoke();
     }
 
     private bool TryGetDeckWorldPosition(out Vector3 world)
@@ -2162,78 +2303,7 @@ private void OnEnemyTurnStart()
         return TryGetDeckWorldPosition(out world);
     }
 
-    private System.Collections.IEnumerator SimpleFadeIn(CanvasGroup cg)
-    {
-        const float duration = 0.15f;
-        float elapsed = 0f;
-        while (elapsed < duration && cg != null)
-        {
-            elapsed += Time.deltaTime;
-            cg.alpha = Mathf.Clamp01(elapsed / duration);
-            yield return null;
-        }
-        if (cg != null) cg.alpha = 1f;
-    }
-
-    private System.Collections.IEnumerator DrawFlyRoutine(RectTransform rt, CanvasGroup cg, CardData card, Vector3 originWorld)
-    {
-        if (cardPrefab == null || damageTextContainer == null)
-        {
-            if (cg != null) cg.alpha = 1f;
-            yield break;
-        }
-
-        // 幻影牌（从牌堆飞出的那张）
-        var ghost = Instantiate(cardPrefab, damageTextContainer);
-        ghost.name = "DrawGhost";
-        ghost.transform.SetAsLastSibling();
-        var ghostUI = ghost.GetComponent<CardUI>();
-        if (ghostUI != null) { ghostUI.Init(card); ghostUI.enabled = false; }
-        foreach (var g in ghost.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
-
-        var ghostRt = ghost.GetComponent<RectTransform>();
-        if (ghostRt == null)
-        {
-            Destroy(ghost);
-            if (cg != null) cg.alpha = 1f;
-            yield break;
-        }
-
-        ghostRt.position = originWorld;
-        ghostRt.localScale = Vector3.one;
-
-        Vector3 upWorld = originWorld + new Vector3(0f, drawFlyUpHeight, 0f);
-
-        // 阶段 1：向上飞一点
-        float elapsed = 0f;
-        float d1 = Mathf.Max(0.01f, drawFlyUpDuration);
-        while (elapsed < d1 && ghostRt != null)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / d1);
-            ghostRt.position = Vector3.Lerp(originWorld, upWorld, 1f - Mathf.Pow(1f - t, 2f));
-            yield return null;
-        }
-
-        // 阶段 2：飞向手牌槽（目标实时读取，布局变动也能跟上）
-        elapsed = 0f;
-        float d2 = Mathf.Max(0.01f, drawFlyToHandDuration);
-        Vector3 start2 = ghostRt != null ? ghostRt.position : upWorld;
-        while (elapsed < d2 && ghostRt != null && rt != null)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / d2);
-            float e = t * t * (3f - 2f * t);
-            ghostRt.position = Vector3.Lerp(start2, rt.position, e);
-            yield return null;
-        }
-
-        if (ghostRt != null) Destroy(ghostRt.gameObject);
-        if (cg != null) cg.alpha = 1f;
-
-        // 到达时弹一下
-        if (rt != null) yield return StartCoroutine(PopRoutine(rt));
-    }
+    // （旧的单张抽牌动画 SimpleFadeIn / DrawFlyRoutine 已由批量两段式 DrawBatchRoutine 取代）
 
     private System.Collections.IEnumerator PopRoutine(RectTransform rt)
     {

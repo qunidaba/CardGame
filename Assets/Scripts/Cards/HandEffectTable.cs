@@ -34,7 +34,7 @@ public class HandEffectTable
         {
             case HandType.OnePair:
                 effects.Add(CreateEffect(EffectType.Damage, 2, "造成 2 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 3, "获得 3 点防御"));
+                effects.Add(CreateEffect(EffectType.Defense, 2, "获得 2 点防御"));
                 break;
 
             case HandType.TwoConsecutivePairs:

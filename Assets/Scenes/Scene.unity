@@ -236,6 +236,7 @@ GameObject:
   - component: {fileID: 1715174509}
   - component: {fileID: 1715174508}
   - component: {fileID: 1715174507}
+  - component: {fileID: 1715174512}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -318,6 +319,8 @@ MonoBehaviour:
     panelPrefab: {fileID: 3217307379180186020, guid: e0981685203c70a48aa37026149faa6d, type: 3}
   - panelName: ResultPanel
     panelPrefab: {fileID: 5921948291052263535, guid: 7b86579ab0479624186313fc355631e6, type: 3}
+  enableCheatPanel: 1
+  cheatPanelKey: 282
 --- !u!4 &1715174511
 Transform:
   m_ObjectHideFlags: 0
@@ -333,6 +336,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1715174512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1715174506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c69747168c031164c9a16217ce577a9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1724995772
 GameObject:
   m_ObjectHideFlags: 0

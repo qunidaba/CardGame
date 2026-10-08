@@ -12,6 +12,7 @@ public enum Sfx
     Shield,      // 获得防御
     Heal,        // 回复
     Draw,        // 抽牌
+    CardLand,    // 牌落入手中
     Coin,        // 金币
     Reward,      // 奖励 / 胜利
     Error,       // 失败 / 无效操作
@@ -76,6 +77,7 @@ public class AudioManager : MonoBehaviour
         clips[Sfx.Shield]     = LoadOr("shield",      () => SfxSynth.Tone(300f, 0.16f, 0.26f, 8f, 2, 520f));
         clips[Sfx.Heal]       = LoadOr("heal",        () => SfxSynth.Sequence(new[] { 523f, 784f }, 0.09f, 0.24f));
         clips[Sfx.Draw]       = LoadOr("card_draw",   () => SfxSynth.Tone(1000f, 0.06f, 0.16f, 14f));
+        clips[Sfx.CardLand]   = LoadOr("card_land",   () => SfxSynth.Tone(1200f, 0.05f, 0.20f, 20f, 2));
         clips[Sfx.Coin]       = LoadOr("coin",        () => SfxSynth.Sequence(new[] { 1320f, 1760f }, 0.05f, 0.20f, 1));
         clips[Sfx.Reward]     = LoadOr("reward",      () => SfxSynth.Sequence(new[] { 523f, 659f, 784f, 1047f }, 0.08f, 0.24f));
         clips[Sfx.Error]      = LoadOr("error",       () => SfxSynth.Tone(160f, 0.18f, 0.30f, 6f, 1));

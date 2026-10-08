@@ -43,6 +43,10 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     public BattleUnit Player => player;
     public BattleUnit CurrentEnemy => GetEnemy();
     public IReadOnlyList<CardData> HandCards => handArea != null ? handArea.HandCards : null;
+
+    /// <summary>最近一次加入手牌的顺序（供 UI 按抽牌顺序播放动画）</summary>
+    public IReadOnlyList<CardData> LastDrawOrder { get; private set; }
+
     public int PoisonBonus => GetPoisonBonus();
     public List<CardData> DrawToHand(int count)
     {
@@ -990,13 +994,12 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     /// <summary>逐张把牌加入手牌（每张之间留间隔，让 UI 逐张播放抽牌动画）</summary>
     private IEnumerator DrawStaggered(List<CardData> cards)
     {
-        if (cards == null) yield break;
-        foreach (var card in cards)
-        {
-            AddToHand(new List<CardData> { card });
-            if (drawCardInterval > 0f)
-                yield return new WaitForSeconds(drawCardInterval);
-        }
+        if (cards == null || cards.Count == 0) yield break;
+
+        AddToHand(cards);   // 一次性加入手牌；两段式抽牌动画由 BattlePanel 批量播放
+
+        // 等批量抽牌动画播完再继续
+        yield return new WaitForSeconds(0.4f + cards.Count * 0.16f);
     }
 
     /// <summary>
@@ -1006,6 +1009,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     private List<CardData> AddToHand(List<CardData> cards, bool triggerOnDraw = true)
     {
         if (cards == null || cards.Count == 0) return new List<CardData>();
+
+        LastDrawOrder = new List<CardData>(cards);   // 记录本批次加入顺序（在 AddCards 触发刷新之前）
 
         var added = new List<CardData>(cards);
 
@@ -1017,10 +1022,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         }
 
         if (triggerOnDraw)
-        {
             foreach (var c in added) enchantmentSystem?.OnDrawn(c);
-            if (added.Count > 0) AudioManager.Instance?.Play(Sfx.Draw);   // 抽牌音效（搜寻/回手不触发）
-        }
 
         return added;
     }

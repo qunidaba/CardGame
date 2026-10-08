@@ -351,6 +351,9 @@ MonoBehaviour:
   enemyShieldIcon: {fileID: 1542221907824914787}
   turnCountText: {fileID: 0}
   shieldIconPath: 
+  selectionSpritePath: Battle/UIS
+  backgroundImage: {fileID: 0}
+  responsiveLayout: 1
   deckCountText: {fileID: 1809812519115771885}
   discardCountText: {fileID: 189610732217574884}
   handTypeText: {fileID: 2632842574355982325}
@@ -368,6 +371,7 @@ MonoBehaviour:
   drawFlyToHandDuration: 0.22
   drawArrivePopScale: 1.15
   drawAnimStagger: 0.06
+  drawPauseDuration: 0
   potionBarStart: {x: -800, y: 300}
   potionSlotSpacing: 150
   playButton: {fileID: 8649955476344776566}

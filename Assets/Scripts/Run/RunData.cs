@@ -293,7 +293,7 @@ namespace Roguelike
         /// <summary>
         /// 给某张牌添加附魔
         /// </summary>
-        public void AddEnchantment(int rank, Suit suit, int enchantmentId)
+        public void AddEnchantment(int rank, Suit suit, int enchantmentId, bool allowBonus = true)
         {
             CodexData.DiscoverEnchantment(enchantmentId);   // 图鉴：获得即算发现
             string key = GetCardKey(rank, suit);
@@ -316,8 +316,9 @@ namespace Roguelike
             if (!cardEnchantmentIds[key].Contains(enchantmentId))
                 cardEnchantmentIds[key].Add(enchantmentId);
 
-            // 遗物「双倍附魔」：同一张牌再随机附魔一个
-            if (doubleEnchant && !grantingBonusEnchant)
+            // 遗物「双倍附魔」：仅当本次加的是「正常附魔」时才再送一个（诅咒 / 事件专属 / 临时附魔都不触发）
+            bool isNormalEnchant = ench != null && RarityUtil.Matches(ench.rarity, "");
+            if (allowBonus && isNormalEnchant && doubleEnchant && !grantingBonusEnchant)
                 GrantBonusEnchantment(rank, suit, enchantmentId);
         }
 
@@ -325,15 +326,34 @@ namespace Roguelike
 
         private void GrantBonusEnchantment(int rank, Suit suit, int excludeId)
         {
+            var pool = ConfigLoader.Config?.enchantments;
+            if (pool == null) return;
+
+            string key = GetCardKey(rank, suit);
+            var existing = cardEnchantmentIds.TryGetValue(key, out var list) ? list : new List<int>();
+
+            // 该牌当前已有的互斥组（避免送来的附魔顶掉已有附魔）
+            var usedGroups = new HashSet<string>();
+            foreach (var id in existing)
+            {
+                var e = ConfigLoader.GetEnchantment(id);
+                if (e != null && !string.IsNullOrEmpty(e.exclusiveGroup)) usedGroups.Add(e.exclusiveGroup);
+            }
+
+            // 只挑「正常」附魔：有权重、非诅咒、非事件专属、不重复、不与已有互斥组冲突
+            var candidates = pool.FindAll(e =>
+                e != null &&
+                e.id != excludeId &&
+                e.weight > 0 &&
+                RarityUtil.Matches(e.rarity, "") &&
+                !existing.Contains(e.id) &&
+                (string.IsNullOrEmpty(e.exclusiveGroup) || !usedGroups.Contains(e.exclusiveGroup)));
+
+            if (candidates.Count == 0) return;
+
             grantingBonusEnchant = true;
             try
             {
-                var pool = ConfigLoader.Config?.enchantments;
-                if (pool == null) return;
-
-                var candidates = pool.FindAll(e => e.id != excludeId);
-                if (candidates.Count == 0) return;
-
                 var ench = candidates[UnityEngine.Random.Range(0, candidates.Count)];
                 AddEnchantment(rank, suit, ench.id);
             }
@@ -371,7 +391,7 @@ namespace Roguelike
         /// <summary>添加本场战斗临时附魔（战斗结束时自动移除）</summary>
         public void AddTempEnchantment(int rank, Suit suit, int enchantmentId)
         {
-            AddEnchantment(rank, suit, enchantmentId);
+            AddEnchantment(rank, suit, enchantmentId, allowBonus: false);
 
             string key = GetCardKey(rank, suit);
             if (!tempCardEnchantments.ContainsKey(key))
