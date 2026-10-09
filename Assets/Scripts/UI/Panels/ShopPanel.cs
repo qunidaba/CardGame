@@ -239,7 +239,7 @@ public class ShopPanel : BasePanel
         if (e.kind == "potion")
         {
             // 药水槽没满直接买；满了让玩家选一个替换掉
-            if (runData.PotionIds.Count < RunData.MaxPotions)
+            if (runData.PotionIds.Count < runData.PotionSlotCap)
             {
                 if (shopSystem.BuyPotion(e, runData)) { Refresh(); onChangedCb?.Invoke(); }
                 return;

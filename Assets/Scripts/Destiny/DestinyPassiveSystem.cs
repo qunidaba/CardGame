@@ -148,9 +148,11 @@ namespace Roguelike
             => (run != null && run.GetDestinyRank(Suit.Club) >= 2)
                 ? ClubLv2EnchantOptionCount
                 : ClubLv2EnchantOptionCountBase;
+
+        /// <summary>方块 Lv1：商店价格折扣倍率（Lv1+ → 0.8；否则 1）</summary>
+        public static float GetShopDiscountMultiplier(RunData run)
+            => (run != null && run.GetDestinyRank(Suit.Diamond) >= 1)
+                ? 1f - DiamondLv1ShopDiscountPercent / 100f
+                : 1f;
     }
 }
-
-// ⚠ 备注：方块 Lv1「商店降价 20%」目前**只有文案、没有实现**（ShopSystem 里没有任何命格降价逻辑）。
-//    要补的话在 ShopSystem.GetRelicPrice / GetPotionPrice / GetEnchantBasePrice 里按
-//    DestinyPassiveSystem.DiamondLv1ShopDiscountPercent 打折即可。

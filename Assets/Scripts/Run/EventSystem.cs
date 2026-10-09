@@ -129,7 +129,7 @@ namespace Roguelike
         {
             if (potion == null) return;
 
-            if (runData.PotionIds.Count >= RunData.MaxPotions)
+            if (runData.PotionIds.Count >= runData.PotionSlotCap)
             {
                 outcome.pendingPotionIds.Add(potion.id);
                 outcome.messages.Add($"获得药水：{potion.name}（药水槽已满，需要替换或丢弃）");

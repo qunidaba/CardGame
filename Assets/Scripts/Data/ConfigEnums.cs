@@ -115,6 +115,7 @@ namespace Roguelike.Data
         MultiplyGold,
         MultiplyPotionEffect,
         AddPotionSlot,
+        GainRandomPotion,
         HealOnDamage,
         HealOnDamageDealt,
         ModifyShopPrice,

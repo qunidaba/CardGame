@@ -554,13 +554,30 @@ namespace Roguelike
 
         // === 药水操作 ===
 
-        /// <summary>药水槽上限</summary>
+        /// <summary>药水槽基础上限</summary>
         public const int MaxPotions = 3;
+
+        /// <summary>药水槽实际上限（基础 3 + 遗物「AddPotionSlot」提供的额外槽）</summary>
+        public int PotionSlotCap
+        {
+            get
+            {
+                int cap = MaxPotions;
+                foreach (int id in _relicIds)
+                {
+                    var r = ConfigLoader.GetRelic(id);
+                    if (r == null || r.effects == null) continue;
+                    foreach (var e in r.effects)
+                        if (e.type == "AddPotionSlot") cap += ToInt(e.value);
+                }
+                return cap;
+            }
+        }
 
         /// <summary>获得药水（允许同种药水重复持有）</summary>
         public bool TryAddPotion(int potionId)
         {
-            if (_potionIds.Count >= MaxPotions) return false;
+            if (_potionIds.Count >= PotionSlotCap) return false;
             _potionIds.Add(potionId);
             CodexData.DiscoverPotion(potionId);   // 图鉴
             OnPotionsChanged?.Invoke();

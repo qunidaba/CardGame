@@ -953,7 +953,7 @@
                             "type": "NextBattleMulligan",
                             "value": 1,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -974,7 +974,7 @@
                             "type": "NextBattleNoMulligan",
                             "value": null,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -989,7 +989,7 @@
                             "type": "GainGold",
                             "value": 25,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -1034,11 +1034,11 @@
                     ]
                 },
                 {
-                    "text": "汲取精华 (失去 4 最大生命，选一张牌 +1 稀有及以上附魔)",
+                    "text": "汲取精华 (获得 4 最大生命，选一张牌 +1 稀有及以上附魔)",
                     "condition": null,
                     "results": [
                         {
-                            "type": "LoseMaxHp",
+                            "type": "GainMaxHp",
                             "value": 4,
                             "count": 0,
                             "rarity": "Any",
@@ -1161,12 +1161,12 @@
             "once": false,
             "options": [
                 {
-                    "text": "献祭 (失去 10 最大生命，获得 1 个随机遗物)",
+                    "text": "献祭 (失去 5 最大生命，获得 1 个随机遗物)",
                     "condition": null,
                     "results": [
                         {
                             "type": "LoseMaxHp",
-                            "value": 10,
+                            "value": 5,
                             "count": 0,
                             "rarity": "Any",
                             "suit": null,
@@ -1231,13 +1231,6 @@
                             "lose": null
                         }
                     ]
-                },
-                {
-                    "text": "离开",
-                    "condition": null,
-                    "results": [
-
-]
                 }
             ]
         },

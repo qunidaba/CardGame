@@ -40,6 +40,7 @@ namespace Roguelike
         public ShopInventory Generate(RunData runData)
         {
             var inv = new ShopInventory();
+            float discount = DestinyPassiveSystem.GetShopDiscountMultiplier(runData);   // 方块 Lv1：商店降价
 
             // ===== 遗物：随机 2~3 个（跨稀有度，排除已拥有）=====
             var relicPool = new List<RelicData>();
@@ -59,7 +60,7 @@ namespace Roguelike
                 {
                     kind = "relic",
                     id = r.id,
-                    price = GetRelicPrice(r.rarity),
+                    price = Mathf.RoundToInt(GetRelicPrice(r.rarity) * discount),
                     label = r.name
                 });
             }
@@ -77,7 +78,7 @@ namespace Roguelike
                 {
                     kind = "potion",
                     id = p.id,
-                    price = GetPotionPrice(p.rarity),
+                    price = Mathf.RoundToInt(GetPotionPrice(p.rarity) * discount),
                     label = p.name
                 });
             }
@@ -93,8 +94,8 @@ namespace Roguelike
                 inv.enchantments.Add(new ShopEnchantEntry
                 {
                     enchantmentId = e.id,
-                    priceRandom = basePrice,
-                    priceCustom = Mathf.RoundToInt(basePrice * 2f)
+                    priceRandom = Mathf.RoundToInt(basePrice * discount),
+                    priceCustom = Mathf.RoundToInt(basePrice * 2f * discount)
                 });
             }
 

@@ -209,8 +209,23 @@ namespace Roguelike
                     break;
 
                 case "AddPotionSlot":
-                    ctx.RunData.TryAddPotion(0);
+                    // 药水槽容量由 RunData.PotionSlotCap 实时从遗物计算，这里无需处理
                     break;
+
+                case "GainRandomPotion":
+                {
+                    var potions = Roguelike.Data.ConfigLoader.Config?.potions;
+                    if (potions != null)
+                    {
+                        var pool = potions.FindAll(p => p.rarity != "Event");
+                        if (pool.Count > 0)
+                        {
+                            var p = pool[UnityEngine.Random.Range(0, pool.Count)];
+                            ctx.RunData.TryAddPotion(p.id);
+                        }
+                    }
+                    break;
+                }
 
                 // ===== OnCardPlayed 即时效果 =====
                 case "AddDamageOnPlay":

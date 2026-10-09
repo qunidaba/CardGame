@@ -21,19 +21,19 @@
         {
             "id": 2,
             "name": "炼金术士之石",
-            "description": "药水效果 +50%，药水槽 +1。",
-            "rarity": "Event",
+            "description": "药水槽 +1；每场战斗开始时获得一瓶随机药水。",
+            "rarity": "Epic",
             "effects": [
                 {
-                    "trigger": "OnPotionUse",
-                    "type": "MultiplyPotionEffect",
-                    "value": 1.5,
+                    "trigger": "Passive",
+                    "type": "AddPotionSlot",
+                    "value": 1,
                     "condition": null,
                     "duration": 0
                 },
                 {
-                    "trigger": "Passive",
-                    "type": "AddPotionSlot",
+                    "trigger": "OnCombatStart",
+                    "type": "GainRandomPotion",
                     "value": 1,
                     "condition": null,
                     "duration": 0

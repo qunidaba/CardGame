@@ -3054,25 +3054,34 @@ private void OnEnemyTurnStart()
 
     private void EnsurePotionBar()
     {
-        if (potionSlots != null && potionSlots.Length > 0 && potionSlots[0] != null) return;
+        int cap = 3;
+        var rd = battleManager != null ? battleManager.GetRunData() : null;
+        if (rd != null) cap = Mathf.Max(1, rd.PotionSlotCap);
+
+        // 已按当前容量创建好 → 跳过；容量变化（如获得「炼金术士之石」）→ 重建
+        if (potionSlots != null && potionSlots.Length == cap && cap > 0 && potionSlots[0] != null)
+            return;
+
+        if (potionSlots != null)
+            foreach (var s in potionSlots) if (s != null) Destroy(s.gameObject);
+        potionSlots = new PotionSlotUI[cap];
 
         var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
         Transform parent = (relicSlots != null && relicSlots.Length > 0 && relicSlots[0] != null)
             ? relicSlots[0].transform.parent
             : transform;
 
-        for (int i = 0; i < potionSlots.Length; i++)
+        for (int i = 0; i < cap; i++)
         {
             var go = new GameObject($"PotionSlot{i}", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
             var rt = go.GetComponent<RectTransform>();
-            // 贴左边（potionBarStart 是设计坐标下的中心偏移，这里换算成距左边的边距）
-            rt.anchorMin = new Vector2(0f, 0.5f);
-            rt.anchorMax = new Vector2(0f, 0.5f);
+            // 以中心为基准：最左格 x = -900，后面的每格 +potionSlotSpacing
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(100, 100);
-            rt.anchoredPosition = new Vector2(
-                DesignW * 0.5f + potionBarStart.x + i * potionSlotSpacing, potionBarStart.y);
+            rt.anchoredPosition = new Vector2(-900f + i * potionSlotSpacing, potionBarStart.y);
 
             var img = go.GetComponent<Image>();
             img.color = new Color(0.20f, 0.20f, 0.25f, 0.60f);
