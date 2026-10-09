@@ -115,8 +115,7 @@ namespace Roguelike.Data
         public string type;           // GainGold, LoseGold, Heal, LoseMaxHp, GainMaxHp, EnchantRandomCard, EnchantSpecificCard, UpgradeEnchantment, RemoveEnchantment, RemoveAllEnchantmentsRandomCard, GainRelic, LoseRelic, GainPotion, NextBattleStartHp, Gamble, StartCombat, NextBattleEnemyBuff
         public object value;          // int, float, string
         public int count;             // 用于 EnchantRandomCard count
-        public int tierMin;           // 用于 EnchantRandomCard tierMin
-        public string rarity;         // 用于 GainRelic rarity
+        public string rarity;         // 稀有度过滤（Any/Common/Rare/Epic/RareOrAbove/CommonOrAbove）；遗物稀有度
         public string suit;           // 用于指定花色的效果（AddDestinyPointSuit / SealSuitNextBattle 等）
         public int enemyId;           // 用于 StartCombatWithReward：事件专属战斗的敌人 id
         public string require;        // 选牌限制：如 "Enchant:32"（只能选拥有该附魔的牌）

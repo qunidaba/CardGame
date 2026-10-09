@@ -527,8 +527,7 @@ namespace Roguelike
                 case "EnchantRandomCard":
                 {
                     int count = result.count > 0 ? result.count : 1;
-                    int minTier = result.tierMin > 0 ? result.tierMin : 1;
-                    var options = rewardSystem.GenerateEnchantmentOptions(runData, count, minTier);
+                    var options = rewardSystem.GenerateEnchantmentOptions(runData, count, result.rarity);
                     foreach (var opt in options)
                     {
                         rewardSystem.ApplyEnchantmentReward(runData, opt);

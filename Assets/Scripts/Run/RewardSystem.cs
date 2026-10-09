@@ -100,7 +100,7 @@ namespace Roguelike
             return reward;
         }
 
-        public List<EnchantmentRewardOption> GenerateEnchantmentOptions(RunData runData, int count, int minTier = 1)
+        public List<EnchantmentRewardOption> GenerateEnchantmentOptions(RunData runData, int count, string rarityFilter = "")
         {
             var options = new List<EnchantmentRewardOption>();
             var availableCards = GetAvailableCardKeys(runData);
@@ -119,7 +119,7 @@ namespace Roguelike
             for (int i = 0; i < optionsNeeded; i++)
             {
                 string cardKey = shuffled[i];
-                var enchantment = PickRandomEnchantment(runData, minTier);
+                var enchantment = PickRandomEnchantment(runData, rarityFilter);
                 if (enchantment != null)
                 {
                     options.Add(new EnchantmentRewardOption
@@ -134,7 +134,7 @@ namespace Roguelike
             // 如果不够，补齐
             while (options.Count < count)
             {
-                var enchantment = PickRandomEnchantment(runData, minTier);
+                var enchantment = PickRandomEnchantment(runData, rarityFilter);
                 if (enchantment == null) break;
                 string cardKey = availableCards.Count > 0 ? availableCards[UnityEngine.Random.Range(0, availableCards.Count)] : "Spade_14";
                 options.Add(new EnchantmentRewardOption
@@ -232,21 +232,14 @@ namespace Roguelike
             return pool[UnityEngine.Random.Range(0, pool.Count)];
         }
 
-        private EnchantmentData PickRandomEnchantment(RunData runData, int minTier = 1)
+        private EnchantmentData PickRandomEnchantment(RunData runData, string rarityFilter)
         {
-            // 按权重随机，考虑 tier 分布（低 tier 概率高）
-            var weights = new Dictionary<int, int> { { 1, 65 }, { 2, 30 }, { 3, 5 } };
+            // 候选：正常附魔（weight>0）且在稀有度过滤内（RareOrAbove / Any / 具体稀有度）
+            var candidates = ConfigLoader.Config.enchantments.FindAll(e => e.weight > 0 && RarityUtil.Matches(e.rarity, rarityFilter));
 
-            var candidates = new List<EnchantmentData>();
-            foreach (var kvp in weights)
-            {
-                if (kvp.Key < minTier) continue;
-                candidates.AddRange(ConfigLoader.Config.enchantments.FindAll(e => e.weight > 0 && RarityUtil.Tier(e.rarity) == kvp.Key));
-            }
-
-            // 保底：如果 minTier 过滤后为空，则放宽到所有 >= minTier 的附魔
+            // 保底：过滤后为空则放宽到所有正常附魔
             if (candidates.Count == 0)
-                candidates = ConfigLoader.Config.enchantments.FindAll(e => e.weight > 0 && RarityUtil.Tier(e.rarity) >= minTier);
+                candidates = ConfigLoader.Config.enchantments.FindAll(e => e.weight > 0 && RarityUtil.Matches(e.rarity, ""));
             if (candidates.Count == 0) return null;
 
             // 按 weight 随机

@@ -351,7 +351,6 @@ namespace Roguelike.Data
                 type = GetString(d, "type"),
                 value = d.GetValueOrDefault("value"),
                 count = GetInt(d, "count", 1),
-                tierMin = GetInt(d, "tierMin", 1),
                 rarity = GetString(d, "rarity"),
                 suit = GetString(d, "suit"),
                 enemyId = GetInt(d, "enemyId"),
