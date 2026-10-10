@@ -49,6 +49,48 @@ public class DestinyPassiveSystemTests
 
         Assert.AreEqual(0, player.GetStatusAmount(StatusEffectType.Strength));
         Assert.AreEqual(0, sys.FirstTurnBonusDraw);
-        Assert.AreEqual(0, sys.ClubOpeningEnchant);
+    }
+
+    [Test]
+    public void CombatStart_DiamondLv3_GoldPerStrength()
+    {
+        var run = RunWith(0, 0, 0, diamond: 10); // Lv3 阈值 = 10
+        run.Gold = 120;
+        var player = new BattleUnit("p", 50);
+
+        new DestinyPassiveSystem().ApplyCombatStart(run, player);
+
+        Assert.AreEqual(120 / DestinyPassiveSystem.DiamondLv3GoldPerStrength,
+            player.GetStatusAmount(StatusEffectType.Strength));
+    }
+
+    [Test]
+    public void BattleWin_DiamondLv2_GoldPercent()
+    {
+        var run = RunWith(0, 0, 0, diamond: 5); // Lv2 阈值 = 5
+        run.Gold = 100;
+
+        DestinyPassiveSystem.ApplyBattleWin(run);
+
+        Assert.AreEqual(115, run.Gold); // 100 + 15%
+    }
+
+    [Test]
+    public void ClubTurnEnchant_OnlyAtLv3()
+    {
+        Assert.AreEqual(0, DestinyPassiveSystem.GetClubTurnEnchantCount(RunWith(0, 0, 5, 0)));
+        Assert.AreEqual(DestinyPassiveSystem.ClubLv3HandEnchantPerTurn,
+            DestinyPassiveSystem.GetClubTurnEnchantCount(RunWith(0, 0, 10, 0)));
+    }
+
+    [Test]
+    public void SpadePlayBonus_Lv3_FirstPlayMultiplier()
+    {
+        var run = RunWith(10, 0, 0, 0); // Lv3
+
+        DestinyPassiveSystem.GetSpadePlayBonus(run, playIndex: 1, out int add, out float mult);
+
+        Assert.AreEqual(0, add);
+        Assert.AreEqual(DestinyPassiveSystem.SpadeLv3FirstPlayMultiplier, mult);
     }
 }

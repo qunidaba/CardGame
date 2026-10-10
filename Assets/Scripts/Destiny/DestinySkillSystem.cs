@@ -19,6 +19,7 @@ namespace Roguelike
 
         List<CardData> DrawToHand(int count);
         void GrantRandomEnchants(List<CardData> cards, int count, int minTier);
+        void RunAfterDraws(System.Action action);
         void NotifyEnchantmentsChanged();
         void NotifyDestinyChanged();
         void NotifyHandChanged();
@@ -75,7 +76,9 @@ namespace Roguelike
                     var drawn = ctx.DrawToHand(DestinyPassiveSystem.ActiveClubDraw);
                     int enchCount = rank == 1 ? 0 : (rank == 2 ? DestinyPassiveSystem.ActiveClubEnchantLv2 : DestinyPassiveSystem.ActiveClubEnchantLv3);
                     int minTier = rank >= 3 ? 2 : 1;
-                    ctx.GrantRandomEnchants(drawn, enchCount, minTier);
+                    // 等牌都抽到手上再附魔（让附魔特效看得见）
+                    if (enchCount > 0)
+                        ctx.RunAfterDraws(() => ctx.GrantRandomEnchants(drawn, enchCount, minTier));
                     break;
                 }
 

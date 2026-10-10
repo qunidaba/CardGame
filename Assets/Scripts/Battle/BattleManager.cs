@@ -69,6 +69,25 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     void IDestinySkillContext.NotifyDestinyChanged() => OnDestinyChanged?.Invoke();
     void IDestinySkillContext.NotifyHandChanged() => OnHandChanged?.Invoke();
     void IDestinySkillContext.CheckBattleEnd() => CheckBattleEnd();
+    void IDestinySkillContext.RunAfterDraws(System.Action action) => RunAfterDraws(action);
+
+    /// <summary>抽牌动画播完后执行（面板接管；无面板则立即执行）。用于让附魔等效果在牌落地后再生效。</summary>
+    public void RunAfterDraws(System.Action action)
+    {
+        if (action == null) return;
+        if (OnRequestDrawWait == null) { action(); return; }
+        CoroutineRunner.Instance.StartCoroutine(RunAfterDrawsRoutine(action));
+    }
+
+    private System.Collections.IEnumerator RunAfterDrawsRoutine(System.Action action)
+    {
+        bool done = false;
+        OnRequestDrawWait(() => done = true);
+        yield return new WaitUntil(() => done);
+        if (enchantAfterLandingDelay > 0f)
+            yield return new WaitForSeconds(enchantAfterLandingDelay);
+        action?.Invoke();
+    }
 
     // ===== 对外转发（供 Handler / 状态注册表调用）=====
     public void ApplySwallow(int count, BattleUnit attacker) => EnemyAbilities.ApplySwallow(count, attacker);
@@ -143,6 +162,12 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
     // 敌方行动延迟回调
     public System.Action<System.Action> OnRequestEnemyActionDelay;
+
+    // 抽牌动画完成回调（面板接管：抽牌动画播完再回调；未接管则用固定等待）
+    public System.Action<System.Action> OnRequestDrawWait;
+
+    // 牌全部落地后、附加魔之前的停顿（秒），让附魔特效晚一点出现更清楚
+    public float enchantAfterLandingDelay = 0.3f;
 
     // --- 模块引用 ---
     private DeckPile deckPile;
@@ -945,7 +970,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             player.RemoveStatus(StatusEffectType.NextTurnDraw);
         }
 
-        // 命格：梅花 Lv1 第一回合额外抽牌 / Lv3 开局附魔
+        // 命格：梅花 Lv1 第一回合额外抽牌
         if (isFirstTurn)
         {
             if (DestinyPassives.FirstTurnBonusDraw > 0)
@@ -954,9 +979,17 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
                 yield return DrawStaggered(bonus);
                 Debug.Log($"[命格] 梅花 Lv1：开局额外抽 {bonus.Count} 张");
             }
-            if (DestinyPassives.ClubOpeningEnchant > 0)
-                GrantRandomEnchantsToCards(new List<CardData>(handArea.HandCards), DestinyPassives.ClubOpeningEnchant, 1);
         }
+
+        // 命格：梅花 Lv3 每回合开始时，随机 N 张手牌获得随机附魔（等牌落地后再停顿一小会儿）
+        int clubTurnEnchant = DestinyPassiveSystem.GetClubTurnEnchantCount(runData);
+        if (clubTurnEnchant > 0 && handArea.Count > 0)
+        {
+            if (enchantAfterLandingDelay > 0f)
+                yield return new WaitForSeconds(enchantAfterLandingDelay);
+            GrantRandomEnchantsToCards(new List<CardData>(handArea.HandCards), clubTurnEnchant, 1);
+        }
+
         yield return new WaitForSeconds(phaseDelay);
 
         // 触发流程事件
@@ -998,8 +1031,17 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
         AddToHand(cards);   // 一次性加入手牌；两段式抽牌动画由 BattlePanel 批量播放
 
-        // 等批量抽牌动画播完再继续
-        yield return new WaitForSeconds(0.4f + cards.Count * 0.16f);
+        // 等批量抽牌动画播完再继续（由面板接管；没有面板时退回固定等待）
+        if (OnRequestDrawWait != null)
+        {
+            bool done = false;
+            OnRequestDrawWait(() => done = true);
+            yield return new WaitUntil(() => done);
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.4f + cards.Count * 0.16f);
+        }
     }
 
     /// <summary>
@@ -1834,7 +1876,7 @@ public float GetNextPlayDamageMultiplier()
             runData.nextBattleStartStatuses.Clear();
         }
 
-        // 方块 Lv2 / 梅花 Lv1 / 梅花 Lv3 已由 DestinyPassives.ApplyCombatStart 处理（见本方法开头）
+        // 黑桃 Lv1 / 方块 Lv3 / 梅花 Lv1 已由 DestinyPassives.ApplyCombatStart 处理（见本方法开头）
 
         // 遗物「圣锤」：三条 + 比它大 1 的牌 视为四条
         HandEvaluator.HammerEnabled = relicSystem != null && relicSystem.GetFlatBonus("Hammer", 0) > 0;

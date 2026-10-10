@@ -84,6 +84,10 @@ public partial class BattlePanel : BasePanel
     public float drawAnimStagger = 0.06f;         // 一次新增多张时，每张起飞错开的间隔
     public float drawPauseDuration = 0f;       // 「向上抽出」到「飞向手牌」之间的停顿（秒）
 
+    [Header("附魔特效")]
+    public float enchantFxPopScale = 1.18f;       // 获得附魔时牌放大的倍数
+    public float enchantFxDuration = 0.5f;        // 获得附魔特效时长（秒）
+
     [Header("药水栏布局")]
     public Vector2 potionBarStart = new Vector2(-800f, 300f);  // 第一个药水槽位置（遗物栏下方最左）
     public float potionSlotSpacing = 150f;
@@ -379,6 +383,7 @@ public partial class BattlePanel : BasePanel
         battleManager.OnSuitTallyChanged += OnSuitTallyChanged;
         battleManager.OnCardEnchantmentsChanged += ForceRefreshHand;
         battleManager.OnDestinyChanged += RefreshDestinyHud;
+        battleManager.OnRequestDrawWait += OnRequestDrawWait;
     }
 
     private void UnsubscribeEvents()
@@ -429,6 +434,7 @@ public partial class BattlePanel : BasePanel
         battleManager.OnSuitTallyChanged -= OnSuitTallyChanged;
         battleManager.OnCardEnchantmentsChanged -= ForceRefreshHand;
         battleManager.OnDestinyChanged -= RefreshDestinyHud;
+        battleManager.OnRequestDrawWait -= OnRequestDrawWait;
     }
 
     // --- 事件处理：数据变化 = 即时刷新 UI + 飘字 ---
@@ -1273,6 +1279,25 @@ private void OnEnemyTurnStart()
         onComplete?.Invoke();
     }
 
+    // 面板接管"等抽牌动画播完"：敌方/命格等逻辑需要等牌真正落到手牌后再继续
+    private void OnRequestDrawWait(System.Action onComplete)
+    {
+        if (!isActiveAndEnabled) { onComplete?.Invoke(); return; }
+        StartCoroutine(DrawWaitCoroutine(onComplete));
+    }
+
+    private System.Collections.IEnumerator DrawWaitCoroutine(System.Action onComplete)
+    {
+        yield return null;   // 先让 OnHandChanged→PlayDrawBatch 把批次排上
+        float timeout = 4f;
+        while ((drawBatchesRunning > 0 || pendingDrawAnims.Count > 0 || pendingLanding.Count > 0) && timeout > 0f)
+        {
+            timeout -= Time.unscaledDeltaTime;
+            yield return null;
+        }
+        onComplete?.Invoke();
+    }
+
     private Vector3 GetUnitWorldPosition(BattleUnit unit, bool isDefense)
     {
         if (unit == battleManager?.GetPlayer())
@@ -1850,6 +1875,12 @@ private void OnEnemyTurnStart()
     // 正在播放"落地"动画、但还没创建真实牌的牌（防止刷新把同一张牌重复批处理）
     private readonly HashSet<CardData> pendingLanding = new HashSet<CardData>();
 
+    // 每张手牌上一次的附魔 ID 快照（用于检测"新增附魔"→播放特效）
+    private readonly Dictionary<CardData, HashSet<int>> enchantSnapshot = new Dictionary<CardData, HashSet<int>>();
+
+    // 正在运行的抽牌批次数量（供「等抽牌动画播完」使用）
+    private int drawBatchesRunning;
+
     private void RefreshHandCards()
     {
         var handArea = battleManager.GetHandArea();
@@ -1868,6 +1899,7 @@ private void OnEnemyTurnStart()
         {
             var ui = cardUis[card];
             cardUis.Remove(card);
+            enchantSnapshot.Remove(card);
             if (ui != null)
             {
                 handTargets.Remove(ui);
@@ -2057,6 +2089,7 @@ private void OnEnemyTurnStart()
         };
 
         cardUis[card] = cardUI;
+        enchantSnapshot[card] = new HashSet<int>(card.GetLiveEnchantmentIds());
         return cardUI;
     }
 
@@ -2148,7 +2181,15 @@ private void OnEnemyTurnStart()
     private void PlayDrawBatch(List<DrawReq> reqs)
     {
         if (reqs == null || reqs.Count == 0) return;
-        StartCoroutine(DrawBatchRoutine(reqs));
+        StartCoroutine(DrawBatchTracked(reqs));
+    }
+
+    // 包裹抽牌批次：统计运行中的批次数，供「等抽牌动画播完」判断
+    private System.Collections.IEnumerator DrawBatchTracked(List<DrawReq> reqs)
+    {
+        drawBatchesRunning++;
+        yield return DrawBatchRoutine(reqs);
+        drawBatchesRunning--;
     }
 
     private System.Collections.IEnumerator DrawBatchRoutine(List<DrawReq> reqs)
@@ -2405,6 +2446,24 @@ private void OnEnemyTurnStart()
     /// <summary>强制刷新手牌 UI（作弊/改造/外部修改附魔后用）</summary>
     public void ForceRefreshHand()
     {
+        // 检测本帧「新增附魔」的手牌 → 播放紫光 + 放大缩小特效
+        foreach (var kv in cardUis)
+        {
+            var card = kv.Key;
+            var ui = kv.Value;
+            if (card == null || ui == null) continue;
+
+            var current = new HashSet<int>(card.GetLiveEnchantmentIds());
+            if (enchantSnapshot.TryGetValue(card, out var prev))
+            {
+                bool gained = false;
+                foreach (var id in current)
+                    if (!prev.Contains(id)) { gained = true; break; }
+                if (gained) StartCoroutine(EnchantFxRoutine(ui));
+            }
+            enchantSnapshot[card] = current;
+        }
+
         // 现有牌的附魔/花色可能变了，逐个刷新显示（不重建对象，避免打断动画）
         foreach (var kv in cardUis)
         {
@@ -2418,6 +2477,52 @@ private void OnEnemyTurnStart()
         RefreshHandCards();
         UpdateSelectionVisuals();
         UpdateButtonStates();
+    }
+
+    /// <summary>获得附魔时：牌闪一下紫光 + 放大再缩小</summary>
+    private System.Collections.IEnumerator EnchantFxRoutine(CardUI ui)
+    {
+        if (ui == null) yield break;
+        var rt = ui.transform as RectTransform;
+        if (rt == null) yield break;
+
+        // 紫色覆盖层（放在最上层，随牌缩放）
+        var glowGo = new GameObject("EnchantGlow", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var grt = (RectTransform)glowGo.transform;
+        grt.SetParent(rt, false);
+        grt.anchorMin = Vector2.zero;
+        grt.anchorMax = Vector2.one;
+        grt.offsetMin = Vector2.zero;
+        grt.offsetMax = Vector2.zero;
+        grt.SetAsLastSibling();
+        var glow = glowGo.GetComponent<Image>();
+        glow.raycastTarget = false;
+        glow.color = new Color(0.65f, 0.35f, 1f, 0f);
+
+        Vector3 baseScale = rt.localScale;
+        float duration = Mathf.Max(0.05f, enchantFxDuration);
+        float elapsed = 0f;
+        while (elapsed < duration && rt != null)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            // 放大再缩小
+            float s = t < 0.5f
+                ? Mathf.Lerp(1f, enchantFxPopScale, t / 0.5f)
+                : Mathf.Lerp(enchantFxPopScale, 1f, (t - 0.5f) / 0.5f);
+            rt.localScale = baseScale * s;
+
+            // 紫光快速亮起再淡出
+            var c = glow.color;
+            c.a = Mathf.Sin(t * Mathf.PI) * 0.7f;
+            glow.color = c;
+
+            yield return null;
+        }
+
+        if (rt != null) rt.localScale = baseScale;
+        if (glowGo != null) Destroy(glowGo);
     }
 
     private void UpdateSelectionVisuals()

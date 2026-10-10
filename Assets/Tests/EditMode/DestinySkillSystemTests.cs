@@ -16,6 +16,7 @@ public class DestinySkillSystemTests
         public List<BattleUnit> GetAliveEnemies() => new List<BattleUnit>();
         public List<CardData> DrawToHand(int count) => new List<CardData>();
         public void GrantRandomEnchants(List<CardData> cards, int count, int minTier) { }
+        public void RunAfterDraws(System.Action action) => action?.Invoke();
         public void NotifyEnchantmentsChanged() { }
         public void NotifyDestinyChanged() { }
         public void NotifyHandChanged() { }

@@ -9,8 +9,8 @@ namespace Roguelike
     /// 触发点天然分散，但"做什么、数值多少、判定条件"全部集中在这里：
     ///   - 常量：所有数值（改平衡只改这里）
     ///   - 静态钩子：无状态的判定/结算（只要 RunData），任何触发点直接调
-    ///   - 实例状态：只有「梅花 Lv1 首回合抽牌 / 梅花 Lv3 开局附魔」需要把状态
-    ///     从战斗开始带到首回合，所以由 BattleManager 持有一个实例
+    ///   - 实例状态：只有「梅花 Lv1 首回合抽牌」需要把状态从战斗开始带到首回合，
+    ///     所以由 BattleManager 持有一个实例
     ///
     /// 文案由 DestinyInfo 从这里取数生成。
     /// </summary>
@@ -23,7 +23,7 @@ namespace Roguelike
         // ---- 黑桃 ----
         public const int SpadeLv1Strength = 2;               // Lv1：战斗开始 +N 层力量
         public const int SpadeLv2DamageBonus = 3;            // Lv2：每回合第 2 手起，伤害 +N
-        public const float SpadeLv3FirstPlayMultiplier = 2f; // Lv3：每回合第 1 手，伤害 ×N
+        public const float SpadeLv3FirstPlayMultiplier = 3f; // Lv3：每回合第 1 手，伤害 ×N
 
         // ---- 红桃 ----
         public const int HeartLv1BattleEndHeal = 5;          // Lv1：战斗结束回复 N 生命
@@ -34,12 +34,12 @@ namespace Roguelike
         public const int ClubLv1FirstTurnDraw = 2;           // Lv1：第一回合额外抽 N 张
         public const int ClubLv2EnchantOptionCountBase = 3;  // Lv2：附魔奖励 N 选 1
         public const int ClubLv2EnchantOptionCount = 4;      //      → M 选 1
-        public const int ClubLv3OpeningEnchantCount = 2;     // Lv3：开局随机 N 张手牌附魔
+        public const int ClubLv3HandEnchantPerTurn = 2;      // Lv3：每回合开始时随机 N 张手牌附魔
 
         // ---- 方块 ----
         public const int DiamondLv1ShopDiscountPercent = 20; // Lv1：商店降价 N%（⚠ 见文件末尾备注）
-        public const int DiamondLv2GoldPerStrength = 50;     // Lv2：开局每 N 金币 +1 力量
-        public const int DiamondLv3GoldGainPercent = 10;     // Lv3：战斗结束后金币 +N%
+        public const int DiamondLv3GoldPerStrength = 50;     // Lv3：战斗开始时每 N 金币 +1 力量
+        public const int DiamondLv2GoldGainPercent = 15;     // Lv2：战斗结束时金币 +N%
 
         // ---- 主动技 ----
         public const int ActiveSpadeHitsBase = 3;          // 破军：(N + 等级) 次 1 点伤害 → Lv1:4 / Lv2:5 / Lv3:6
@@ -60,33 +60,28 @@ namespace Roguelike
         /// <summary>梅花 Lv1：第一回合额外抽牌张数（0 = 无）</summary>
         public int FirstTurnBonusDraw { get; private set; }
 
-        /// <summary>梅花 Lv3：开局随机附魔张数（0 = 无）</summary>
-        public int ClubOpeningEnchant { get; private set; }
-
         /// <summary>
-        /// 战斗开始被动：黑桃 Lv1 力量 / 方块 Lv2 金币换力量 / 梅花 Lv1 首回合抽牌 / 梅花 Lv3 开局附魔。
-        /// （梅花 Lv1/Lv3 的计数存到本实例，供首个玩家回合消费）
+        /// 战斗开始被动：黑桃 Lv1 力量 / 方块 Lv3 金币换力量 / 梅花 Lv1 首回合抽牌。
+        /// （梅花 Lv1 的计数存到本实例，供首个玩家回合消费）
         /// </summary>
         public void ApplyCombatStart(RunData run, BattleUnit player)
         {
             FirstTurnBonusDraw = 0;
-            ClubOpeningEnchant = 0;
             if (run == null || player == null) return;
 
             // 黑桃 Lv1：战斗开始获得力量
             if (run.GetDestinyRank(Suit.Spade) >= 1)
                 player.AddStatus(StatusEffectType.Strength, SpadeLv1Strength, -1);
 
-            // 方块 Lv2：开局每 N 金币获得 1 层力量
-            if (run.GetDestinyRank(Suit.Diamond) >= 2)
+            // 方块 Lv3：战斗开始时每 N 金币获得 1 层力量
+            if (run.GetDestinyRank(Suit.Diamond) >= 3)
             {
-                int strength = run.Gold / DiamondLv2GoldPerStrength;
+                int strength = run.Gold / DiamondLv3GoldPerStrength;
                 if (strength > 0) player.AddStatus(StatusEffectType.Strength, strength, -1);
             }
 
-            // 梅花 Lv1 / Lv3（计数留给首回合消费）
+            // 梅花 Lv1：计数留给首回合消费
             if (run.GetDestinyRank(Suit.Club) >= 1) FirstTurnBonusDraw = ClubLv1FirstTurnDraw;
-            if (run.GetDestinyRank(Suit.Club) >= 3) ClubOpeningEnchant = ClubLv3OpeningEnchantCount;
         }
 
         // ============================================================
@@ -94,7 +89,7 @@ namespace Roguelike
         // ============================================================
 
         /// <summary>
-        /// 黑桃出牌被动（Lv3 第 1 手伤害翻倍 / Lv2 第 2 手起伤害 +N）。
+        /// 黑桃出牌被动（Lv3 第 1 手伤害 ×N / Lv2 第 2 手起伤害 +N）。
         /// 只返回数值，具体怎么加到效果列表由 BattleManager 决定。
         /// </summary>
         public static void GetSpadePlayBonus(RunData run, int playIndex, out int addDamage, out float multiplier)
@@ -131,13 +126,17 @@ namespace Roguelike
             if (run.GetDestinyRank(Suit.Heart) >= 1)
                 run.CurrentHp = Mathf.Min(run.MaxHp, run.CurrentHp + HeartLv1BattleEndHeal);
 
-            // 方块 Lv3：金币增长
-            if (run.GetDestinyRank(Suit.Diamond) >= 3)
+            // 方块 Lv2：战斗结束时金币增长
+            if (run.GetDestinyRank(Suit.Diamond) >= 2)
             {
-                int gain = Mathf.RoundToInt(run.Gold * DiamondLv3GoldGainPercent / 100f);
+                int gain = Mathf.RoundToInt(run.Gold * DiamondLv2GoldGainPercent / 100f);
                 if (gain > 0) run.Gold += gain;
             }
         }
+
+        /// <summary>梅花 Lv3：每回合开始时随机附魔的手牌张数（0 = 无）</summary>
+        public static int GetClubTurnEnchantCount(RunData run)
+            => (run != null && run.GetDestinyRank(Suit.Club) >= 3) ? ClubLv3HandEnchantPerTurn : 0;
 
         /// <summary>黑桃主动技：按等级决定打几次（Lv1:4 / Lv2:5 / Lv3:6）</summary>
         public static int GetActiveSpadeHits(int rank)

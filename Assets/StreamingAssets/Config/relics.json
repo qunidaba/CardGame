@@ -283,13 +283,13 @@
         {
             "id": 17,
             "name": "皇家赌注",
-            "description": "打出同花顺时，本次伤害翻倍",
+            "description": "打出同花顺时，本次伤害×1.5",
             "rarity": "Epic",
             "effects": [
                 {
                     "trigger": "OnHandType",
                     "type": "MultiplyDamage",
-                    "value": 2,
+                    "value": 1.5,
                     "condition": "StraightFlushAny",
                     "duration": 0
                 }
