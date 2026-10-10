@@ -47,11 +47,15 @@ namespace Roguelike
         {
             foreach (var card in cards)
             {
-                tally[card.suit] = GetCount(card.suit) + 1;
-                lastPlayed = card.suit;
+                var s = card.EffectiveSuit;   // 用被附魔/遗物/药水改变后的花色
+                tally[s] = GetCount(s) + 1;
+                lastPlayed = s;
             }
             foreach (var card in cards)
-                onChanged?.Invoke(card.suit, GetCount(card.suit));
+            {
+                var s = card.EffectiveSuit;
+                onChanged?.Invoke(s, GetCount(s));
+            }
         }
     }
 }

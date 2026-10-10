@@ -72,18 +72,27 @@ namespace Roguelike
             }
 
             int n = Mathf.Min(count, pool.Count);
+            int strengthGain = 0;
             for (int i = 0; i < n; i++)
             {
                 var card = pool[i];
                 if (!deck.RemoveFromDeck(card)) continue;
 
                 eaten.Add(card);
+                strengthGain += card.rank;   // 按被吞牌的点数累积力量
                 Debug.Log($"{attacker.Name} 吞噬：吞掉了 {card.DisplayName}（剩余牌堆 {deck.Count}）");
             }
 
             // 一个 buff 汇总所有被吞的牌（层数 = 张数）
             if (eaten.Count > 0)
                 attacker.StatusEffects.SetStatus(StatusEffectType.Swallow, eaten.Count, -1);
+
+            // 吞噬怪：根据被吞牌的合计点数给自己叠加力量（本场有效）
+            if (strengthGain > 0)
+            {
+                attacker.StatusEffects.AddStatus(StatusEffectType.Strength, strengthGain, -1);
+                Debug.Log($"{attacker.Name} 吞噬：按点数获得 {strengthGain} 力量");
+            }
         }
 
         /// <summary>某个敌人当前吞掉的牌（没有则返回 null；供 UI 显示用）</summary>

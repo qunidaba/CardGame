@@ -906,7 +906,7 @@
                     "actions": [
                         {
                             "type": "Buff",
-                            "value": 4,
+                            "value": 10,
                             "multiHit": false,
                             "hitCount": 1,
                             "description": null,
@@ -1014,8 +1014,8 @@
             "imageScale": 0,
             "imageOffsetX": 0,
             "imageOffsetY": 0,
-            "hp": 80,
-            "maxHp": 80,
+            "hp": 200,
+            "maxHp": 200,
             "intents": [
                 {
                     "type": "Multi",
@@ -1126,8 +1126,8 @@
             "imageScale": 0,
             "imageOffsetX": 0,
             "imageOffsetY": 0,
-            "hp": 85,
-            "maxHp": 85,
+            "hp": 160,
+            "maxHp": 160,
             "intents": [
                 {
                     "type": "Attack",
@@ -1225,8 +1225,8 @@
             "imageScale": 0,
             "imageOffsetX": 0,
             "imageOffsetY": 0,
-            "hp": 60,
-            "maxHp": 60,
+            "hp": 100,
+            "maxHp": 100,
             "intents": [
                 {
                     "type": "MultiAttack",
@@ -1253,7 +1253,7 @@
                     "actions": [
                         {
                             "type": "Defense",
-                            "value": 8,
+                            "value": 15,
                             "multiHit": false,
                             "hitCount": 1,
                             "description": null,
