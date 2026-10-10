@@ -86,15 +86,15 @@ public class HandEffectTable
 
             case HandType.FourOfAKind:
                 effects.Add(CreateEffect(EffectType.Damage, 20, "造成 20 点伤害"));
-                effects.Add(CreateEffect(EffectType.Heal, 3, "回复 3 点血量"));
-                effects.Add(CreateEffect(EffectType.Defense, 6, "获得 6 点防御"));
+                effects.Add(CreateEffect(EffectType.Heal, 5, "回复 5 点血量"));
+                effects.Add(CreateEffect(EffectType.Defense, 10, "获得 10 点防御"));
                 effects.Add(CreateEffect(EffectType.DrawCard, 2, "额外抽 2 张牌"));
                 break;
 
             case HandType.StraightFlush3:
-                effects.Add(CreateEffect(EffectType.Damage, 12, "造成 12 点伤害"));
-                effects.Add(CreateEffect(EffectType.DrawCard, 2, "额外抽 2 张牌"));
-                effects.Add(CreateEffect(EffectType.Defense, 4, "获得 4 点防御"));
+                effects.Add(CreateEffect(EffectType.Damage, 11, "造成 11 点伤害"));
+                effects.Add(CreateEffect(EffectType.DrawCard, 1, "额外抽 1 张牌"));
+                effects.Add(CreateEffect(EffectType.Defense, 2, "获得 2 点防御"));
                 break;
 
             case HandType.StraightFlush4:

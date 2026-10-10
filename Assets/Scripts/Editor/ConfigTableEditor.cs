@@ -1072,7 +1072,11 @@ public class ConfigTableEditor : EditorWindow
 
         if (newIndex != currentIndex)
         {
-            value = CreateDefaultValue(typeNames[newIndex]);
+            // 类型切换：立即按新类型转换并提交。
+            // 之前只改本地变量，下面的输入框没变化就不会触发 EndChangeCheck，导致类型永远切不过去。
+            value = ConvertForTypeSwitch(value, typeNames[newIndex]);
+            setter(value);
+            currentIndex = newIndex;
         }
 
         EditorGUI.indentLevel++;
@@ -1120,6 +1124,19 @@ public class ConfigTableEditor : EditorWindow
             case "string": return "";
             case "bool": return false;
             default: return 0;
+        }
+    }
+
+    /// <summary>类型下拉切换时，把已有的值转换成目标类型（保留数值，如 int 2 → float 2）。</summary>
+    private object ConvertForTypeSwitch(object value, string typeName)
+    {
+        switch (typeName)
+        {
+            case "int": return value != null ? Convert.ToInt32(value) : 0;
+            case "float": return value != null ? Convert.ToSingle(value) : 0f;
+            case "string": return value?.ToString() ?? "";
+            case "bool": return value != null && Convert.ToBoolean(value);
+            default: return CreateDefaultValue(typeName);
         }
     }
 
