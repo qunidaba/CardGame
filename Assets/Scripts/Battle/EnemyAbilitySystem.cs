@@ -31,6 +31,12 @@ namespace Roguelike
         private readonly Dictionary<BattleUnit, List<WeaknessType>> weaknesses =
             new Dictionary<BattleUnit, List<WeaknessType>>();
 
+        // 吞噬奖励：按被吞牌的花色给吞噬者叠加状态（永久）
+        private const int SwallowSpadeStrength = 2;   // 黑桃 → 力量 +2
+        private const int SwallowClubFocus = 2;       // 梅花 → 专注 +2
+        private const int SwallowHeartRegeneration = 8; // 红桃 → 再生 +8
+        private const int SwallowDiamondThorns = 2;   // 方片 → 荆棘 +2
+
         public EnemyAbilitySystem(IEnemyAbilityContext ctx)
         {
             this.ctx = ctx;
@@ -72,14 +78,23 @@ namespace Roguelike
             }
 
             int n = Mathf.Min(count, pool.Count);
-            int strengthGain = 0;
+            int spadeGain = 0, clubGain = 0, heartGain = 0, diamondGain = 0;
             for (int i = 0; i < n; i++)
             {
                 var card = pool[i];
                 if (!deck.RemoveFromDeck(card)) continue;
 
                 eaten.Add(card);
-                strengthGain += card.rank;   // 按被吞牌的点数累积力量
+
+                // 按被吞牌的花色累积状态
+                switch (card.suit)
+                {
+                    case Suit.Spade:   spadeGain   += SwallowSpadeStrength; break;
+                    case Suit.Club:    clubGain    += SwallowClubFocus; break;
+                    case Suit.Heart:   heartGain   += SwallowHeartRegeneration; break;
+                    case Suit.Diamond: diamondGain += SwallowDiamondThorns; break;
+                }
+
                 Debug.Log($"{attacker.Name} 吞噬：吞掉了 {card.DisplayName}（剩余牌堆 {deck.Count}）");
             }
 
@@ -87,12 +102,17 @@ namespace Roguelike
             if (eaten.Count > 0)
                 attacker.StatusEffects.SetStatus(StatusEffectType.Swallow, eaten.Count, -1);
 
-            // 吞噬怪：根据被吞牌的合计点数给自己叠加力量（本场有效）
-            if (strengthGain > 0)
-            {
-                attacker.StatusEffects.AddStatus(StatusEffectType.Strength, strengthGain, -1);
-                Debug.Log($"{attacker.Name} 吞噬：按点数获得 {strengthGain} 力量");
-            }
+            // 吞噬怪：按被吞牌的花色给自己叠加状态（永久）
+            if (spadeGain > 0)
+                attacker.StatusEffects.AddStatus(StatusEffectType.Strength, spadeGain, -1);
+            if (clubGain > 0)
+                attacker.StatusEffects.AddStatus(StatusEffectType.Focus, clubGain, -1);
+            if (heartGain > 0)
+                attacker.StatusEffects.AddStatus(StatusEffectType.Regeneration, heartGain, -1);
+            if (diamondGain > 0)
+                attacker.StatusEffects.AddStatus(StatusEffectType.Thorns, diamondGain, -1);
+            if (spadeGain + clubGain + heartGain + diamondGain > 0)
+                Debug.Log($"{attacker.Name} 吞噬奖励：力量+{spadeGain} 专注+{clubGain} 再生+{heartGain} 荆棘+{diamondGain}");
         }
 
         /// <summary>某个敌人当前吞掉的牌（没有则返回 null；供 UI 显示用）</summary>
