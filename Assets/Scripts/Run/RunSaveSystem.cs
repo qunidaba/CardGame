@@ -547,7 +547,8 @@ namespace Roguelike
 
                 ["cardEnchantmentIds"] = DictListIntToObj(r.cardEnchantmentIds),
                 ["relicCounters"] = DictIntToObj(r.relicCounters),
-                ["nextBattleStartStatuses"] = StatusesToObj(r.nextBattleStartStatuses)
+                ["nextBattleStartStatuses"] = StatusesToObj(r.nextBattleStartStatuses),
+                ["auctionItems"] = AuctionToObj(r.auctionItems)
             };
         }
 
@@ -625,6 +626,7 @@ namespace Roguelike
             r.cardEnchantmentIds = ObjToDictListInt(d.TryGetValue("cardEnchantmentIds", out var ce) ? ce as Dictionary<string, object> : null);
             r.relicCounters = ObjToDictInt(d.TryGetValue("relicCounters", out var rc) ? rc as Dictionary<string, object> : null);
             r.nextBattleStartStatuses = ObjToStatuses(d.TryGetValue("nextBattleStartStatuses", out var st) ? st as List<object> : null);
+            r.auctionItems = ObjToAuction(d, "auctionItems");
 
             return r;
         }
@@ -663,6 +665,36 @@ namespace Roguelike
             foreach (var s in list)
                 outList.Add(new Dictionary<string, object> { ["status"] = s.status ?? "", ["stacks"] = s.stacks, ["turns"] = s.turns });
             return outList;
+        }
+
+        private static List<object> AuctionToObj(List<AuctionItem> list)
+        {
+            var outList = new List<object>();
+            if (list == null) return outList;
+            foreach (var a in list)
+                outList.Add(new Dictionary<string, object>
+                {
+                    ["isPotion"] = a.isPotion, ["id"] = a.id, ["label"] = a.label ?? "",
+                    ["startPrice"] = a.startPrice, ["minIncrement"] = a.minIncrement,
+                    ["currentPrice"] = a.currentPrice, ["state"] = a.state
+                });
+            return outList;
+        }
+
+        private static List<AuctionItem> ObjToAuction(Dictionary<string, object> d, string key)
+        {
+            var list = new List<AuctionItem>();
+            if (d == null || !(d.TryGetValue(key, out var v) && v is List<object> raw)) return list;
+            foreach (var item in raw)
+                if (item is Dictionary<string, object> dd)
+                    list.Add(new AuctionItem
+                    {
+                        isPotion = GetBool(dd, "isPotion", false), id = GetInt(dd, "id", 0),
+                        label = GetStr(dd, "label", ""), startPrice = GetInt(dd, "startPrice", 0),
+                        minIncrement = GetInt(dd, "minIncrement", 0), currentPrice = GetInt(dd, "currentPrice", 0),
+                        state = GetInt(dd, "state", 0)
+                    });
+            return list;
         }
 
         private static Dictionary<string, List<int>> ObjToDictListInt(Dictionary<string, object> d)

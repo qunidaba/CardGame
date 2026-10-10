@@ -341,6 +341,24 @@ namespace Roguelike
             return outcome;
         }
 
+        /// <summary>该事件是否为「拍卖会」类型（含 result.type = Auction）</summary>
+        public static bool IsAuctionEvent(EventData ev)
+        {
+            if (ev?.options == null) return false;
+            foreach (var o in ev.options)
+                if (OptionStartsAuction(o)) return true;
+            return false;
+        }
+
+        /// <summary>该选项是否触发拍卖会（含 result.type = Auction）</summary>
+        public static bool OptionStartsAuction(EventOptionData opt)
+        {
+            if (opt?.results == null) return false;
+            foreach (var r in opt.results)
+                if (r != null && r.type == "Auction") return true;
+            return false;
+        }
+
         // ===== 选项预抽（拍卖会提前展示拍品）=====
         private struct PreparedItem
         {

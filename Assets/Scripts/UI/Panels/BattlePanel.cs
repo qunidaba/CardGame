@@ -2160,6 +2160,7 @@ private void OnEnemyTurnStart()
             !TryGetDeckWorldPosition(out var deckWorld))
         {
             foreach (var r in reqs) LandCard(r.card);
+            SyncHandSiblingOrder();
             UpdateHandLayoutTargets();
             StartHandDriver();
             yield break;
@@ -2221,6 +2222,7 @@ private void OnEnemyTurnStart()
 
         while (arrivedB < createdB) yield return null;
 
+        SyncHandSiblingOrder();
         UpdateHandLayoutTargets();
         StartHandDriver();
     }
@@ -2238,12 +2240,27 @@ private void OnEnemyTurnStart()
         var rt = (RectTransform)ui.transform;
         int total = battleManager != null ? battleManager.GetHandArea().HandCards.Count : 1;
         rt.anchoredPosition = ComputeHandSlot(HandIndexOf(card), Mathf.Max(1, total));   // 落地实时算位置
-        int idx = Mathf.Clamp(HandIndexOf(card), 0, Mathf.Max(0, handContainer.childCount - 1));
-        rt.SetSiblingIndex(idx);
+        // 逐张落地时如果各自 SetSiblingIndex(手牌下标)，因还有牌未落地、childCount 不足会被 clamp，
+        // 造成层序错乱（右边的牌被左边的牌压住）。改为按完整手牌顺序统一同步层级。
+        SyncHandSiblingOrder();
         handTargets[ui] = rt.anchoredPosition;
 
         StartCoroutine(PopRoutine(rt));
         UpdateHandLayoutTargets();   // 让已有牌重新为它让位/归位
+    }
+
+    /// <summary>按手牌顺序统一同步所有已创建手牌的层级（sibling index），从底到顶依次设置。</summary>
+    private void SyncHandSiblingOrder()
+    {
+        if (handContainer == null) return;
+        var hand = battleManager != null ? battleManager.GetHandArea() : null;
+        if (hand == null) return;
+        var list = hand.HandCards;
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (cardUis.TryGetValue(list[i], out var ui) && ui != null)
+                ui.transform.SetSiblingIndex(i);
+        }
     }
 
     private RectTransform CreateGhost(CardData card)

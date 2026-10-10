@@ -1519,12 +1519,12 @@
             "once": false,
             "options": [
                 {
-                    "text": "投 20 金许愿 (随机大奖)",
+                    "text": "投 50 金许愿 (随机大奖)",
                     "condition": null,
                     "results": [
                         {
                             "type": "LoseGold",
-                            "value": 20,
+                            "value": 50,
                             "count": 0,
                             "rarity": "Any",
                             "suit": null,
@@ -1675,12 +1675,12 @@
             "once": false,
             "options": [
                 {
-                    "text": "竞拍遗物 (失去 40 金，获得 1 个稀有及以上遗物)",
+                    "text": "进入拍卖（3 件随机拍品）",
                     "condition": null,
                     "results": [
                         {
-                            "type": "LoseGold",
-                            "value": 40,
+                            "type": "Auction",
+                            "value": null,
                             "count": 0,
                             "rarity": null,
                             "suit": null,
@@ -1692,66 +1692,8 @@
                             "outcomes": null,
                             "win": null,
                             "lose": null
-                        },
-                        {
-                            "type": "GainRelic",
-                            "value": null,
-                            "count": 0,
-                            "rarity": "RareOrAbove",
-                            "suit": null,
-                            "enemyId": 0,
-                            "require": null,
-                            "status": null,
-                            "preview": true,
-                            "weight": 1,
-                            "outcomes": null,
-                            "win": null,
-                            "lose": null
                         }
                     ]
-                },
-                {
-                    "text": "竞拍药水 (失去 20 金，获得 1 个随机药水)",
-                    "condition": null,
-                    "results": [
-                        {
-                            "type": "LoseGold",
-                            "value": 20,
-                            "count": 0,
-                            "rarity": null,
-                            "suit": null,
-                            "enemyId": 0,
-                            "require": null,
-                            "status": null,
-                            "preview": false,
-                            "weight": 1,
-                            "outcomes": null,
-                            "win": null,
-                            "lose": null
-                        },
-                        {
-                            "type": "GainPotion",
-                            "value": null,
-                            "count": 0,
-                            "rarity": null,
-                            "suit": null,
-                            "enemyId": 0,
-                            "require": null,
-                            "status": null,
-                            "preview": true,
-                            "weight": 1,
-                            "outcomes": null,
-                            "win": null,
-                            "lose": null
-                        }
-                    ]
-                },
-                {
-                    "text": "离开",
-                    "condition": null,
-                    "results": [
-
-]
                 }
             ]
         },
@@ -1845,7 +1787,7 @@
                             "type": "ResetDestiny",
                             "value": null,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -1866,7 +1808,7 @@
                             "type": "AddDestinyPoint",
                             "value": 1,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -1904,7 +1846,7 @@
                             "type": "CurseCardRandom",
                             "value": 68,
                             "count": 1,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -1919,7 +1861,7 @@
                             "type": "AddDestinyPointSuit",
                             "value": 2,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": "Spade",
                             "enemyId": 0,
                             "require": null,
@@ -1940,7 +1882,7 @@
                             "type": "LoseHp",
                             "value": 10,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -1955,7 +1897,7 @@
                             "type": "AddDestinyPointSuit",
                             "value": 1,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": "Spade",
                             "enemyId": 0,
                             "require": null,
@@ -1986,7 +1928,7 @@
                             "type": "StartCombatWithReward",
                             "value": 29,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 5,
                             "require": null,
@@ -2007,7 +1949,7 @@
                             "type": "LoseHp",
                             "value": 7,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -2038,7 +1980,7 @@
                             "type": "SealSuitNextBattle",
                             "value": null,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": "Spade",
                             "enemyId": 0,
                             "require": null,
@@ -2053,7 +1995,7 @@
                             "type": "AddDestinyPointSuit",
                             "value": 2,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": "Spade",
                             "enemyId": 0,
                             "require": null,
@@ -2074,7 +2016,7 @@
                             "type": "SealSuitNextBattle",
                             "value": null,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": "Club",
                             "enemyId": 0,
                             "require": null,
@@ -2103,14 +2045,14 @@
                     ]
                 },
                 {
-                    "text": "封印红桃 (下场战斗无法打出红桃；最大生命 +5)",
+                    "text": "封印红桃 (下场战斗无法打出红桃；最大生命 +8)",
                     "condition": null,
                     "results": [
                         {
                             "type": "SealSuitNextBattle",
                             "value": null,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": "Heart",
                             "enemyId": 0,
                             "require": null,
@@ -2125,7 +2067,7 @@
                             "type": "GainMaxHp",
                             "value": 5,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -2146,7 +2088,7 @@
                             "type": "SealSuitNextBattle",
                             "value": null,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": "Diamond",
                             "enemyId": 0,
                             "require": null,
@@ -2161,7 +2103,7 @@
                             "type": "GainGold",
                             "value": 40,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,

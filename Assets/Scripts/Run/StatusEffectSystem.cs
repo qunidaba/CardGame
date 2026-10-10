@@ -147,10 +147,8 @@ namespace Roguelike
             if (existing != null)
             {
                 existing.amount += amount;
-                if (duration > 0)
-                {
-                    existing.duration = Mathf.Max(existing.duration, duration);
-                }
+                // 持续时间取最长；duration <= 0 视为无限，优先级最高（有限不会顶掉无限）
+                existing.duration = MergeDuration(existing.duration, duration);
                 OnEffectChanged?.Invoke(type, existing.amount);
             }
             else
@@ -159,6 +157,17 @@ namespace Roguelike
                 effects.Add(effect);
                 OnEffectAdded?.Invoke(type, amount);
             }
+        }
+
+        /// <summary>
+        /// 合并持续时间：取两者中最长的；duration &lt;= 0 表示无限（战斗结束才移除），优先级最高。
+        /// 避免有限持续时间的同类状态把无限持续时间的状态顶掉。
+        /// </summary>
+        private static int MergeDuration(int existing, int incoming)
+        {
+            if (incoming <= 0) return incoming;
+            if (existing <= 0) return existing;
+            return Mathf.Max(existing, incoming);
         }
 
         /// <summary>
@@ -172,7 +181,7 @@ namespace Roguelike
             if (existing != null)
             {
                 existing.amount = amount;
-                if (duration > 0) existing.duration = duration;
+                existing.duration = MergeDuration(existing.duration, duration);
                 OnEffectChanged?.Invoke(type, existing.amount);
                 return;
             }

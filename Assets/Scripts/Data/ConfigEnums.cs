@@ -98,6 +98,7 @@ namespace Roguelike.Data
         OnBattleWin,
         OnBattleLose,
         OnPotionUse,
+        OnPlayResolved,
         Passive
     }
 
@@ -220,6 +221,7 @@ namespace Roguelike.Data
         AddDestinyPointSuit,
         StartChallenge,
         StartCombatWithReward,
+        Auction,
         StageGamble,
         Gamble
     }

@@ -1294,6 +1294,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         // 燃料等：其他牌打出时，检查仍留在手牌中的附魔
         enchantmentSystem?.OnOtherCardsPlayed(selected);
 
+        // 本次出牌全部结算完毕：触发「出牌后」类遗物（如魔导书——新附魔下一手才生效）
+        relicProcessor?.ApplyEffects("OnPlayResolved", ctx);
+
         // 附魔「搜寻」：打出后可从弃牌堆取牌回手
         foreach (var card in selected)
             if (card.HasSearch) PendingSearchCount++;
@@ -1462,7 +1465,7 @@ else
         // 触发流程事件
         OnEnemyTurnStart?.Invoke();
 
-        // 阶段 1: 回合开始效果 (遗物 OnEnemyTurnStart, 附魔 OnTurnStart)
+        // 全局：回合开始效果 (遗物 OnEnemyTurnStart, 附魔 OnTurnStart)
         OnEnemyPhaseChanged?.Invoke("TurnStartEffects");
         var ctx = BuildContext();
         relicProcessor?.ApplyEffects("OnEnemyTurnStart", ctx);
@@ -1472,13 +1475,14 @@ else
         // Boss 被动「污染」：每回合污染玩家若干张牌
         ApplyPollution();
 
-        // 阶段 2: DoT 逐个结算 (中毒/灼烧/再生)，逐个敌人处理
-        // 放在清除防御之前，让敌人残留的防御能吸收这部分伤害
-        OnEnemyPhaseChanged?.Invoke("DoT");
-        foreach (var unit in enemies)
+        // 逐个敌人：各自独立执行完整回合（DoT → 清盾 → 行动 → 该敌人回合结束）
+        // 用快照遍历：召唤会往 enemies 里加人；新召唤出来的敌人本回合不行动。
+        foreach (var unit in new List<BattleUnit>(enemies))
         {
             if (unit == null || unit.IsDead) continue;
 
+            // 1) 该敌人的 DoT（中毒/灼烧/再生）——放在清盾之前，让残留防御先吸收
+            OnEnemyPhaseChanged?.Invoke("DoT");
             var dotEffects = unit.StatusEffects.GetAllEffects()
                 .Where(e => e.type == StatusEffectType.Poison ||
                            e.type == StatusEffectType.Burn ||
@@ -1492,42 +1496,37 @@ else
             }
 
             // DoT 可能直接把敌人打死：先等受击飘字/震屏播完，再结算胜负
-            // （否则 CheckBattleEnd 会立刻切到奖励面板，飘字和震动因为面板隐藏而播不出来）
             if (unit.IsDead)
                 yield return new WaitForSeconds(deathVisualDelay);
 
-            // DoT 可能直接把敌人打死：立刻结算并中断敌方行动（不能让它继续出手）
-            CheckBattleEnd();
-            if (IsBattleOver) yield break;
-        }
-        yield return new WaitForSeconds(phaseDelay);
-
-        // 阶段 3: 清除旧防御（DoT 结算完才清）
-        OnEnemyPhaseChanged?.Invoke("ClearDefense");
-        foreach (var unit in enemies)
-            if (unit != null && !unit.IsDead) unit.ClearDefense();
-        yield return new WaitForSeconds(phaseDelay);
-
-        // 阶段 4: 敌人依次执行各自已选定的意图
-        // 用快照遍历：召唤会往 enemies 里加人，直接 foreach 会抛「集合被修改」；
-        // 快照也让新召唤出来的敌人本回合不行动。
-        OnEnemyPhaseChanged?.Invoke("Act");
-        foreach (var unit in new List<BattleUnit>(enemies))
-        {
-            if (unit == null || unit.IsDead) continue;
-
-            var intent = GetIntentOf(unit);
-            if (intent == null) continue;
-
-            // 出手前摇：让 UI 播放预警（放大 / 变红 / 意图闪烁），停一小会儿再真正行动
-            OnEnemyActing?.Invoke(unit, intent);
-            if (enemyWindupDelay > 0f) yield return new WaitForSeconds(enemyWindupDelay);
-
-            yield return ExecuteOneIntent(intent, unit);
-
             CheckBattleEnd();
             if (IsBattleOver) yield break;
 
+            // 2) 清除该敌人的旧防御
+            OnEnemyPhaseChanged?.Invoke("ClearDefense");
+            if (!unit.IsDead) unit.ClearDefense();
+            yield return new WaitForSeconds(phaseDelay);
+
+            // 3) 该敌人行动
+            if (!unit.IsDead)
+            {
+                var intent = GetIntentOf(unit);
+                if (intent != null)
+                {
+                    OnEnemyPhaseChanged?.Invoke("Act");
+                    // 出手前摇：UI 预警（放大 / 变红 / 意图闪烁）
+                    OnEnemyActing?.Invoke(unit, intent);
+                    if (enemyWindupDelay > 0f) yield return new WaitForSeconds(enemyWindupDelay);
+
+                    yield return ExecuteOneIntent(intent, unit);
+                    CheckBattleEnd();
+                    if (IsBattleOver) yield break;
+                }
+            }
+
+            // 4) 该敌人回合结束（状态层数递减等）
+            OnEnemyPhaseChanged?.Invoke("TurnEnd");
+            unit.OnTurnEnd();
             yield return new WaitForSeconds(hitInterval);
         }
 
@@ -1539,17 +1538,11 @@ else
 
         // 选择下一回合的意图（玩家回合开始时触发显示）
         SelectAllEnemyIntents();
-        // 不在这里触发 OnEnemyIntentReady，由玩家回合开始时触发
 
-        // 阶段 5: 回合结束效果 (遗物 OnTurnEnd, 附魔 OnTurnEnd)
+        // 全局：回合结束效果 (遗物 OnTurnEnd, 附魔 OnTurnEnd)
         OnEnemyPhaseChanged?.Invoke("TurnEndEffects");
         relicProcessor?.ApplyEffects("OnTurnEnd", ctx);
         enchantmentSystem?.OnTurnEnd();
-
-        // 阶段 5: 回合结束结算 (层数递减等)
-        OnEnemyPhaseChanged?.Invoke("TurnEnd");
-        foreach (var unit in enemies)
-            unit?.OnTurnEnd();
         yield return new WaitForSeconds(phaseDelay);
 
         // 触发流程事件

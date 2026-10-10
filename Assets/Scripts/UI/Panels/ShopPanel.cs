@@ -22,6 +22,7 @@ public class ShopPanel : BasePanel
     private Transform content;
 
     private bool built;
+    private InventoryBar inventoryBar;
 
     public void ShowShop(ShopInventory inv, RunData rd, RelicSystem rs, Action onClose, Action onChanged = null)
     {
@@ -42,6 +43,7 @@ public class ShopPanel : BasePanel
         if (runData == null || inventory == null) return;
 
         goldText.text = $"金币：{runData.Gold}";
+        inventoryBar?.Refresh();
 
         for (int i = content.childCount - 1; i >= 0; i--)
             Destroy(content.GetChild(i).gameObject);
@@ -382,7 +384,15 @@ public class ShopPanel : BasePanel
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
-        overlay.color = new Color(0f, 0f, 0f, 0.8f);
+        // 背景和战斗面板一致：同一张 BackGround 图
+        var bgSprite = Resources.Load<Sprite>("BackGrounds/BackGround");
+        if (bgSprite != null)
+        {
+            overlay.sprite = bgSprite;
+            overlay.type = Image.Type.Simple;
+            overlay.preserveAspect = false;
+        }
+        overlay.color = Color.white;
         overlay.raycastTarget = true;
 
         var rootRt = gameObject.GetComponent<RectTransform>();
@@ -401,7 +411,7 @@ public class ShopPanel : BasePanel
         crt.anchorMax = new Vector2(0.5f, 0.5f);
         crt.pivot = new Vector2(0.5f, 0.5f);
         crt.sizeDelta = new Vector2(820, 900);
-        crt.anchoredPosition = Vector2.zero;
+        crt.anchoredPosition = new Vector2(0f, -60f);
         card.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.16f, 0.98f);
 
         var title = MakeText(card.transform, "商店", 42, TextAlignmentOptions.Center, 700);
@@ -435,6 +445,9 @@ public class ShopPanel : BasePanel
         vlg.childControlHeight = false;
         vlg.childForceExpandWidth = true;
         vlg.childForceExpandHeight = false;
+
+        // 左上角：只读遗物栏 + 药水栏（同战斗面板）
+        inventoryBar = InventoryBar.Build(transform);
     }
 
     private static string SuitSymbol(Suit s)

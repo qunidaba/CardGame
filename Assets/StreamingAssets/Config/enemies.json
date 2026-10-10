@@ -188,7 +188,7 @@
             ],
             "goldRange": [
                 12,
-                20
+                15
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -220,8 +220,8 @@
             "imageScale": 0,
             "imageOffsetX": 0,
             "imageOffsetY": 0,
-            "hp": 130,
-            "maxHp": 130,
+            "hp": 200,
+            "maxHp": 200,
             "intents": [
                 {
                     "type": "Multi",
@@ -247,13 +247,13 @@
                             "actions": null
                         },
                         {
-                            "type": "Attack",
-                            "value": 2,
+                            "type": "Buff",
+                            "value": 1,
                             "multiHit": false,
-                            "hitCount": 3,
+                            "hitCount": 1,
                             "description": null,
                             "weight": 100,
-                            "status": "",
+                            "status": "Strength",
                             "duration": -1,
                             "battleStart": false,
                             "actions": null
@@ -299,8 +299,8 @@
                 }
             ],
             "goldRange": [
-                35,
-                40
+                20,
+                25
             ],
             "relicDrop": true,
             "bossRelic": false,
@@ -332,8 +332,8 @@
             "imageScale": 0,
             "imageOffsetX": 0,
             "imageOffsetY": 0,
-            "hp": 150,
-            "maxHp": 150,
+            "hp": 250,
+            "maxHp": 250,
             "intents": [
                 {
                     "type": "Multi",
@@ -423,8 +423,8 @@
                 }
             ],
             "goldRange": [
-                50,
-                70
+                45,
+                50
             ],
             "relicDrop": false,
             "bossRelic": true,
@@ -522,8 +522,8 @@
                 }
             ],
             "goldRange": [
-                40,
-                60
+                0,
+                0
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -596,8 +596,8 @@
                 }
             ],
             "goldRange": [
-                35,
-                55
+                0,
+                0
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -683,8 +683,8 @@
                 }
             ],
             "goldRange": [
-                8,
-                12
+                6,
+                8
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -890,8 +890,8 @@
             "imageScale": 0,
             "imageOffsetX": 0,
             "imageOffsetY": 0,
-            "hp": 140,
-            "maxHp": 140,
+            "hp": 200,
+            "maxHp": 200,
             "intents": [
                 {
                     "type": "Multi",
@@ -981,8 +981,8 @@
                 }
             ],
             "goldRange": [
-                40,
-                60
+                30,
+                40
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -1093,8 +1093,8 @@
                 }
             ],
             "goldRange": [
-                18,
-                28
+                13,
+                18
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -1192,8 +1192,8 @@
                 }
             ],
             "goldRange": [
-                18,
-                28
+                13,
+                18
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -1279,8 +1279,8 @@
                 }
             ],
             "goldRange": [
-                18,
-                28
+                10,
+                15
             ],
             "relicDrop": false,
             "bossRelic": false,
@@ -1504,8 +1504,8 @@
                 }
             ],
             "goldRange": [
-                18,
-                28
+                40,
+                50
             ],
             "relicDrop": false,
             "bossRelic": false,

@@ -114,6 +114,9 @@ namespace Roguelike
             public int turns = -1;     // 回合数（-1 = 整场战斗）
         }
         public List<BattleStartStatus> nextBattleStartStatuses = new List<BattleStartStatus>();
+
+        // ===== 拍卖会（事件）======
+        public List<AuctionItem> auctionItems = new List<AuctionItem>();
         public int nextBattleBonusRelicId = 0;       // 下场战斗胜利后额外获得的遗物
         public int pendingEventEnemyId = 0;          // 事件专属战斗的敌人 id（0=无）
 

@@ -345,7 +345,7 @@
                     "type": "ApplyVulnerable",
                     "value": 4,
                     "condition": null,
-                    "duration": 2
+                    "duration": 1
                 }
             ],
             "maxSlots": 1,
@@ -636,7 +636,7 @@
             "rarity": "Event",
             "effects": [
                 {
-                    "trigger": "OnCardPlayed",
+                    "trigger": "OnPlayResolved",
                     "type": "GrantRandomEnchantToPlayedCards",
                     "value": 2,
                     "condition": null,

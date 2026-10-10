@@ -17,6 +17,7 @@ public class EventPanel : BasePanel
     private Transform optionContainer;
     private Action<int> onOptionChosen;
     private bool built;
+    private InventoryBar inventoryBar;
 
     /// <summary>
     /// 显示一个事件。onChosen 返回被点击的选项索引。
@@ -25,6 +26,7 @@ public class EventPanel : BasePanel
     {
         onOptionChosen = onChosen;
         EnsureBuilt();
+        inventoryBar?.Refresh();
 
         titleText.text = ev != null ? ev.title : "事件";
         descText.text = ev != null ? ev.description : "";
@@ -100,7 +102,15 @@ public class EventPanel : BasePanel
         // 全屏遮罩（拦截点击）
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
-        overlay.color = new Color(0f, 0f, 0f, 0.75f);
+        // 背景和战斗面板一致：同一张 BackGround 图
+        var bgSprite = Resources.Load<Sprite>("BackGrounds/BackGround");
+        if (bgSprite != null)
+        {
+            overlay.sprite = bgSprite;
+            overlay.type = Image.Type.Simple;
+            overlay.preserveAspect = false;
+        }
+        overlay.color = Color.white;
         overlay.raycastTarget = true;
 
         var rootRt = gameObject.GetComponent<RectTransform>();
@@ -196,6 +206,9 @@ public class EventPanel : BasePanel
         vlg.childControlHeight = false;
         vlg.childForceExpandWidth = true;
         vlg.childForceExpandHeight = false;
+
+        // 左上角：只读遗物栏 + 药水栏（布局同战斗面板）
+        inventoryBar = InventoryBar.Build(transform);
     }
 
     private void CreateOptionButton(string text, Action onClick, bool interactable = true)

@@ -8,7 +8,7 @@
             "commonPool": "act1_common",
             "elitePool": "act1_elite",
             "commonPoolLate": "act1_common_late",
-            "eliteChancePerBattle": [0, 0, 0.2, 0.35, 0.5, 0.7, 0.9],
+            "eliteChancePerBattle": [0, 0, 0.2, 0.7, 0.5, 0.35, 0.9],
             "guaranteedRestAt": [2, 5],
             "guaranteedShopAt": [3]
         },
@@ -20,7 +20,7 @@
             "commonPool": "act2_common",
             "elitePool": "act2_elite",
             "commonPoolLate": "act2_common_late",
-            "eliteChancePerBattle": [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0],
+            "eliteChancePerBattle": [0, 0.15, 0.3, 0.9, 0.6, 0.25, 0.1, 1.0],
             "guaranteedRestAt": [3],
             "guaranteedShopAt": [4]
         }

@@ -46,6 +46,9 @@ namespace Roguelike
         // 当前是否在事件专属战斗中（不结算命格、无普通奖励、隐藏命运花色）
         private bool inEventBattle;
 
+        // 拍卖会：当前事件面板的每个选项对应的拍品下标（-1 = 离开）
+        private readonly List<int> auctionOptionItem = new List<int>();
+
         /// <summary>当前是否为事件专属战斗</summary>
         public bool InEventBattle => inEventBattle;
 
@@ -298,6 +301,13 @@ namespace Roguelike
                 uiManager.Hide<DestinyPanel>();
                 uiManager.Hide<ShopPanel>();
                 uiManager.Hide<BattlePanel>();
+
+                // 拍卖会：还原竞拍（拍品/价格已在 RunData 里）
+                if (EventSystem.IsAuctionEvent(ev))
+                {
+                    StartAuction();
+                    return;
+                }
 
                 var panel = uiManager.ShowPanel<EventPanel>();
                 if (panel != null)
@@ -742,6 +752,10 @@ namespace Roguelike
                 image = src.image,
                 frames = new System.Collections.Generic.List<string>(src.frames),
                 frameRate = src.frameRate,
+                burrowImage = src.burrowImage,
+                burrowFrames = new System.Collections.Generic.List<string>(src.burrowFrames),
+                emergeImage = src.emergeImage,
+                emergeFrames = new System.Collections.Generic.List<string>(src.emergeFrames),
                 imageWidth = src.imageWidth,
                 imageHeight = src.imageHeight,
                 imageScale = src.imageScale,
@@ -754,23 +768,35 @@ namespace Roguelike
                 bossRelic = src.bossRelic,
                 isBoss = src.isBoss,
                 pools = new System.Collections.Generic.List<string>(src.pools),
+                passive = src.passive,
+                polluteCount = src.polluteCount,
                 intents = new System.Collections.Generic.List<IntentData>()
             };
             foreach (var it in src.intents)
-            {
-                e.intents.Add(new IntentData
-                {
-                    type = it.type,
-                    value = it.value,
-                    multiHit = it.multiHit,
-                    hitCount = it.hitCount,
-                    description = it.description,
-                    weight = it.weight,
-                    status = it.status,
-                    duration = it.duration
-                });
-            }
+                e.intents.Add(CloneIntent(it));
             return e;
+        }
+
+        /// <summary>深拷贝意图（含 Multi 的子行动 actions / battleStart）</summary>
+        private static IntentData CloneIntent(IntentData it)
+        {
+            var c = new IntentData
+            {
+                type = it.type,
+                value = it.value,
+                multiHit = it.multiHit,
+                hitCount = it.hitCount,
+                description = it.description,
+                weight = it.weight,
+                status = it.status,
+                duration = it.duration,
+                battleStart = it.battleStart,
+                actions = new System.Collections.Generic.List<IntentData>()
+            };
+            if (it.actions != null)
+                foreach (var a in it.actions)
+                    c.actions.Add(CloneIntent(a));
+            return c;
         }
 
         private EnemyData ApplyEnemyBuff(EnemyData baseEnemy, int buffLevel)
@@ -1095,6 +1121,15 @@ namespace Roguelike
                 uiManager.Hide<DestinyPanel>();
                 uiManager.Hide<ShopPanel>();
                 uiManager.Hide<BattlePanel>();
+
+                // 拍卖会：用普通事件面板 + 结果面板走竞拍流程
+                if (EventSystem.IsAuctionEvent(ev))
+                {
+                    RunData.auctionItems.Clear();   // 每次进入拍卖会重新生成拍品
+                    StartAuction();
+                    return;
+                }
+
                 var panel = uiManager.ShowPanel<EventPanel>();
                 if (panel != null)
                 {
@@ -1184,17 +1219,137 @@ namespace Roguelike
             uiManager.Hide<ShopPanel>();
             uiManager.Hide<BattlePanel>();
 
+            if (!RunData.visitedEventIds.Contains(ev.id))
+                RunData.visitedEventIds.Add(ev.id);
+            RunData.currentEventStage = 1;
+            currentEvent = ev;
+
+            // 拍卖会：直接进入竞拍
+            if (EventSystem.IsAuctionEvent(ev))
+            {
+                RunData.auctionItems.Clear();
+                StartAuction();
+                return;
+            }
+
             var panel = uiManager.ShowPanel<EventPanel>();
             if (panel != null)
             {
                 Debug.Log($"[RunDirector] 调试进入事件「{ev.title}」(id={ev.id})");
-                if (!RunData.visitedEventIds.Contains(ev.id))
-                    RunData.visitedEventIds.Add(ev.id);
-                RunData.currentEventStage = 1;
-                currentEvent = ev;
                 eventSystem.PrepareEvent(ev, RunData);
                 panel.ShowEvent(ev, idx => OnEventOptionChosen(ev, idx));
             }
+        }
+
+        // ===== 拍卖会（事件）：普通事件面板 + 事件结果面板 =====
+
+        /// <summary>开始 / 继续拍卖：生成拍品并显示竞拍选项</summary>
+        private void StartAuction()
+        {
+            if (RunData == null) { EnterNextBattle(); return; }
+            if (RunData.auctionItems == null) RunData.auctionItems = new List<AuctionItem>();
+            if (RunData.auctionItems.Count == 0)
+                RunData.auctionItems = AuctionSystem.Generate(RunData);
+            ShowAuctionOptions();
+        }
+
+        private void ShowAuctionOptions()
+        {
+            if (RunData == null) { EnterNextBattle(); return; }
+            var ui = uiManager ?? UIManager.Instance;
+            if (ui == null) { EnterNextBattle(); return; }
+
+            ui.Hide<EventResultPanel>();
+            ui.Hide<BattlePanel>();
+
+            var ev = new Roguelike.Data.EventData
+            {
+                title = "拍卖会",
+                description = "对看中的拍品出价。可能被别人加价，价格越高越不容易被加价。"
+            };
+            auctionOptionItem.Clear();
+
+            for (int i = 0; i < RunData.auctionItems.Count; i++)
+            {
+                var it = RunData.auctionItems[i];
+                if (it.state != 0) continue;
+
+                int bid = it.currentPrice == 0 ? it.startPrice : it.currentPrice + it.minIncrement;
+                string kind = it.isPotion ? "药水" : "遗物";
+                string verb = it.currentPrice == 0 ? "竞拍" : "继续加价";
+
+                var opt = new Roguelike.Data.EventOptionData { text = $"{verb}《{it.label}》({kind}) — {bid} 金" };
+                opt.results.Add(new Roguelike.Data.EventResultData { type = "LoseGold", value = bid });   // 仅用于按金币禁用
+                ev.options.Add(opt);
+                auctionOptionItem.Add(i);
+            }
+
+            ev.options.Add(new Roguelike.Data.EventOptionData { text = "离开拍卖会" });
+            auctionOptionItem.Add(-1);
+
+            var panel = ui.ShowPanel<EventPanel>();
+            if (panel == null) { EnterNextBattle(); return; }
+            panel.ShowEvent(ev, OnAuctionOptionChosen);
+
+            RunSaveSystem.SaveEvent(RunData, currentEvent != null ? currentEvent.id : 0,
+                currentEvent != null && eventSystem != null ? eventSystem.ExportPrepared(currentEvent) : null);
+        }
+
+        private void OnAuctionOptionChosen(int idx)
+        {
+            if (RunData == null) return;
+            if (idx < 0 || idx >= auctionOptionItem.Count) return;
+            int itemIdx = auctionOptionItem[idx];
+            if (itemIdx < 0) { LeaveAuction(); return; }
+            if (itemIdx >= RunData.auctionItems.Count) { ShowAuctionOptions(); return; }
+            BidItem(RunData.auctionItems[itemIdx]);
+        }
+
+        private void BidItem(AuctionItem item)
+        {
+            var ui = uiManager ?? UIManager.Instance;
+            if (ui == null) { EnterNextBattle(); return; }
+
+            int bid = item.currentPrice == 0 ? item.startPrice : item.currentPrice + item.minIncrement;
+            if (RunData.Gold < bid) { ShowAuctionOptions(); return; }
+            item.currentPrice = bid;
+
+            var outcome = new EventOutcome();
+            if (UnityEngine.Random.value < AuctionSystem.OutbidChance(item, bid))
+            {
+                item.currentPrice = bid + item.minIncrement;   // 别人加价
+                outcome.messages.Add($"<color=#FF6B6B>被别人加价到 {item.currentPrice}！</color>");
+            }
+            else
+            {
+                RunData.Gold -= bid;
+                bool ok = item.isPotion ? RunData.TryAddPotion(item.id) : RunData.TryAddRelic(item.id);
+                if (!ok)
+                {
+                    RunData.Gold += bid;
+                    item.state = 2;
+                    outcome.messages.Add($"《{item.label}》你的槽已满，放弃。");
+                }
+                else
+                {
+                    item.state = 1;
+                    outcome.messages.Add($"<color=#8BC34A>竞拍成功！</color>《{item.label}》花费 {bid} 金币。");
+                }
+            }
+
+            ui.Hide<EventPanel>();
+            var rp = ui.ShowPanel<EventResultPanel>();
+            if (rp != null) rp.ShowOutcome(outcome, ShowAuctionOptions);
+            else ShowAuctionOptions();
+        }
+
+        private void LeaveAuction()
+        {
+            var ui = uiManager ?? UIManager.Instance;
+            ui?.Hide<EventPanel>();
+            ui?.Hide<EventResultPanel>();
+            if (RunData != null) RunData.auctionItems.Clear();
+            EnterNextBattle();
         }
 
         private void OnEventOptionChosen(Roguelike.Data.EventData ev, int optionIndex)
@@ -1207,6 +1362,15 @@ namespace Roguelike
 
             var option = ev.options[optionIndex];
             Debug.Log($"[RunDirector] 事件「{ev.title}」选择选项 {optionIndex}: {option.text}");
+
+            // 拍卖会：该选项进入竞拍
+            if (EventSystem.OptionStartsAuction(option))
+            {
+                uiManager?.Hide<EventPanel>();
+                RunData.auctionItems.Clear();
+                StartAuction();
+                return;
+            }
 
             // 需要选牌/选花色/选遗物的事件：先弹选择面板，选完再执行
             if (uiManager != null && EventSystem.NeedsCardPick(option))
