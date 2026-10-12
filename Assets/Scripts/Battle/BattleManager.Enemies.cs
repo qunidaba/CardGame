@@ -273,21 +273,62 @@ public partial class BattleManager
     {
         if (data == null) return null;
 
-        // 同名敌人加编号，便于区分
-        string displayName = data.name;
-        int sameCount = 0;
-        foreach (var d in enemyDatas)
-            if (d != null && d.name == data.name) sameCount++;
-        if (sameCount > 0) displayName = $"{data.name} {sameCount + 1}";
-
-        var unit = new BattleUnit(displayName, data.hp);
+        var unit = new BattleUnit(data.name, data.hp);
         unit.MaxHp = data.maxHp > 0 ? data.maxHp : data.hp;   // maxHp 没配就按 hp
         unit.OnTakeDamageCallback = dmg => enchantmentSystem?.OnDealDamage(dmg);
 
         enemies.Add(unit);
         enemyDatas.Add(data);
         SubscribeEnemyUnit(unit);
+
+        RenumberEnemyDisplayNames();   // 召唤后重排编号（同名复数时每个都带数字）
         return unit;
+    }
+
+    /// <summary>
+    /// 重排敌人显示名：同名敌人出现「复数」时，每个敌人名字后直接接编号（无空格），
+    /// 例如「吞噬怪1 强化1 / 吞噬怪2 强化1」；「强化N / 虚弱N」标记始终保持在最后。
+    /// </summary>
+    private void RenumberEnemyDisplayNames()
+    {
+        // 统计每个基础名出现次数
+        var total = new Dictionary<string, int>();
+        for (int i = 0; i < enemyDatas.Count; i++)
+        {
+            var d = enemyDatas[i];
+            if (d == null) continue;
+            total[d.name] = total.TryGetValue(d.name, out var c) ? c + 1 : 1;
+        }
+
+        var running = new Dictionary<string, int>();
+        int n = Mathf.Min(enemies.Count, enemyDatas.Count);
+        for (int i = 0; i < n; i++)
+        {
+            var data = enemyDatas[i];
+            var unit = enemies[i];
+            if (data == null || unit == null) continue;
+
+            // 拆出结尾的「强化N / 虚弱N」标记
+            string core = data.name;
+            string tag = "";
+            var m = System.Text.RegularExpressions.Regex.Match(data.name, @"(强化|虚弱)\d+$");
+            if (m.Success)
+            {
+                core = data.name.Substring(0, m.Index).TrimEnd();
+                tag = " " + m.Value;
+            }
+
+            if (total[data.name] > 1)
+            {
+                int idx = running.TryGetValue(data.name, out var r) ? r + 1 : 1;
+                running[data.name] = idx;
+                unit.SetName($"{core}{idx}{tag}");
+            }
+            else
+            {
+                unit.SetName($"{core}{tag}");
+            }
+        }
     }
 
     /// <summary>当前生效的嘲讽者下标（没有嘲讽/嘲讽者已阵亡则返回 -1）</summary>

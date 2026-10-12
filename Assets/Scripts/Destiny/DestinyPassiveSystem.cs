@@ -43,7 +43,7 @@ namespace Roguelike
 
         // ---- 主动技 ----
         public const int ActiveSpadeHitsBase = 3;          // 破军：(N + 等级) 次 1 点伤害 → Lv1:4 / Lv2:5 / Lv3:6
-        public const int ActiveHeartRegenBase = 2;         // 回春：N + 等级 层再生
+        public const int ActiveHeartRegenBase = 3;         // 回春：N + 等级 层再生
         public const int ActiveHeartRegenTurns = 3;        //       持续 N 回合
         public const int ActiveClubDraw = 4;               // 顿悟：抽 N 张
         public const int ActiveClubEnchantLv2 = 2;         //       其中 N 张附魔
@@ -52,6 +52,20 @@ namespace Roguelike
         public const int ActiveDiamondGoldLv2 = 60;
         public const int ActiveDiamondGoldLv3 = 100;
         public const int ActiveDiamondDamagePerGold = 20;  //       造成 金币/N 伤害
+
+        // ---- 主动技所需命运之力（4 花色 × 3 等级，全部独立可调）----
+        public const int FateCostSpadeLv1 = 12;
+        public const int FateCostSpadeLv2 = 14;
+        public const int FateCostSpadeLv3 = 14;
+        public const int FateCostHeartLv1 = 12;
+        public const int FateCostHeartLv2 = 13;
+        public const int FateCostHeartLv3 = 14;
+        public const int FateCostClubLv1 = 15;
+        public const int FateCostClubLv2 = 18;
+        public const int FateCostClubLv3 = 18;
+        public const int FateCostDiamondLv1 = 12;
+        public const int FateCostDiamondLv2 = 15;
+        public const int FateCostDiamondLv3 = 18;
 
         // ============================================================
         //  战斗开始状态（实例成员，由 BattleManager 持有一个实例）
@@ -141,6 +155,49 @@ namespace Roguelike
         /// <summary>黑桃主动技：按等级决定打几次（Lv1:4 / Lv2:5 / Lv3:6）</summary>
         public static int GetActiveSpadeHits(int rank)
             => ActiveSpadeHitsBase + Mathf.Clamp(rank, 1, 3);
+
+        /// <summary>主动技所需命运之力：按 花色 × 等级（等级钳制到 1~3）</summary>
+        public static int GetActiveFatePowerCost(Suit suit, int rank)
+        {
+            rank = Mathf.Clamp(rank, 1, 3);
+            switch (suit)
+            {
+                case Suit.Spade: return rank == 1 ? FateCostSpadeLv1 : rank == 2 ? FateCostSpadeLv2 : FateCostSpadeLv3;
+                case Suit.Heart: return rank == 1 ? FateCostHeartLv1 : rank == 2 ? FateCostHeartLv2 : FateCostHeartLv3;
+                case Suit.Club: return rank == 1 ? FateCostClubLv1 : rank == 2 ? FateCostClubLv2 : FateCostClubLv3;
+                case Suit.Diamond: return rank == 1 ? FateCostDiamondLv1 : rank == 2 ? FateCostDiamondLv2 : FateCostDiamondLv3;
+                default: return FateCostSpadeLv1;
+            }
+        }
+
+        /// <summary>所有主动技里最高的命运之力需求（用于充能上限）</summary>
+        public static readonly int MaxActiveFatePowerCost = ComputeMaxFateCost();
+
+        /// <summary>命运之力的充能上限：当前主命格主动技的需求（未确立主命格时退回全局最大值）</summary>
+        public static int GetFatePowerCap(RunData run)
+        {
+            if (run != null && run.HasMainDestiny)
+            {
+                var suit = (Suit)run.mainDestinySuit;
+                return GetActiveFatePowerCost(suit, run.GetDestinyRank(suit));
+            }
+            return MaxActiveFatePowerCost;
+        }
+
+        private static int ComputeMaxFateCost()
+        {
+            int[] all =
+            {
+                FateCostSpadeLv1, FateCostSpadeLv2, FateCostSpadeLv3,
+                FateCostHeartLv1, FateCostHeartLv2, FateCostHeartLv3,
+                FateCostClubLv1, FateCostClubLv2, FateCostClubLv3,
+                FateCostDiamondLv1, FateCostDiamondLv2, FateCostDiamondLv3
+            };
+            int max = 0;
+            for (int i = 0; i < all.Length; i++)
+                if (all[i] > max) max = all[i];
+            return max;
+        }
 
         /// <summary>梅花 Lv2：附魔奖励的选项数量（3 → 4）</summary>
         public static int GetEnchantOptionCount(RunData run)

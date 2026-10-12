@@ -6,6 +6,7 @@ using Roguelike;
 public class BattleUnit
 {
     public string Name { get; private set; }
+    public void SetName(string name) => Name = name;
     public int MaxHp { get; set; }
 
     private int _currentHp;

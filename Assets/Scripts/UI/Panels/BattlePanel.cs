@@ -1154,12 +1154,19 @@ public partial class BattlePanel : BasePanel
     {
         if (playerStatusBar != null)
             playerStatusBar.Refresh(battleManager.GetPlayer());
+
+        // 玩家 buff/debuff 变化（如暴怒药水）会改变出牌预览，立即刷新
+        UpdatePreview();
     }
 
     private void OnEnemyStatusChanged(BattleUnit unit, StatusEffectType type, int amount)
     {
         var slot = FindSlot(unit);
         if (slot == null) return;
+
+        // 敌人 buff/debuff 变化会改变其意图数值（伤害等），立即刷新该敌人的意图
+        if (battleManager != null && battleManager.IsPlayerTurn && !unit.IsDead)
+            slot.SetIntent(BuildIntentText(unit, battleManager.GetIntentOf(unit)));
 
         // 敌方状态变化（被吞/被诅咒/被上 debuff/遁地层数被消耗…）也等投射物命中后再刷新，
         // 否则图标会在特效打到之前就变（遁地 buff 提前消失、debuff 提前出现）。
@@ -3143,7 +3150,8 @@ private void OnEnemyTurnStart()
             {
                 var suit = (Suit)rd.mainDestinySuit;
                 int rank = rd.GetDestinyRank(suit);
-                destinyHudText.text = $"主命格 {DestinyInfo.SuitSymbol(suit)} {DestinyInfo.SuitName(suit)} Lv.{rank}\n命运之力 {rd.fatePower}/{RunData.FatePowerMax}";
+                int cost = DestinyPassiveSystem.GetActiveFatePowerCost(suit, Mathf.Max(1, rank));
+                destinyHudText.text = $"主命格 {DestinyInfo.SuitSymbol(suit)} {DestinyInfo.SuitName(suit)} Lv.{rank}\n命运之力 {rd.fatePower}/{cost}";
             }
             else
             {
@@ -3153,7 +3161,13 @@ private void OnEnemyTurnStart()
 
         if (activeSkillButton != null)
         {
-            bool ready = rd != null && rd.HasMainDestiny && rd.fatePower >= RunData.FatePowerMax;
+            bool ready = false;
+            if (rd != null && rd.HasMainDestiny)
+            {
+                var suit = (Suit)rd.mainDestinySuit;
+                int rank = Mathf.Max(1, rd.GetDestinyRank(suit));
+                ready = rd.fatePower >= DestinyPassiveSystem.GetActiveFatePowerCost(suit, rank);
+            }
             activeSkillButton.interactable = ready && battleManager.IsPlayerTurn && battleManager.CanPlayerAct;
         }
     }

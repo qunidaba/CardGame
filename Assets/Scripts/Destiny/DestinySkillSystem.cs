@@ -44,11 +44,14 @@ namespace Roguelike
         {
             var run = ctx.Run;
             if (run == null || !run.HasMainDestiny) return false;
-            if (run.fatePower < RunData.FatePowerMax) return false;
 
             var suit = (Suit)run.mainDestinySuit;
             int rank = run.GetDestinyRank(suit);
             if (rank < 1) rank = 1;
+
+            // 所需命运之力按 花色 × 等级 独立配置
+            int cost = DestinyPassiveSystem.GetActiveFatePowerCost(suit, rank);
+            if (run.fatePower < cost) return false;
 
             // 释放：清空命运之力
             run.fatePower = 0;

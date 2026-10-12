@@ -693,14 +693,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             {
                 if (data == null) continue;
 
-                // 同名敌人加编号，便于区分
-                string displayName = data.name;
-                int sameCount = 0;
-                foreach (var d in enemyDatas)
-                    if (d != null && d.name == data.name) sameCount++;
-                if (sameCount > 0) displayName = $"{data.name} {sameCount + 1}";
-
-                var unit = new BattleUnit(displayName, data.hp);
+                var unit = new BattleUnit(data.name, data.hp);
                 unit.MaxHp = data.maxHp;
                 unit.OnTakeDamageCallback = dmg => enchantmentSystem?.OnDealDamage(dmg);
 
@@ -716,6 +709,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             enemyDatas.Add(fallback);
             Debug.LogWarning("[BattleManager] 敌人列表为空，使用占位敌人");
         }
+
+        RenumberEnemyDisplayNames();   // 同名敌人加编号（名字后直接接数字；强化/虚弱标记保持在最后）
 
         InitializeEnemyPassiveStatuses();   // Boss 被动展示状态（凝视 / 污染）：开局就显示
 
@@ -924,8 +919,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         OnPlayerPhaseChanged?.Invoke("DoT");
         var playerDots = player.StatusEffects.GetAllEffects()
             .Where(e => e.type == StatusEffectType.Poison ||
-                        e.type == StatusEffectType.Burn ||
-                        e.type == StatusEffectType.Regeneration)
+                        e.type == StatusEffectType.Burn)
             .ToList();
         foreach (var eff in playerDots)
         {
@@ -1235,7 +1229,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
             if (mainGain > 0)
             {
-                runData.fatePower = Mathf.Min(RunData.FatePowerMax, runData.fatePower + mainGain);
+                runData.fatePower = Mathf.Min(DestinyPassiveSystem.GetFatePowerCap(runData), runData.fatePower + mainGain);
                 runData.NotifyDestinyChanged();
                 OnDestinyChanged?.Invoke();
             }
@@ -1461,6 +1455,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         // 「同化之心」：恢复本回合临时变成红桃的牌
         relicProcessor?.RestoreHeartified();
 
+        // 再生：回合结束时回血（与中毒/灼烧的回合开始结算区分开）
+        ProcessRegeneration(player);
+
         // 玩家状态效果回合结束结算 (DoT 已在敌方回合处理，这里只做层数递减等)
         player?.OnTurnEnd();
 
@@ -1527,8 +1524,7 @@ else
             OnEnemyPhaseChanged?.Invoke("DoT");
             var dotEffects = unit.StatusEffects.GetAllEffects()
                 .Where(e => e.type == StatusEffectType.Poison ||
-                           e.type == StatusEffectType.Burn ||
-                           e.type == StatusEffectType.Regeneration)
+                           e.type == StatusEffectType.Burn)
                 .ToList();
 
             foreach (var eff in dotEffects)
@@ -1566,8 +1562,9 @@ else
                 }
             }
 
-            // 4) 该敌人回合结束（状态层数递减等）
+            // 4) 该敌人回合结束：再生回血 + 状态层数递减
             OnEnemyPhaseChanged?.Invoke("TurnEnd");
+            if (!unit.IsDead) ProcessRegeneration(unit);
             unit.OnTurnEnd();
             yield return new WaitForSeconds(hitInterval);
         }
@@ -1631,10 +1628,21 @@ else
             target.RemoveStatus(StatusEffectType.Burn, reduce);
         }
 
-        // 中毒/灼烧/再生的「持续回合」在这里递减。
+        // 中毒/灼烧的「持续回合」在这里（回合开始）递减。
         // 它们在回合开始时结算，如果拖到回合结束才递减，回合内新加的状态会白白少一回合。
-        // （其余状态仍在 StatusEffectSystem.OnTurnEnd 里递减）
+        // （再生在回合结束结算，见 ProcessRegeneration；其余状态在 StatusEffectSystem.OnTurnEnd 里递减）
         target.StatusEffects.TickDotDuration(effect.type);
+    }
+
+    /// <summary>再生：回合结束时回血（与中毒/灼烧的回合开始结算区分开），并递减持续回合</summary>
+    private void ProcessRegeneration(BattleUnit target)
+    {
+        if (target == null || target.IsDead) return;
+        var regenEffects = target.StatusEffects.GetAllEffects()
+            .Where(e => e.type == StatusEffectType.Regeneration)
+            .ToList();
+        foreach (var eff in regenEffects)
+            ProcessSingleDoT(target, eff);
     }
 
     /// <summary>
@@ -1885,7 +1893,7 @@ public float GetNextPlayDamageMultiplier()
         if (runData.nextBattleFateFull)
         {
             runData.nextBattleFateFull = false;
-            runData.fatePower = RunData.FatePowerMax;
+            runData.fatePower = DestinyPassiveSystem.GetFatePowerCap(runData);
             runData.NotifyDestinyChanged();
             OnDestinyChanged?.Invoke();
             Debug.Log("[事件] 开局命运之力已回满");
@@ -1898,7 +1906,7 @@ public float GetNextPlayDamageMultiplier()
     /// <summary>释放主命格主动技能（需命运之力攒满）—— 逻辑在 DestinySkillSystem</summary>
     public bool ActivateDestinySkill() => DestinySkills.Activate();
 
-    /// <summary>给指定牌各随机附魔（用于梅花顿悟/开局）</summary>
+    /// <summary>给指定牌各随机附魔（用于梅花顿悟/梅花 Lv3）——仅本场战斗有效</summary>
     private void GrantRandomEnchantsToCards(List<CardData> cards, int count, int minTier)
     {
         if (cards == null || count <= 0) return;
@@ -1916,7 +1924,7 @@ public float GetNextPlayDamageMultiplier()
         {
             var c = shuffled[i];
             var ench = pool[UnityEngine.Random.Range(0, pool.Count)];
-            runData?.AddEnchantment(c.EnchantRank, c.EnchantSuit, ench.id);
+            runData?.AddTempEnchantment(c.EnchantRank, c.EnchantSuit, ench.id);   // 本场战斗临时附魔
         }
         NotifyEnchantmentsChanged();
     }

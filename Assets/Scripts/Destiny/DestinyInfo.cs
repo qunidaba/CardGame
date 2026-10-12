@@ -69,7 +69,7 @@ namespace Roguelike
                     {
                         $"Lv1：每场战斗第一回合额外抽 {DestinyPassiveSystem.ClubLv1FirstTurnDraw} 张",
                         $"Lv2：附魔奖励 {DestinyPassiveSystem.ClubLv2EnchantOptionCountBase} 选 1 → {DestinyPassiveSystem.ClubLv2EnchantOptionCount} 选 1",
-                        $"Lv3：每回合开始时，随机 {DestinyPassiveSystem.ClubLv3HandEnchantPerTurn} 张手牌获得随机附魔"
+                        $"Lv3：每回合开始时，随机 {DestinyPassiveSystem.ClubLv3HandEnchantPerTurn} 张手牌获得随机附魔（仅本场战斗）"
                     };
                 case Suit.Diamond:
                     return new[]
@@ -100,23 +100,33 @@ namespace Roguelike
         public static string GetActiveDesc(Suit suit, int rank)
         {
             rank = rank < 1 ? 1 : (rank > 3 ? 3 : rank);
+
+            string body;
             switch (suit)
             {
                 case Suit.Spade:
-                    return $"对随机敌人造成 {DestinyPassiveSystem.GetActiveSpadeHits(rank)} 次 1 点伤害";
+                    body = $"对随机敌人造成 {DestinyPassiveSystem.GetActiveSpadeHits(rank)} 次 1 点伤害";
+                    break;
                 case Suit.Heart:
-                    return $"清除自身所有负面，获得 {DestinyPassiveSystem.ActiveHeartRegenTurns} 回合 {DestinyPassiveSystem.ActiveHeartRegenBase + rank} 层再生";
+                    body = $"清除自身所有负面，获得 {DestinyPassiveSystem.ActiveHeartRegenTurns} 回合 {DestinyPassiveSystem.ActiveHeartRegenBase + rank} 层再生";
+                    break;
                 case Suit.Club:
-                    if (rank == 1) return $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌";
-                    if (rank == 2) return $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv2} 张各获得随机附魔";
-                    return $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv3} 张各获得随机稀有附魔";
+                    if (rank == 1) body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌";
+                    else if (rank == 2) body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv2} 张各获得随机附魔（仅本场战斗）";
+                    else body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv3} 张各获得随机稀有附魔（仅本场战斗）";
+                    break;
                 case Suit.Diamond:
-                    if (rank == 1) return $"立即获得 {DestinyPassiveSystem.ActiveDiamondGoldLv1} 金币";
-                    if (rank == 2) return $"立即获得 {DestinyPassiveSystem.ActiveDiamondGoldLv2} 金币，并造成 金币/{DestinyPassiveSystem.ActiveDiamondDamagePerGold} 伤害";
-                    return $"立即获得 {DestinyPassiveSystem.ActiveDiamondGoldLv3} 金币，并造成 金币/{DestinyPassiveSystem.ActiveDiamondDamagePerGold} 伤害";
+                    if (rank == 1) body = $"立即获得 {DestinyPassiveSystem.ActiveDiamondGoldLv1} 金币";
+                    else if (rank == 2) body = $"立即获得 {DestinyPassiveSystem.ActiveDiamondGoldLv2} 金币，并造成 金币/{DestinyPassiveSystem.ActiveDiamondDamagePerGold} 伤害";
+                    else body = $"立即获得 {DestinyPassiveSystem.ActiveDiamondGoldLv3} 金币，并造成 金币/{DestinyPassiveSystem.ActiveDiamondDamagePerGold} 伤害";
+                    break;
                 default:
-                    return "";
+                    body = "";
+                    break;
             }
+
+            int cost = DestinyPassiveSystem.GetActiveFatePowerCost(suit, rank);
+            return $"{body}（命运之力 {cost}）";
         }
     }
 }

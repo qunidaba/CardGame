@@ -33,8 +33,8 @@ public class HandEffectTable
         switch (result.type)
         {
             case HandType.OnePair:
-                effects.Add(CreateEffect(EffectType.Damage, 2, "造成 2 点伤害"));
-                effects.Add(CreateEffect(EffectType.Defense, 2, "获得 2 点防御"));
+                effects.Add(CreateEffect(EffectType.Damage, 1, "造成 1 点伤害"));
+                effects.Add(CreateEffect(EffectType.Defense, 3, "获得 3 点防御"));
                 break;
 
             case HandType.TwoConsecutivePairs:
@@ -93,7 +93,7 @@ public class HandEffectTable
 
             case HandType.StraightFlush3:
                 effects.Add(CreateEffect(EffectType.Damage, 11, "造成 11 点伤害"));
-                effects.Add(CreateEffect(EffectType.DrawCard, 1, "额外抽 1 张牌"));
+                effects.Add(CreateEffect(EffectType.DrawCard, 2, "额外抽 2 张牌"));
                 effects.Add(CreateEffect(EffectType.Defense, 2, "获得 2 点防御"));
                 break;
 

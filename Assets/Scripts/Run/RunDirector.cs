@@ -806,10 +806,9 @@ namespace Roguelike
             buffed.hp = Mathf.RoundToInt(baseEnemy.hp * (1 + buffLevel * 0.2f));
             buffed.maxHp = Mathf.RoundToInt(baseEnemy.maxHp * (1 + buffLevel * 0.2f));
 
+            float intentMult = 1 + buffLevel * 0.15f;
             foreach (var intent in buffed.intents)
-            {
-                intent.value = Mathf.RoundToInt(intent.value * (1 + buffLevel * 0.15f));
-            }
+                ScaleIntentValues(intent, intentMult, clampMin1: false);
             buffed.goldRange[0] = Mathf.RoundToInt(buffed.goldRange[0] * (1 + buffLevel * 0.25f));
             buffed.goldRange[1] = Mathf.RoundToInt(buffed.goldRange[1] * (1 + buffLevel * 0.25f));
 
@@ -824,12 +823,22 @@ namespace Roguelike
             debuffed.hp = Mathf.Max(1, Mathf.RoundToInt(baseEnemy.hp * (1 - level * 0.15f)));
             debuffed.maxHp = Mathf.Max(1, Mathf.RoundToInt(baseEnemy.maxHp * (1 - level * 0.15f)));
 
+            float intentMult = 1 - level * 0.15f;
             foreach (var intent in debuffed.intents)
-            {
-                intent.value = Mathf.Max(1, Mathf.RoundToInt(intent.value * (1 - level * 0.15f)));
-            }
+                ScaleIntentValues(intent, intentMult, clampMin1: true);
 
             return debuffed;
+        }
+
+        /// <summary>按倍率缩放意图数值（含 Multi 的子行动 actions，递归）</summary>
+        private static void ScaleIntentValues(IntentData intent, float mult, bool clampMin1)
+        {
+            if (intent == null) return;
+            int scaled = Mathf.RoundToInt(intent.value * mult);
+            intent.value = clampMin1 ? Mathf.Max(1, scaled) : scaled;
+            if (intent.actions != null)
+                foreach (var a in intent.actions)
+                    ScaleIntentValues(a, mult, clampMin1);
         }
 
         private void EnterBossBattle()

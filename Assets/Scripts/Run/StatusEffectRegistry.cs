@@ -91,7 +91,7 @@ namespace Roguelike
             Reg(StatusEffectType.Focus, "专注", "专", desc: (a, s, o) => $"造成伤害增加 {a * 10}%");
             Reg(StatusEffectType.Artifact, "神器", "神", desc: (a, s, o) => "抵消一次负面效果");
             Reg(StatusEffectType.Thorns, "荆棘", "荆", desc: (a, s, o) => $"受到攻击时反伤 {a} 点");
-            Reg(StatusEffectType.Regeneration, "再生", "再", desc: (a, s, o) => $"回合开始时回复 {a} 点生命");
+            Reg(StatusEffectType.Regeneration, "再生", "再", desc: (a, s, o) => $"回合结束时回复 {a} 点生命");
             Reg(StatusEffectType.Metallicize, "金属化", "金", desc: (a, s, o) => $"回合结束获得 {a} 点防御");
             Reg(StatusEffectType.Intangible, "无形", "无", desc: (a, s, o) => "下次受到的攻击伤害变为 1");
             Reg(StatusEffectType.Vulnerable, "易伤", "易", desc: (a, s, o) => $"受到伤害 +{a * 10}%（每层 +10%）", neg: true);
