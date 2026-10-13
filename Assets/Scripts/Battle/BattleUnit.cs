@@ -92,6 +92,16 @@ public class BattleUnit
     }
 
     /// <summary>
+    /// 直接失去生命（无视防御与伤害修正，如自残 / 茧缚标记 / 契约）
+    /// </summary>
+    public void LoseHp(int amount)
+    {
+        if (amount <= 0) return;
+        CurrentHp -= amount;
+        OnDamageTaken?.Invoke(this, amount);
+    }
+
+    /// <summary>
     /// 造成伤害（经过状态效果修正）
     /// </summary>
     public int DealDamage(int baseDamage)

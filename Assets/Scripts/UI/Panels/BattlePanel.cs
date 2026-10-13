@@ -97,6 +97,8 @@ public partial class BattlePanel : BasePanel
     public Button endTurnButton;
     public Button mulliganButton;
     public TextMeshProUGUI mulliganButtonText;
+    private ColorBlock mulliganButtonColors = ColorBlock.defaultColorBlock;
+    private bool mulliganColorsCached;
 
     [Header("金币与遗物")]
     public TextMeshProUGUI goldText;
@@ -238,6 +240,9 @@ public partial class BattlePanel : BasePanel
 
         // 分辨率自适应：把写死的位置改成贴边（只做一次）
         ApplyResponsiveLayout();
+
+        // 玩家状态栏图标：从中间向两边排开（与敌人状态栏一致）
+        CenterStatusBar(playerStatusBar);
 
 // 订阅精确事件（携带 delta）
         SubscribeEvents();
@@ -938,6 +943,16 @@ public partial class BattlePanel : BasePanel
     /// 这样换宽高比时它们跟着屏幕边缘走，不会跑出屏幕。
     /// 只在第一次战斗时执行一次（之后锚点会自己跟着分辨率走）。
     /// </summary>
+    /// <summary>让状态栏图标从中间向两边排开（与敌人状态栏一致）</summary>
+    private static void CenterStatusBar(StatusEffectBar bar)
+    {
+        if (bar == null) return;
+        var container = bar.container != null ? bar.container : bar.transform;
+        var hlg = container.GetComponent<HorizontalLayoutGroup>();
+        if (hlg == null) hlg = container.gameObject.AddComponent<HorizontalLayoutGroup>();
+        hlg.childAlignment = TextAnchor.MiddleCenter;
+    }
+
     private void ApplyResponsiveLayout()
     {
         if (responsiveApplied || !responsiveLayout) return;
@@ -2612,12 +2627,30 @@ private void OnEnemyTurnStart()
         // 结束回合按钮：玩家回合且游戏未结束且可操作
         endTurnButton.interactable = battleManager.IsPlayerTurn && !battleManager.IsBattleOver && canAct;
 
-        // 重抽按钮：重抽阶段且选中了牌
-        bool canMulligan = inMulliganPhase && hasSelected;
+        // 重抽按钮：重抽阶段且选中了牌，且选中的牌里没有被茧缚标记的花色
+        var selectedForMulligan = handArea.GetSelectedCards();
+        bool hasMarkedSelected = selectedForMulligan.Exists(c => battleManager.IsCocoonMarked(c));
+        bool canMulligan = inMulliganPhase && hasSelected && !hasMarkedSelected;
         mulliganButton.interactable = canMulligan;
         if (mulliganButtonText != null)
         {
-            mulliganButtonText.text = battleManager.HasUsedMulligan ? "已重抽" : (hasSelected ? "弃牌重抽" : "请选牌");
+            if (battleManager.HasUsedMulligan) mulliganButtonText.text = "已重抽";
+            else if (hasMarkedSelected) mulliganButtonText.text = "茧缚";
+            else mulliganButtonText.text = hasSelected ? "弃牌重抽" : "请选牌";
+        }
+
+        // 选中被茧缚标记的花色时，重抽按钮整体略微变红
+        if (mulliganButton != null)
+        {
+            if (!mulliganColorsCached) { mulliganButtonColors = mulliganButton.colors; mulliganColorsCached = true; }
+
+            var cb = mulliganButtonColors;
+            if (hasMarkedSelected)
+            {
+                var dc = mulliganButtonColors.disabledColor;
+                cb.disabledColor = new Color(0.95f, 0.45f, 0.45f, dc.a);
+            }
+            mulliganButton.colors = cb;
         }
 
         // 改造按钮：恰好选中 1 张且可改造（万能牌/变色/镜牌）
@@ -2642,7 +2675,7 @@ private void OnEnemyTurnStart()
     {
         if (intent == null || battleManager == null) return "";
 
-        int value = (intent.type == "Attack" || intent.type == "MultiAttack" || intent.type == "Sunder")
+        int value = (intent.type == "Attack" || intent.type == "MultiAttack" || intent.type == "Sunder" || intent.type == "HandSizeAttack")
             ? battleManager.GetIntentPreviewDamage(intent, unit)
             : intent.value;
 
@@ -2665,6 +2698,8 @@ private void OnEnemyTurnStart()
             }
             case "MultiAttack":
                 return $"<color=#FF6B6B>多重攻击 {value} x{intent.hitCount}</color>{chargeTag}";
+            case "HandSizeAttack":
+                return $"<color=#FF6B6B>抽髓 {value} x{intent.hitCount}</color>{chargeTag}";
             case "Debuff":
             {
                 // 和 Buff 一致：填了 description 就用它
@@ -2777,9 +2812,10 @@ private void OnEnemyTurnStart()
             {
                 case "Attack":
                 case "MultiAttack":
+                case "HandSizeAttack":
                 {
                     int dmg = battleManager != null ? battleManager.GetIntentPreviewDamage(a, unit) : a.value;
-                    string suffix = (a.type == "MultiAttack" && a.hitCount > 1) ? $" x{a.hitCount}" : "";
+                    string suffix = (a.type != "Attack" && a.hitCount > 1) ? $" x{a.hitCount}" : "";
                     string tag = IsCharged(unit) ? " <color=#FFD24D>(蓄力×2)</color>" : "";
                     parts.Add($"<color=#FF6B6B>攻击 {dmg}{suffix}</color>{tag}");
                     break;

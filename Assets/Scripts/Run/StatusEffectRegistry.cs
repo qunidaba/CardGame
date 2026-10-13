@@ -190,6 +190,28 @@ namespace Roguelike
                         ? Roguelike.RunDirector.Instance.RunData.PollutedCount : 0;
                     return $"每回合污染玩家 {a} 张牌；当前已污染 {polluted} 张\n（被污染的牌附魔失效、参与牌型伤害 -1、打出后解除）";
                 });
+            Reg(StatusEffectType.CocoonMark, "茧缚", "茧",
+                showCount: false, showDuration: false,
+                labelFunc: a => a >= 1 ? SuitSymbol((Suit)(a - 1)) : "茧",
+                desc: (a, s, o) =>
+                {
+                    string body = a >= 1
+                        ? $"在场时手牌不弃置；当前标记 {SuitName((Suit)(a - 1))}：打出该花色每张失去 3 点生命（无视防御），且该花色不可弃牌重抽"
+                        : "在场时回合结束手牌不弃置；回合结束时标记本回合打出最多的花色（下回合该花色每张失去 3 生命且不可重抽）";
+
+                    var bm = Roguelike.RunDirector.Instance != null ? Roguelike.RunDirector.Instance.BattleManager : null;
+                    var counts = bm != null ? bm.GetTurnSuitCounts() : null;
+                    if (counts != null && counts.Count > 0)
+                    {
+                        var parts = new List<string>();
+                        foreach (Suit su in new[] { Suit.Spade, Suit.Heart, Suit.Club, Suit.Diamond })
+                            if (counts.TryGetValue(su, out var c) && c > 0)
+                                parts.Add($"{SuitSymbol(su)}{c}");
+                        if (parts.Count > 0)
+                            body += "\n本回合已打出：" + string.Join("  ", parts);
+                    }
+                    return body;
+                });
         }
 
         // ===== 注册辅助 =====

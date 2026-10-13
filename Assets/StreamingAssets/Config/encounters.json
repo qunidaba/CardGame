@@ -156,6 +156,47 @@
             "enemies": [
                 15
             ]
+        },
+        {
+            "id": 18,
+            "name": "缚茧蛛",
+            "pool": "act2_common",
+            "weight": 10,
+            "enemies": [
+                23
+            ]
+        },
+        {
+            "id": 19,
+            "name": "缚茧蛛+吞噬怪",
+            "pool": "act2_common_late",
+            "weight": 6,
+            "enemies": [
+                23,
+                12
+            ]
+        },
+        {
+            "id": 20,
+            "name": "缚茧蛛+愤怒骷髅头*2",
+            "pool": "act2_common_late",
+            "weight": 6,
+            "enemies": [
+                23,
+                13,
+                13
+            ]
+        },
+        {
+            "id": 21,
+            "name": "遁地蠕虫+诡异蠕虫*2",
+            "pool": "act2_common_late",
+            "weight": 6,
+            "enemies": [
+                11,
+                14,
+                11
+            ]
         }
     ]
 }

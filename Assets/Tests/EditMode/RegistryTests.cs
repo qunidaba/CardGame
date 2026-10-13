@@ -24,6 +24,7 @@ public class RegistryTests
         Assert.AreEqual("中毒", StatusEffectRegistry.Name(StatusEffectType.Poison));
         Assert.AreEqual("遁地", StatusEffectRegistry.Name(StatusEffectType.Burrow));
         Assert.AreEqual("吞噬", StatusEffectRegistry.Name(StatusEffectType.Swallow));
+        Assert.AreEqual("茧缚", StatusEffectRegistry.Name(StatusEffectType.CocoonMark));
     }
 
     [Test]

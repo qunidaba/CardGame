@@ -54,6 +54,7 @@ namespace Roguelike
         Burrow = 36,              // 遁地：受到的攻击伤害固定为 1，层数 = 还需被攻击的次数（挂在敌人身上）
         Gaze = 37,                // 凝视：Boss 记住玩家上一手牌型，重复该牌型伤害减半（amount = (int)HandType）
         Pollute = 38,             // 污染：Boss 每回合污染玩家若干张牌（层数 = 每回合污染张数）
+        CocoonMark = 39,          // 茧缚标记：玩家打出的被标记花色每张失去生命（带花色维度，挂在玩家身上）
     }
 
     /// <summary>

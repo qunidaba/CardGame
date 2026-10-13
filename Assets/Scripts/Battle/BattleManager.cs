@@ -328,6 +328,13 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             case "MultiAttack":
             case "Sunder":
                 return player.StatusEffects.PreviewTakeDamage(PreviewChargeDamage(attacker, intent));
+            case "HandSizeAttack":
+            {
+                int hand = handArea != null ? handArea.Count : 0;
+                int dmg = attacker.DealDamage(intent.value + hand);
+                if (dmg > 0 && attacker.GetStatusAmount(StatusEffectType.Charge) > 0) dmg *= 2;
+                return player.StatusEffects.PreviewTakeDamage(dmg);
+            }
             case "Multi":
             {
                 int sum = 0;
@@ -354,8 +361,24 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     public int GetSuitCount(Suit suit) => Suits.GetCount(suit);
     public Dictionary<Suit, int> GetSuitTally() => Suits.GetAll();
     public Suit GetDominantSuit() => Suits.Dominant();
+    /// <summary>本回合已打出的各花色数量（茧缚提示用）</summary>
+    public Dictionary<Suit, int> GetTurnSuitCounts() => new Dictionary<Suit, int>(turnSuitCount);
+    /// <summary>该牌是否属于当前被「茧缚」标记的花色（不可弃牌重抽）</summary>
+    public bool IsCocoonMarked(CardData card)
+        => card != null && cocoonMarkedSuit >= 0 && (int)card.EffectiveSuit == cocoonMarkedSuit;
     private void ResetSuitTally() => Suits.Reset();
-    private void CountPlayedSuits(List<CardData> cards) => Suits.CountPlayed(cards);
+    private void CountPlayedSuits(List<CardData> cards)
+    {
+        Suits.CountPlayed(cards);
+        if (cards == null) return;
+        foreach (var c in cards)
+        {
+            var s = c.EffectiveSuit;
+            turnSuitCount[s] = turnSuitCount.TryGetValue(s, out var v) ? v + 1 : 1;
+            lastSuitThisTurn = s;
+            hasPlayedThisTurn = true;
+        }
+    }
 
     // ===== 附魔回合状态接口（由 EnchantmentSystem 调用）=====
 
@@ -476,6 +499,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
                 e.StatusEffects.SetStatus(StatusEffectType.Gaze, 0, -1);   // 0 = 尚未出牌
             else if (data.passive == "Pollute")
                 e.StatusEffects.SetStatus(StatusEffectType.Pollute, Mathf.Max(1, data.polluteCount), -1);
+            else if (data.passive == "Cocoon")
+                e.StatusEffects.SetStatus(StatusEffectType.CocoonMark, 0, -1);   // 0 = 尚未标记；开局就展示特性
         }
     }
 
@@ -589,6 +614,13 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     private int battleGuaranteeCount = 0;
     private readonly List<int> sealedSuits = new List<int>();   // 本场无法打出的花色
 
+    // ===== 茧缚（缚茧蛛被动）：保留手牌 + 下回合标记花色 =====
+    private const int CocoonHpPenaltyPerCard = 3;               // 打出被标记花色的牌 → 失去生命（无视防御）
+    private readonly Dictionary<Suit, int> turnSuitCount = new Dictionary<Suit, int>();  // 本回合出牌花色统计
+    private Suit lastSuitThisTurn = Suit.Spade;                 // 本回合最后打出的花色（并列时优先）
+    private bool hasPlayedThisTurn = false;
+    private int cocoonMarkedSuit = -1;                          // 当前被标记的花色（-1 = 无）
+
     // 梅花事件：本场战斗修正
     private int battleStraightDraw = 0;          // 顺子额外抽牌
     private int battleFateBonus = 0;             // 命运之力积攒 +N
@@ -686,6 +718,11 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         queuedIntents.Clear();
         EnemyAbilities.Clear();
         CurrentTargetIndex = -1;   // 开局不预选敌人，需要玩家点选目标
+
+        // 茧缚：重置
+        cocoonMarkedSuit = -1;
+        turnSuitCount.Clear();
+        hasPlayedThisTurn = false;
 
         if (enemyList != null)
         {
@@ -908,6 +945,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         playsThisTurn = 0;
         PendingSearchCount = 0;
         TurnsElapsed++;
+        turnSuitCount.Clear();       // 茧缚：本回合出牌花色统计
+        hasPlayedThisTurn = false;
 
         // 敌人被动：愤怒骷髅头——每回合刷新 2 个弱点牌型
         EnemyAbilities.RefreshWeaknesses();
@@ -1210,6 +1249,14 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         // 花色命运：统计本场打出的花色
         CountPlayedSuits(selected);
 
+        // 茧缚：打出被标记花色的牌 → 失去生命（无视防御）
+        ApplyCocoonPlayPenalty(selected);
+        if (player.IsDead)
+        {
+            CheckBattleEnd();
+            return true;
+        }
+
         // 命格：打出主命格花色的牌积攒命运之力
         if (runData != null && runData.HasMainDestiny)
         {
@@ -1387,9 +1434,16 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         }
 
         var selected = handArea.GetSelectedCards();
+
+        // 茧缚：被标记花色的牌无法弃牌重抽
+        if (cocoonMarkedSuit >= 0)
+            selected = selected.Where(c => (int)c.EffectiveSuit != cocoonMarkedSuit).ToList();
+
         if (selected.Count == 0)
         {
-            Debug.Log("没有选中任何牌");
+            Debug.Log(cocoonMarkedSuit >= 0
+                ? "被茧缚标记的花色无法弃牌重抽"
+                : "没有选中任何牌");
             return false;
         }
 
@@ -1433,16 +1487,28 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         ClearTarget();
 
         // 阶段 1: 手牌放回牌堆（带「保留」的牌留在手牌）
+        // 茧缚：场上存在该机制敌人时，手牌不弃置
         OnPlayerPhaseChanged?.Invoke("DiscardHand");
-        var allHandCards = new List<CardData>(handArea.HandCards);
-        var toReturn = allHandCards.Where(c => !c.IsRetain).ToList();
-        if (toReturn.Count > 0)
+        bool cocoonActive = AnyAliveEnemyHasPassive("Cocoon");
+        if (cocoonActive)
         {
-            handArea.RemoveCards(toReturn);
-            deckPile.Discard(toReturn);
-            enchantmentSystem?.OnCardsDiscarded(toReturn);
-            Debug.Log($"回合结束，{toReturn.Count} 张手牌放回牌堆并洗牌");
+            Debug.Log("[茧缚] 手牌被织网缠住，回合结束不弃置");
         }
+        else
+        {
+            var allHandCards = new List<CardData>(handArea.HandCards);
+            var toReturn = allHandCards.Where(c => !c.IsRetain).ToList();
+            if (toReturn.Count > 0)
+            {
+                handArea.RemoveCards(toReturn);
+                deckPile.Discard(toReturn);
+                enchantmentSystem?.OnCardsDiscarded(toReturn);
+                Debug.Log($"回合结束，{toReturn.Count} 张手牌放回牌堆并洗牌");
+            }
+        }
+
+        // 茧缚：结算"本回合打出最多的花色"→下回合标记（无此机制则清除）
+        UpdateCocoonMark(cocoonActive);
         yield return new WaitForSeconds(phaseDelay);
 
         // 阶段 2: 回合结束效果 (遗物 OnTurnEnd, 附魔 OnTurnEnd)
@@ -1645,6 +1711,70 @@ else
             ProcessSingleDoT(target, eff);
     }
 
+    // ===== 茧缚（缚茧蛛被动）=====
+
+    /// <summary>打出被标记花色的牌 → 失去生命（无视防御）</summary>
+    private void ApplyCocoonPlayPenalty(List<CardData> selected)
+    {
+        if (cocoonMarkedSuit < 0 || player == null || player.IsDead || selected == null || selected.Count == 0) return;
+
+        int count = 0;
+        foreach (var c in selected)
+            if ((int)c.EffectiveSuit == cocoonMarkedSuit) count++;
+        if (count <= 0) return;
+
+        int lost = count * CocoonHpPenaltyPerCard;
+        player.LoseHp(lost);
+        Debug.Log($"[茧缚] 打出被标记花色 {count} 张 → 失去 {lost} 点生命（无视防御）");
+    }
+
+    /// <summary>回合结束：结算本回合打出最多的花色 → 下回合标记（并列取最后打出的花色）</summary>
+    private void UpdateCocoonMark(bool cocoonActive)
+    {
+        // 本回合打出最多的花色（并列取最后打出的）→ 下回合标记
+        int mark = -1;
+        if (cocoonActive && hasPlayedThisTurn && turnSuitCount.Count > 0)
+        {
+            int bestSuit = -1, bestCount = 0;
+            foreach (var kv in turnSuitCount)
+            {
+                if (kv.Value > bestCount)
+                {
+                    bestCount = kv.Value;
+                    bestSuit = (int)kv.Key;
+                }
+                else if (kv.Value == bestCount && (int)kv.Key == (int)lastSuitThisTurn)
+                {
+                    bestSuit = (int)kv.Key;
+                }
+            }
+            mark = bestSuit;
+        }
+
+        cocoonMarkedSuit = mark;
+
+        // 显示在所有存活缚茧蛛身上：amount = mark + 1（0 = 尚未标记）
+        foreach (var e in enemies)
+        {
+            if (e == null || e.IsDead) continue;
+            var data = GetEnemyData(e);
+            if (data != null && data.passive == "Cocoon")
+                e.StatusEffects.SetStatus(StatusEffectType.CocoonMark, mark + 1, -1);
+        }
+
+        if (mark >= 0)
+            Debug.Log($"[茧缚] 下回合标记花色：{DestinyInfo.SuitSymbol((Suit)mark)}");
+
+        turnSuitCount.Clear();
+        hasPlayedThisTurn = false;
+    }
+
+    /// <summary>解除茧缚标记（敌人全灭时；标记只存内部字段）</summary>
+    private void ClearCocoonMark()
+    {
+        cocoonMarkedSuit = -1;
+    }
+
     /// <summary>
     /// 检查战斗是否结束
     /// </summary>
@@ -1655,6 +1785,10 @@ else
 
         // 吞噬怪已阵亡：归还它吞掉的牌
         EnemyAbilities.ReturnSwallowedCardsOfDeadEnemies();
+
+        // 缚茧蛛已阵亡：解除茧缚标记
+        if (cocoonMarkedSuit >= 0 && !AnyAliveEnemyHasPassive("Cocoon"))
+            ClearCocoonMark();
 
         if (player.IsDead)
         {

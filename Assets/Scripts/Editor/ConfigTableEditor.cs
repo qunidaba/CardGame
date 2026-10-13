@@ -1020,6 +1020,7 @@ public class ConfigTableEditor : EditorWindow
                 case "Burrow": return "遁地（受到的攻击伤害固定为1，被攻击 N 次后出来）";
                 case "Summon": return "召唤（value=敌人id，hitCount=数量；上限3个，满员不能用）";
                 case "HealAllies": return "全体回血（给所有友方回复 value 点生命）";
+                case "HandSizeAttack": return "抽髓（伤害=value+玩家手牌数，多段）";
             }
         }
 
@@ -1030,6 +1031,7 @@ public class ConfigTableEditor : EditorWindow
             {
                 case "None": return "无";
                 case "Weakness": return "弱点（每回合刷新2个弱点牌型，被非弱点牌型攻击+1力量）";
+                case "Cocoon": return "茧缚（在场时手牌不弃置；本回合出牌最多花色下回合每张失去3生命且不可重抽）";
             }
         }
 

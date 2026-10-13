@@ -90,4 +90,15 @@ public class StatusDamageTests
         u.Heal(999);
         Assert.AreEqual(80, u.CurrentHp);
     }
+
+    [Test]
+    public void LoseHp_IgnoresDefenseAndModifiers()
+    {
+        var u = Unit();
+        u.Defense = 10;
+        u.AddStatus(StatusEffectType.Vulnerable, 5, -1);   // 易伤本会放大伤害
+        u.LoseHp(3);
+        Assert.AreEqual(10, u.Defense, "失去生命不消耗防御");
+        Assert.AreEqual(97, u.CurrentHp, "固定 -3，不受易伤/防御影响");
+    }
 }

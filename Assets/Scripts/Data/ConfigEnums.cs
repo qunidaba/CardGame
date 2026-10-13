@@ -47,7 +47,8 @@ namespace Roguelike.Data
         Swallow,   // 吞噬：吞掉玩家抽牌堆里 N 张牌（value=张数），以状态挂在敌人身上，敌人死亡时归还
         Burrow,    // 遁地：受到的攻击伤害固定为 1，被攻击 value 次后出来（未遁地时优先使用，已遁地时不能再用）
         Summon,    // 召唤：召唤敌人（value=敌人id，hitCount=数量）；敌人上限 3 个，满员时不能用
-        HealAllies // 全体回血：给所有友方敌人回复 value 点生命
+        HealAllies, // 全体回血：给所有友方敌人回复 value 点生命
+        HandSizeAttack // 抽髓：伤害 = value + 玩家手牌数/2，命中 hitCount 次（反囤牌）
     }
 
     /// <summary>敌人被动（EnemyData.passive）：不进意图池，整场战斗常驻</summary>
@@ -56,7 +57,8 @@ namespace Roguelike.Data
         None,       // 无
         Weakness,   // 弱点：每回合刷新 2 个弱点牌型；被非弱点牌型攻击时 +1 力量
         Repeat,     // 复读：记住玩家上一手牌型，重复该牌型时伤害减半
-        Pollute     // 污染：每回合给玩家的牌污染若干张（附魔失效 / 参与牌型伤害-1 / 打出解除）
+        Pollute,    // 污染：每回合给玩家的牌污染若干张（附魔失效 / 参与牌型伤害-1 / 打出解除）
+        Cocoon      // 茧缚：在场时玩家回合结束不弃手牌；本回合打出最多的花色下回合每打 1 张失去 3 生命且不可弃牌重抽
     }
 
     public enum PotionEffectType
