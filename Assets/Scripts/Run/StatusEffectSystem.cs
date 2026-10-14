@@ -55,6 +55,7 @@ namespace Roguelike
         Gaze = 37,                // 凝视：Boss 记住玩家上一手牌型，重复该牌型伤害减半（amount = (int)HandType）
         Pollute = 38,             // 污染：Boss 每回合污染玩家若干张牌（层数 = 每回合污染张数）
         CocoonMark = 39,          // 茧缚标记：玩家打出的被标记花色每张失去生命（带花色维度，挂在玩家身上）
+        Demand = 40,              // 苛求：本回合必须恰好打出 amount 张牌（挂在玩家身上）
     }
 
     /// <summary>

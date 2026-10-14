@@ -212,6 +212,13 @@ namespace Roguelike
                     }
                     return body;
                 });
+            Reg(StatusEffectType.Demand, "苛求", "苛", showDuration: false,
+                desc: (a, s, o) =>
+                {
+                    var bm = Roguelike.RunDirector.Instance != null ? Roguelike.RunDirector.Instance.BattleManager : null;
+                    int played = bm != null ? bm.CardsPlayedThisTurn : 0;
+                    return $"本回合必须恰好打出 {a} 张牌（已打出 {played}）；否则回合结束随机 7 张手牌被随机诅咒";
+                });
         }
 
         // ===== 注册辅助 =====

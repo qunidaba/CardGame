@@ -1032,6 +1032,7 @@ public class ConfigTableEditor : EditorWindow
                 case "None": return "无";
                 case "Weakness": return "弱点（每回合刷新2个弱点牌型，被非弱点牌型攻击+1力量）";
                 case "Cocoon": return "茧缚（在场时手牌不弃置；本回合出牌最多花色下回合每张失去3生命且不可重抽）";
+                case "ExactPlay": return "苛求（每回合要求恰好打出随机 8~13 张牌，否则随机 7 张手牌被诅咒）";
             }
         }
 

@@ -621,6 +621,16 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     private bool hasPlayedThisTurn = false;
     private int cocoonMarkedSuit = -1;                          // 当前被标记的花色（-1 = 无）
 
+    // ===== 苛求（苛求者精英被动）：每回合必须恰好打出随机 N 张牌 =====
+    private const int ExactPlayMin = 8;                         // 要求的张数范围下限
+    private const int ExactPlayMax = 13;                        // 上限（含）
+    private const int ExactPlayCurseCards = 7;                  // 未完成时诅咒的手牌数
+    private int exactionDemand = -1;                            // 本回合要求打出的牌数（-1 = 无）
+    private int cardsPlayedThisTurn = 0;                        // 本回合已打出的牌数
+
+    /// <summary>本回合已打出的牌数（苛求提示用）</summary>
+    public int CardsPlayedThisTurn => cardsPlayedThisTurn;
+
     // 梅花事件：本场战斗修正
     private int battleStraightDraw = 0;          // 顺子额外抽牌
     private int battleFateBonus = 0;             // 命运之力积攒 +N
@@ -723,6 +733,10 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         cocoonMarkedSuit = -1;
         turnSuitCount.Clear();
         hasPlayedThisTurn = false;
+
+        // 苛求：重置
+        exactionDemand = -1;
+        cardsPlayedThisTurn = 0;
 
         if (enemyList != null)
         {
@@ -947,6 +961,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         TurnsElapsed++;
         turnSuitCount.Clear();       // 茧缚：本回合出牌花色统计
         hasPlayedThisTurn = false;
+        cardsPlayedThisTurn = 0;     // 苛求：本回合出牌计数
+        RollExactionDemand();
 
         // 敌人被动：愤怒骷髅头——每回合刷新 2 个弱点牌型
         EnemyAbilities.RefreshWeaknesses();
@@ -1289,6 +1305,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
         // 出牌加成（顺风耳/同花顺之巅/花色调和/附魔共鸣/黑桃被动/暴怒）——与预览共用
         playsThisTurn++;
+        cardsPlayedThisTurn += selected.Count;   // 苛求：本回合出牌计数（按张数）
         ApplyPlayBonuses(effects, selected, result, playsThisTurn, consumeRage: true);
 
         // Boss「凝视」：记住这一手（同类牌型 → 伤害减半，判定在 ApplyPlayBonuses 里）
@@ -1485,6 +1502,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
         // 回合结束清空选中目标：下回合需要重新点选敌人
         ClearTarget();
+
+        // 苛求：本回合出牌数必须恰好等于要求，否则惩罚（要在弃手牌之前结算，才有手牌可诅咒）
+        CheckExactionAtTurnEnd();
 
         // 阶段 1: 手牌放回牌堆（带「保留」的牌留在手牌）
         // 茧缚：场上存在该机制敌人时，手牌不弃置
@@ -1775,6 +1795,91 @@ else
         cocoonMarkedSuit = -1;
     }
 
+    // ===== 苛求（苛求者精英被动）：每回合必须恰好打出随机 N 张牌 =====
+
+    /// <summary>回合开始：若有此机制敌人存活，随机一个要求张数并显示</summary>
+    private void RollExactionDemand()
+    {
+        ClearDemandStatus();
+
+        if (!AnyAliveEnemyHasPassive("ExactPlay"))
+        {
+            exactionDemand = -1;
+            return;
+        }
+
+        exactionDemand = UnityEngine.Random.Range(ExactPlayMin, ExactPlayMax + 1);
+        SetDemandStatus(exactionDemand);
+        Debug.Log($"[苛求] 本回合要求恰好打出 {exactionDemand} 张牌");
+    }
+
+    /// <summary>把「苛求」状态显示在存活的苛求者身上（amount = 要求张数）</summary>
+    private void SetDemandStatus(int amount)
+    {
+        foreach (var e in enemies)
+        {
+            if (e == null || e.IsDead) continue;
+            var data = GetEnemyData(e);
+            if (data != null && data.passive == "ExactPlay")
+                e.StatusEffects.SetStatus(StatusEffectType.Demand, amount, -1);
+        }
+    }
+
+    /// <summary>移除所有苛求者身上的「苛求」状态</summary>
+    private void ClearDemandStatus()
+    {
+        foreach (var e in enemies)
+        {
+            if (e == null) continue;
+            e.StatusEffects.RemoveStatus(StatusEffectType.Demand);
+        }
+    }
+
+    /// <summary>回合结束结算：未恰好打完则惩罚，并清除本回合要求</summary>
+    private void CheckExactionAtTurnEnd()
+    {
+        if (exactionDemand < 0) return;
+
+        if (AnyAliveEnemyHasPassive("ExactPlay") && cardsPlayedThisTurn != exactionDemand)
+        {
+            Debug.Log($"[苛求] 本回合打出 {cardsPlayedThisTurn} 张（要求 {exactionDemand}）→ 未完成，触发惩罚");
+            ApplyExactionPenalty();
+        }
+
+        exactionDemand = -1;
+        ClearDemandStatus();
+    }
+
+    /// <summary>苛求惩罚：随机 N 张手牌各获得一个随机诅咒（本场战斗）</summary>
+    private void ApplyExactionPenalty()
+    {
+        if (runData == null || handArea == null) return;
+
+        var hand = new List<CardData>(handArea.HandCards);
+        if (hand.Count == 0) return;
+
+        // 洗牌取前 N 张
+        for (int i = hand.Count - 1; i > 0; i--)
+        {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            (hand[i], hand[j]) = (hand[j], hand[i]);
+        }
+
+        var curses = Roguelike.Data.ConfigLoader.Config.enchantments.FindAll(e => e != null && e.rarity == "Curse");
+        if (curses.Count == 0) return;
+
+        int n = Mathf.Min(ExactPlayCurseCards, hand.Count);
+        for (int i = 0; i < n; i++)
+        {
+            var card = hand[i];
+            var curse = curses[UnityEngine.Random.Range(0, curses.Count)];
+            runData.AddTempEnchantment(card.EnchantRank, card.EnchantSuit, curse.id);
+        }
+
+        NotifyEnchantmentsChanged();
+        Debug.Log($"[苛求] 惩罚：{n} 张手牌被随机诅咒");
+    }
+
     /// <summary>
     /// 检查战斗是否结束
     /// </summary>
@@ -1789,6 +1894,13 @@ else
         // 缚茧蛛已阵亡：解除茧缚标记
         if (cocoonMarkedSuit >= 0 && !AnyAliveEnemyHasPassive("Cocoon"))
             ClearCocoonMark();
+
+        // 苛求者已阵亡：解除本回合的出牌要求
+        if (exactionDemand >= 0 && !AnyAliveEnemyHasPassive("ExactPlay"))
+        {
+            exactionDemand = -1;
+            ClearDemandStatus();
+        }
 
         if (player.IsDead)
         {

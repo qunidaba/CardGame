@@ -154,7 +154,7 @@
             "pool": "act2_elite",
             "weight": 5,
             "enemies": [
-                15
+                16
             ]
         },
         {
@@ -163,7 +163,7 @@
             "pool": "act2_common",
             "weight": 10,
             "enemies": [
-                23
+                15
             ]
         },
         {
@@ -172,7 +172,7 @@
             "pool": "act2_common_late",
             "weight": 6,
             "enemies": [
-                23,
+                15,
                 12
             ]
         },
@@ -182,8 +182,8 @@
             "pool": "act2_common_late",
             "weight": 6,
             "enemies": [
-                23,
                 13,
+                15,
                 13
             ]
         },
@@ -196,6 +196,15 @@
                 11,
                 14,
                 11
+            ]
+        },
+        {
+            "id": 22,
+            "name": "苛求者",
+            "pool": "act2_elite",
+            "weight": 6,
+            "enemies": [
+                17
             ]
         }
     ]

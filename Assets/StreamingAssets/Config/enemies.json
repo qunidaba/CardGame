@@ -1454,6 +1454,130 @@
         },
         {
             "id": 15,
+            "name": "缚茧蛛",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 220,
+            "maxHp": 220,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 30,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 10,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Defense",
+                            "value": 15,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "",
+                            "duration": 1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 25,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Defense",
+                            "value": 14,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Buff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Strength",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "HandSizeAttack",
+                    "value": 5,
+                    "multiHit": false,
+                    "hitCount": 2,
+                    "description": null,
+                    "weight": 25,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                }
+            ],
+            "goldRange": [
+                15,
+                20
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_common_late"
+            ],
+            "passive": "Cocoon",
+            "polluteCount": 2
+        },
+        {
+            "id": 16,
             "name": "哥布林巫师",
             "image": null,
             "frames": [
@@ -1551,6 +1675,130 @@
                 "act2_elite"
             ],
             "passive": null,
+            "polluteCount": 2
+        },
+        {
+            "id": 17,
+            "name": "苛求者",
+            "image": null,
+            "frames": [
+
+],
+            "frameRate": 0,
+            "burrowImage": null,
+            "burrowFrames": [
+
+],
+            "emergeImage": null,
+            "emergeFrames": [
+
+],
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "imageScale": 0,
+            "imageOffsetX": 0,
+            "imageOffsetY": 0,
+            "hp": 250,
+            "maxHp": 250,
+            "intents": [
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 20,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Attack",
+                            "value": 12,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Debuff",
+                            "value": 3,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Weaken",
+                            "duration": 1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                },
+                {
+                    "type": "MultiAttack",
+                    "value": 2,
+                    "multiHit": false,
+                    "hitCount": 3,
+                    "description": null,
+                    "weight": 20,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": null
+                },
+                {
+                    "type": "Multi",
+                    "value": 0,
+                    "multiHit": false,
+                    "hitCount": 1,
+                    "description": null,
+                    "weight": 20,
+                    "status": null,
+                    "duration": -1,
+                    "battleStart": false,
+                    "actions": [
+                        {
+                            "type": "Buff",
+                            "value": 2,
+                            "multiHit": false,
+                            "hitCount": 1,
+                            "description": null,
+                            "weight": 100,
+                            "status": "Strength",
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        },
+                        {
+                            "type": "Curse",
+                            "value": 67,
+                            "multiHit": false,
+                            "hitCount": 3,
+                            "description": null,
+                            "weight": 100,
+                            "status": null,
+                            "duration": -1,
+                            "battleStart": false,
+                            "actions": null
+                        }
+                    ]
+                }
+            ],
+            "goldRange": [
+                40,
+                45
+            ],
+            "relicDrop": false,
+            "bossRelic": false,
+            "isBoss": false,
+            "pools": [
+                "act2_elite"
+            ],
+            "passive": "ExactPlay",
             "polluteCount": 2
         },
         {
@@ -1972,130 +2220,6 @@
 ],
             "passive": "Pollute",
             "polluteCount": 10
-        },
-        {
-            "id": 23,
-            "name": "缚茧蛛",
-            "image": null,
-            "frames": [
-
-],
-            "frameRate": 0,
-            "burrowImage": null,
-            "burrowFrames": [
-
-],
-            "emergeImage": null,
-            "emergeFrames": [
-
-],
-            "imageWidth": 0,
-            "imageHeight": 0,
-            "imageScale": 0,
-            "imageOffsetX": 0,
-            "imageOffsetY": 0,
-            "hp": 220,
-            "maxHp": 220,
-            "intents": [
-                {
-                    "type": "Multi",
-                    "value": 0,
-                    "multiHit": false,
-                    "hitCount": 1,
-                    "description": null,
-                    "weight": 30,
-                    "status": null,
-                    "duration": -1,
-                    "battleStart": false,
-                    "actions": [
-                        {
-                            "type": "Attack",
-                            "value": 10,
-                            "multiHit": false,
-                            "hitCount": 1,
-                            "description": null,
-                            "weight": 100,
-                            "status": null,
-                            "duration": -1,
-                            "battleStart": false,
-                            "actions": null
-                        },
-                        {
-                            "type": "Defense",
-                            "value": 15,
-                            "multiHit": false,
-                            "hitCount": 1,
-                            "description": null,
-                            "weight": 100,
-                            "status": "",
-                            "duration": 1,
-                            "battleStart": false,
-                            "actions": null
-                        }
-                    ]
-                },
-                {
-                    "type": "Multi",
-                    "value": 0,
-                    "multiHit": false,
-                    "hitCount": 1,
-                    "description": null,
-                    "weight": 25,
-                    "status": null,
-                    "duration": -1,
-                    "battleStart": false,
-                    "actions": [
-                        {
-                            "type": "Defense",
-                            "value": 14,
-                            "multiHit": false,
-                            "hitCount": 1,
-                            "description": null,
-                            "weight": 100,
-                            "status": null,
-                            "duration": -1,
-                            "battleStart": false,
-                            "actions": null
-                        },
-                        {
-                            "type": "Buff",
-                            "value": 2,
-                            "multiHit": false,
-                            "hitCount": 1,
-                            "description": null,
-                            "weight": 100,
-                            "status": "Strength",
-                            "duration": -1,
-                            "battleStart": false,
-                            "actions": null
-                        }
-                    ]
-                },
-                {
-                    "type": "HandSizeAttack",
-                    "value": 5,
-                    "multiHit": false,
-                    "hitCount": 2,
-                    "description": null,
-                    "weight": 25,
-                    "status": null,
-                    "duration": -1,
-                    "battleStart": false,
-                    "actions": null
-                }
-            ],
-            "goldRange": [
-                15,
-                20
-            ],
-            "relicDrop": false,
-            "bossRelic": false,
-            "isBoss": false,
-            "pools": [
-                "act2_common_late"
-            ],
-            "passive": "Cocoon",
-            "polluteCount": 2
         }
     ]
 }
