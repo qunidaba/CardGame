@@ -1383,7 +1383,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
                 }
                 else if (card.EffectiveSuit == Suit.Spade)
                 {
-                    player.TakeDamage(1);
+                    player.LoseHp(1);   // 失去生命（无视防御）
                     var heartTarget = GetEnemy();
                     if (heartTarget != null && !heartTarget.IsDead)
                         heartTarget.TakeDamage(player.DealDamage(1), player);
@@ -1547,7 +1547,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         // 玩家状态效果回合结束结算 (DoT 已在敌方回合处理，这里只做层数递减等)
         player?.OnTurnEnd();
 
-        // 事件永久效果：每回合结束自伤（读状态栏的「血契」层数）
+        // 事件永久效果：每回合结束自伤（读状态栏的「血契」层数）——「自伤」是受到伤害，会被防御格挡
         int selfDamage = player.GetStatusAmount(StatusEffectType.SelfDamage);
         if (selfDamage > 0 && !player.IsDead)
         {

@@ -382,14 +382,15 @@ namespace Roguelike
                     break;
                 }
 
-                // 「半人石像」：出牌时，生命 ≥50% 抽 1 张并失去 2 点生命；否则回复 1 点生命
+                // 「半人石像」：出牌时，生命 ≥50% 抽 1 张并失去 value 点生命；否则回复 value 点生命
                 case "HalfHpPlayEffect":
                 {
                     if (ctx.Player == null) break;
+                    int amount = Mathf.Max(0, GetIntValue(effect.value));
                     float pct = ctx.Player.MaxHp > 0 ? (float)ctx.Player.CurrentHp / ctx.Player.MaxHp : 1f;
                     if (pct >= 0.5f)
                     {
-                        ctx.Player.TakeDamage(1);
+                        ctx.Player.LoseHp(amount);   // 失去生命（无视防御）
                         if (ctx.DeckPile != null && ctx.HandArea != null)
                         {
                             var bonusDraw = ctx.DeckPile.Draw(1);
@@ -401,7 +402,7 @@ namespace Roguelike
                     }
                     else
                     {
-                        ctx.Player.Heal(1);
+                        ctx.Player.Heal(amount);
                     }
                     break;
                 }
