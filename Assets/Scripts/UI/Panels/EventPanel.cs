@@ -97,13 +97,13 @@ public class EventPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         // 全屏遮罩（拦截点击）
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
         // 背景和战斗面板一致：同一张 BackGround 图
-        var bgSprite = Resources.Load<Sprite>("BackGrounds/BackGround");
+        var bgSprite = Res.Load<Sprite>("BackGrounds/BackGround");
         if (bgSprite != null)
         {
             overlay.sprite = bgSprite;
@@ -231,7 +231,7 @@ public class EventPanel : BasePanel
         btn.colors = colors;
         btn.onClick.AddListener(() => onClick?.Invoke());
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var label = CreateText(go.transform, "Label", font, 22, TextAlignmentOptions.Center, Vector2.zero);
         var lRt = label.rectTransform;
         lRt.anchorMin = Vector2.zero;

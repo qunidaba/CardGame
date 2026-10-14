@@ -51,7 +51,7 @@ public class EventResultPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
@@ -170,7 +170,7 @@ public class EventResultPanel : BasePanel
 
     private void CreateEnchantmentRow(GrantedEnchantment granted)
     {
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var ench = ConfigLoader.GetEnchantment(granted.enchantmentId);
 
         string enchName = ench != null ? ench.name : $"附魔#{granted.enchantmentId}";
@@ -213,7 +213,7 @@ public class EventResultPanel : BasePanel
 
     private void CreateMessageRow(string msg)
     {
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var text = CreateText(contentContainer, "Message", font, 24, TextAlignmentOptions.Center);
 
         // 长文本按字数粗估行数，避免被裁切
@@ -247,7 +247,7 @@ public class EventResultPanel : BasePanel
             Suit.Diamond => "D",
             _ => ""
         };
-        return Resources.Load<Sprite>($"Poker/{rankStr}-{suitLetter}");
+        return Res.Load<Sprite>($"Poker/{rankStr}-{suitLetter}");
     }
 
     private TextMeshProUGUI CreateText(Transform parent, string name, TMP_FontAsset font, float size, TextAlignmentOptions align)

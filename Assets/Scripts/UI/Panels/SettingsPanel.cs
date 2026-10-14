@@ -25,7 +25,7 @@ public class SettingsPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         // 全屏遮罩（挡住主菜单的点击）
         var overlay = gameObject.GetComponent<Image>();

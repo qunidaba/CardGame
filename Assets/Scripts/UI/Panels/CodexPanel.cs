@@ -44,7 +44,7 @@ public class CodexPanel : BasePanel
         if (built) return;
         built = true;
 
-        font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();

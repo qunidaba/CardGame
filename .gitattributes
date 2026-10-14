@@ -29,13 +29,13 @@
 *.ttf       binary
 *.otf       binary
 *.ttc       binary
-*.wav       binary
-*.mp3       binary
-*.ogg       binary
+*.wav       filter=lfs diff=lfs merge=lfs -text
+*.mp3       filter=lfs diff=lfs merge=lfs -text
+*.ogg       filter=lfs diff=lfs merge=lfs -text
 *.fbx       binary
 *.dll       binary
 *.so        binary
 *.aar       binary
 *.jar       binary
-Assets/Fonts/simhei[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text
-Assets/Resources/Fonts/simhei[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text
+# 大字体资产走 LFS（移动到 GameRes 后的路径）
+Assets/GameRes/Fonts/simhei[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text

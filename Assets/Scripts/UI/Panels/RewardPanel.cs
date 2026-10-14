@@ -183,7 +183,7 @@ public class RewardPanel : BasePanel
         var iconImage = btnObj.transform.Find("IconImage")?.GetComponent<Image>();
         if (iconImage != null && !string.IsNullOrEmpty(relic.iconPath))
         {
-            var sprite = Resources.Load<Sprite>(relic.iconPath);
+            var sprite = Res.Load<Sprite>(relic.iconPath);
             iconImage.sprite = sprite;
             iconImage.enabled = sprite != null;
         }
@@ -222,7 +222,7 @@ public class RewardPanel : BasePanel
         var iconImage = btnObj.transform.Find("IconImage")?.GetComponent<Image>();
         if (iconImage != null)
         {
-            Sprite sprite = !string.IsNullOrEmpty(potion.icon) ? Resources.Load<Sprite>(potion.icon) : null;
+            Sprite sprite = !string.IsNullOrEmpty(potion.icon) ? Res.Load<Sprite>(potion.icon) : null;
             iconImage.sprite = sprite;
             iconImage.enabled = sprite != null;
         }
@@ -248,7 +248,7 @@ public class RewardPanel : BasePanel
         sepObj.transform.SetParent(rewardContainer, false);
         sepObj.GetComponent<RectTransform>().sizeDelta = new Vector2(ContentWidth, 32f);
         var sepText = sepObj.AddComponent<TextMeshProUGUI>();
-        sepText.font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        sepText.font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         sepText.text = "选择一个附魔:";
         sepText.fontSize = 28;
         sepText.color = Color.white;
@@ -285,7 +285,7 @@ public class RewardPanel : BasePanel
                 if (card.HasValue)
                 {
                     string resourcePath = GetResourcePath(card.Value.rank, card.Value.suit);
-                    Sprite sprite = Resources.Load<Sprite>($"Poker/{resourcePath}");
+                    Sprite sprite = Res.Load<Sprite>($"Poker/{resourcePath}");
                     if (sprite != null)
                     {
                         artworkImage.sprite = sprite;
@@ -347,7 +347,7 @@ public class RewardPanel : BasePanel
     private void AddExistingEnchantmentStrip(GameObject btnObj, Image artworkImage, string cardKey)
     {
         var existing = GetCardEnchantmentNames(cardKey);
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var parent = artworkImage != null ? artworkImage.transform : btnObj.transform;
 
         var strip = new GameObject("ExistingEnchantStrip", typeof(RectTransform), typeof(Image));

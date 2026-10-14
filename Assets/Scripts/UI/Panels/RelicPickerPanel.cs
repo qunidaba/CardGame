@@ -31,7 +31,7 @@ public class RelicPickerPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
@@ -136,7 +136,7 @@ public class RelicPickerPanel : BasePanel
         for (int i = list.childCount - 1; i >= 0; i--)
             Destroy(list.GetChild(i).gameObject);
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var runData = RunDirector.Instance != null ? RunDirector.Instance.RunData : null;
         if (runData == null) return;
 

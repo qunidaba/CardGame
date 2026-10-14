@@ -44,7 +44,7 @@ public class InventoryBar : MonoBehaviour
 
     private void Build()
     {
-        font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         relicSlots = new RelicSlotUI[RelicSystem.MaxSlots];
         for (int i = 0; i < relicSlots.Length; i++)
         {

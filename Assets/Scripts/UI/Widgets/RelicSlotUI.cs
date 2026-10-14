@@ -31,7 +31,7 @@ namespace Roguelike
             {
                 if (!string.IsNullOrEmpty(data.iconPath))
                 {
-                    var sprite = Resources.Load<Sprite>(data.iconPath);
+                    var sprite = Res.Load<Sprite>(data.iconPath);
                     iconImage.sprite = sprite;
                     iconImage.enabled = sprite != null;
                     if (nameText != null) nameText.enabled = false; // 有图标时隐藏名字

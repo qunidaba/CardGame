@@ -176,7 +176,7 @@ public class CardModifierPanel : BasePanel
         scroll.movementType = ScrollRect.MovementType.Clamped;
         scroll.scrollSensitivity = 30f;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         foreach (var c in hand.HandCards)
         {
@@ -187,7 +187,7 @@ public class CardModifierPanel : BasePanel
             go.transform.SetParent(content.transform, false);
 
             var img = go.GetComponent<Image>();
-            var sprite = Resources.Load<Sprite>($"Poker/{ResourceName(target.EffectiveRank, target.EffectiveSuit)}");
+            var sprite = Res.Load<Sprite>($"Poker/{ResourceName(target.EffectiveRank, target.EffectiveSuit)}");
             if (sprite != null)
             {
                 img.sprite = sprite;
@@ -274,7 +274,7 @@ public class CardModifierPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
@@ -337,7 +337,7 @@ public class CardModifierPanel : BasePanel
 
     private void MakeLabel(string text)
     {
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var t = CreateText(controls, "Label", font, 22, TextAlignmentOptions.Center);
         t.rectTransform.sizeDelta = new Vector2(840, 32);
         t.color = new Color(0.85f, 0.85f, 0.9f);
@@ -362,7 +362,7 @@ public class CardModifierPanel : BasePanel
 
     private void MakeButton(Transform parent, string label, Action onClick, bool interactable = true)
     {
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var go = new GameObject("Btn", typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(parent, false);
         var rt = go.GetComponent<RectTransform>();

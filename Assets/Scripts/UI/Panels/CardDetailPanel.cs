@@ -30,7 +30,7 @@ public class CardDetailPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
@@ -123,7 +123,7 @@ public class CardDetailPanel : BasePanel
 
     private void Refresh(int rank, Suit suit)
     {
-        var sprite = Resources.Load<Sprite>($"Poker/{ResourceName(rank, suit)}");
+        var sprite = Res.Load<Sprite>($"Poker/{ResourceName(rank, suit)}");
         if (cardImage != null)
         {
             cardImage.sprite = sprite;
@@ -136,7 +136,7 @@ public class CardDetailPanel : BasePanel
         var runData = RunDirector.Instance != null ? RunDirector.Instance.RunData : null;
         var ids = runData != null ? runData.GetCardEnchantments(rank, suit) : new List<int>();
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         if (ids == null || ids.Count == 0)
         {

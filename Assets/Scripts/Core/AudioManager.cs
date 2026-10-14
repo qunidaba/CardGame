@@ -87,7 +87,7 @@ public class AudioManager : MonoBehaviour
     /// <summary>优先 Resources/Audio/SFX/&lt;file&gt;，没有则用占位音</summary>
     private static AudioClip LoadOr(string file, System.Func<AudioClip> fallback)
     {
-        var clip = Resources.Load<AudioClip>("Audio/SFX/" + file);
+        var clip = Res.Load<AudioClip>("Audio/SFX/" + file);
         return clip != null ? clip : fallback();
     }
 
@@ -136,7 +136,7 @@ public class AudioManager : MonoBehaviour
     /// <summary>从 Resources 加载 BGM 并循环播放（没有则静默，不报错）</summary>
     public void PlayBgmFromResources(string resourcePath = "Audio/BGM", float volume = 0.4f)
     {
-        var clip = Resources.Load<AudioClip>(resourcePath);
+        var clip = Res.Load<AudioClip>(resourcePath);
         if (clip != null) PlayBgm(clip, volume);
     }
 }

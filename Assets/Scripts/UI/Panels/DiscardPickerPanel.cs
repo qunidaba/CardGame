@@ -62,7 +62,7 @@ public class DiscardPickerPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
@@ -180,7 +180,7 @@ public class DiscardPickerPanel : BasePanel
 
         if (cards == null) return;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         // 固定 4 行 × 13 列：每行一个花色，列按点数 2→A 排列；
         // 不在堆里的位置放空占位，保证列对齐（不按抽取顺序排）
@@ -215,7 +215,7 @@ public class DiscardPickerPanel : BasePanel
         go.transform.SetParent(grid, false);
 
         var img = go.GetComponent<Image>();
-        var sprite = Resources.Load<Sprite>($"Poker/{ResourceName(c.EffectiveRank, c.EffectiveSuit)}");
+        var sprite = Res.Load<Sprite>($"Poker/{ResourceName(c.EffectiveRank, c.EffectiveSuit)}");
         if (sprite != null)
         {
             img.sprite = sprite;

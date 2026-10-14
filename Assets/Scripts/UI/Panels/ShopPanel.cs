@@ -191,7 +191,7 @@ public class ShopPanel : BasePanel
 
         // 图标优先；没有图标就把名字居中显示
         string iconPath = GetEntryIconPath(e);
-        Sprite sprite = !string.IsNullOrEmpty(iconPath) ? Resources.Load<Sprite>(iconPath) : null;
+        Sprite sprite = !string.IsNullOrEmpty(iconPath) ? Res.Load<Sprite>(iconPath) : null;
 
         if (sprite != null)
         {
@@ -333,7 +333,7 @@ public class ShopPanel : BasePanel
 
     private TextMeshProUGUI MakeText(Transform parent, string text, float size, TextAlignmentOptions align, float width)
     {
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var go = new GameObject("Text", typeof(RectTransform));
         go.transform.SetParent(parent, false);
         var t = go.AddComponent<TextMeshProUGUI>();
@@ -348,7 +348,7 @@ public class ShopPanel : BasePanel
 
     private Button MakeButton(Transform parent, string label, float width, Action onClick)
     {
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var go = new GameObject("Btn", typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(parent, false);
         go.GetComponent<RectTransform>().sizeDelta = new Vector2(width, 46);
@@ -380,12 +380,12 @@ public class ShopPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
         // 背景和战斗面板一致：同一张 BackGround 图
-        var bgSprite = Resources.Load<Sprite>("BackGrounds/BackGround");
+        var bgSprite = Res.Load<Sprite>("BackGrounds/BackGround");
         if (bgSprite != null)
         {
             overlay.sprite = bgSprite;

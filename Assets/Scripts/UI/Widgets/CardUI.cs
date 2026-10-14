@@ -32,7 +32,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
         if (artworkImage != null)
         {
             string resourcePath = GetResourcePath(card);
-            Sprite sprite = Resources.Load<Sprite>($"Poker/{resourcePath}");
+            Sprite sprite = Res.Load<Sprite>($"Poker/{resourcePath}");
             if (sprite != null)
             {
                 artworkImage.sprite = sprite;
@@ -58,7 +58,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
         if (cardData == null || artworkImage == null) return;
 
         string resourcePath = GetResourcePath(cardData);
-        Sprite sprite = Resources.Load<Sprite>($"Poker/{resourcePath}");
+        Sprite sprite = Res.Load<Sprite>($"Poker/{resourcePath}");
         if (sprite != null)
         {
             artworkImage.sprite = sprite;
@@ -150,7 +150,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
                         if (iconImage != null)
                         {
                             // 这里可以加载附魔图标 Sprite
-                            // iconImage.sprite = Resources.Load<Sprite>($"Enchantments/{ench.name}");
+                            // iconImage.sprite = Res.Load<Sprite>($"Enchantments/{ench.name}");
                         }
                         if (nameText != null)
                             nameText.text = ench.name;

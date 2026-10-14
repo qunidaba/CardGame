@@ -717,7 +717,7 @@ public partial class BattlePanel : BasePanel
     /// <summary>
     /// 取敌人的帧序列，优先级：
     /// 1) cfg.frames 显式帧名（图集/切片）
-    /// 2) cfg.image 指定路径：Resources.LoadAll 取全部子图（多帧）或单图
+    /// 2) cfg.image 指定路径：Res.LoadAll 取全部子图（多帧）或单图
     /// 3) 图集里按名称取单张
     /// </summary>
     private Sprite[] ResolveEnemyFrames()
@@ -736,7 +736,7 @@ public partial class BattlePanel : BasePanel
                 if (string.IsNullOrEmpty(n)) continue;
                 Sprite s = null;
                 if (enemyAtlas != null) s = enemyAtlas.GetSprite(n);
-                if (s == null) s = Resources.Load<Sprite>(n);
+                if (s == null) s = Res.Load<Sprite>(n);
                 if (s != null) list.Add(s);
             }
             if (list.Count > 0) return list.ToArray();
@@ -748,7 +748,7 @@ public partial class BattlePanel : BasePanel
         // 2) Resources：文件夹里的多张图 / 多切片贴图
         if (!string.IsNullOrEmpty(path))
         {
-            var all = Resources.LoadAll<Sprite>(path);
+            var all = Res.LoadAll<Sprite>(path);
             if (all != null && all.Length > 0)
             {
                 System.Array.Sort(all, (a, b) => string.CompareOrdinal(a.name, b.name));
@@ -785,7 +785,7 @@ public partial class BattlePanel : BasePanel
                 if (string.IsNullOrEmpty(n)) continue;
                 Sprite s = null;
                 if (enemyAtlas != null) s = enemyAtlas.GetSprite(n);
-                if (s == null) s = Resources.Load<Sprite>(n);
+                if (s == null) s = Res.Load<Sprite>(n);
                 if (s != null) list.Add(s);
             }
             if (list.Count > 0) return list.ToArray();
@@ -795,7 +795,7 @@ public partial class BattlePanel : BasePanel
         if (!string.IsNullOrEmpty(imagePath))
         {
             string path = imagePath.Contains("/") ? imagePath : enemyImageFolder + imagePath;
-            var all = Resources.LoadAll<Sprite>(path);
+            var all = Res.LoadAll<Sprite>(path);
             if (all != null && all.Length > 0)
             {
                 System.Array.Sort(all, (a, b) => string.CompareOrdinal(a.name, b.name));
@@ -853,7 +853,7 @@ public partial class BattlePanel : BasePanel
         }
         enemySlots.Clear();
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var template = enemyStatusBar;   // 旧状态栏作为模板（图标预制体/图标尺寸）
 
         var units = battleManager.GetEnemies();
@@ -1708,7 +1708,7 @@ private void OnEnemyTurnStart()
         if (!selectionFramesLoaded)
         {
             selectionFramesLoaded = true;
-            var all = Resources.LoadAll<Sprite>(selectionSpritePath);
+            var all = Res.LoadAll<Sprite>(selectionSpritePath);
             if (all != null && all.Length > 0)
             {
                 // 按名字排序，保证 UIS_0 → UIS_1 的播放顺序
@@ -1731,7 +1731,7 @@ private void OnEnemyTurnStart()
 
             // 留空时用默认图：Resources/Battle/DefenseIcon（玩家和敌人共用）
             string path = string.IsNullOrEmpty(shieldIconPath) ? "Battle/DefenseIcon" : shieldIconPath;
-            shieldIconSprite = Resources.Load<Sprite>(path);
+            shieldIconSprite = Res.Load<Sprite>(path);
             if (shieldIconSprite == null)
                 Debug.LogWarning($"[BattlePanel] 找不到护盾图标: Resources/{path}");
         }
@@ -1748,7 +1748,7 @@ private void OnEnemyTurnStart()
         {
             trailSpriteLoaded = true;
             if (!string.IsNullOrEmpty(cardTrailSpritePath))
-                trailSpriteCache = Resources.Load<Sprite>(cardTrailSpritePath);
+                trailSpriteCache = Res.Load<Sprite>(cardTrailSpritePath);
         }
         return trailSpriteCache;
     }
@@ -1765,7 +1765,7 @@ private void OnEnemyTurnStart()
             trailFramesLoaded = true;
             if (!string.IsNullOrEmpty(cardTrailFramesPath))
             {
-                var loaded = Resources.LoadAll<Sprite>(cardTrailFramesPath);
+                var loaded = Res.LoadAll<Sprite>(cardTrailFramesPath);
                 if (loaded != null && loaded.Length > 0)
                 {
                     System.Array.Sort(loaded, (a, b) => string.CompareOrdinal(a.name, b.name));
@@ -1823,7 +1823,7 @@ private void OnEnemyTurnStart()
     {
         if (turnCountText != null) return;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var go = new GameObject("TurnCountText", typeof(RectTransform));
         go.transform.SetParent(transform, false);
         turnCountText = go.AddComponent<TextMeshProUGUI>();
@@ -2908,7 +2908,7 @@ private void OnEnemyTurnStart()
     {
         if (suitHudText != null) return;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         // 屏幕正右侧（垂直居中）的花色计数文本
         var go = new GameObject("SuitHudText", typeof(RectTransform));
@@ -2972,7 +2972,7 @@ private void OnEnemyTurnStart()
     {
         if (modifyButton != null) return;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var go = new GameObject("ModifyButton", typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(transform, false);
         var rt = go.GetComponent<RectTransform>();
@@ -3012,7 +3012,7 @@ private void OnEnemyTurnStart()
     {
         if (pauseButton != null) return;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var go = new GameObject("PauseButton", typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(transform, false);
         var rt = go.GetComponent<RectTransform>();
@@ -3073,7 +3073,7 @@ private void OnEnemyTurnStart()
     private void EnsureDestinyHud()
     {
         if (destinyHudText != null && destinyButton != null && activeSkillButton != null) return;
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         if (destinyHudText == null)
         {
@@ -3139,7 +3139,7 @@ private void OnEnemyTurnStart()
 
     private Button CreateSmallButton(string name, string label, float y, UnityEngine.Events.UnityAction onClick)
     {
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(transform, false);
         var rt = go.GetComponent<RectTransform>();
@@ -3238,7 +3238,7 @@ private void OnEnemyTurnStart()
             foreach (var s in potionSlots) if (s != null) Destroy(s.gameObject);
         potionSlots = new PotionSlotUI[cap];
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         Transform parent = (relicSlots != null && relicSlots.Length > 0 && relicSlots[0] != null)
             ? relicSlots[0].transform.parent
             : transform;
@@ -3338,7 +3338,7 @@ private void OnEnemyTurnStart()
             rt.anchoredPosition = new Vector2(0f, 40f);
 
             toastText = go.AddComponent<TextMeshProUGUI>();
-            toastText.font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+            toastText.font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
             toastText.fontSize = 34;
             toastText.alignment = TextAlignmentOptions.Center;
             toastText.raycastTarget = false;

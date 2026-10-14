@@ -24,7 +24,7 @@ public class MainMenuPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         // 全屏背景（同时拦截点击，挡住下面的东西）
         var bg = gameObject.GetComponent<Image>();

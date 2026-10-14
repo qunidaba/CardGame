@@ -48,7 +48,7 @@ public class DestinyPanel : BasePanel
         for (int i = rows.childCount - 1; i >= 0; i--)
             Destroy(rows.GetChild(i).gameObject);
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
         foreach (Suit s in new[] { Suit.Spade, Suit.Heart, Suit.Club, Suit.Diamond })
         {
             int rank = runData.GetDestinyRank(s);
@@ -96,7 +96,7 @@ public class DestinyPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();

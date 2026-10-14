@@ -58,7 +58,7 @@ public class CardPickerPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var overlay = gameObject.GetComponent<Image>();
         if (overlay == null) overlay = gameObject.AddComponent<Image>();
@@ -135,7 +135,7 @@ public class CardPickerPanel : BasePanel
             Destroy(grid.GetChild(i).gameObject);
 
         var runData = RunDirector.Instance != null ? RunDirector.Instance.RunData : null;
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         foreach (var suit in SuitOrder)
         {
@@ -162,7 +162,7 @@ public class CardPickerPanel : BasePanel
                 bool disabled = (requireEnchanted && !enchanted) || (isDisabled != null && isDisabled(r, s));
 
                 var img = go.GetComponent<Image>();
-                var sprite = Resources.Load<Sprite>($"Poker/{ResourceName(r, s)}");
+                var sprite = Res.Load<Sprite>($"Poker/{ResourceName(r, s)}");
                 if (sprite != null)
                 {
                     img.sprite = sprite;

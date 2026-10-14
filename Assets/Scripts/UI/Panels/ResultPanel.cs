@@ -42,7 +42,7 @@ public class ResultPanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         // 清掉预制体自带的子物体（隐藏后销毁，避免闪一帧）
         for (int i = transform.childCount - 1; i >= 0; i--)

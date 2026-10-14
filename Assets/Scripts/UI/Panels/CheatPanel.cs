@@ -114,7 +114,7 @@ public class CheatPanel : BasePanel
         if (built) return;
         built = true;
 
-        font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         for (int i = 0; i < 7; i++) pageRows.Add(new List<GameObject>());
 

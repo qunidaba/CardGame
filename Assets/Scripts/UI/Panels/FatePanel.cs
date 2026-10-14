@@ -54,7 +54,7 @@ public class FatePanel : BasePanel
         if (built) return;
         built = true;
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         // 全屏遮罩（拦截点击）
         var overlay = gameObject.GetComponent<Image>();
@@ -159,7 +159,7 @@ public class FatePanel : BasePanel
         rt.sizeDelta = new Vector2(620, 62);
         go.GetComponent<Image>().color = new Color(0.18f, 0.19f, 0.25f, 1f);
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts/simhei SDF");
+        var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
 
         var left = CreateText(go.transform, "Suit", font, 28, TextAlignmentOptions.Left);
         var lrt = left.rectTransform;

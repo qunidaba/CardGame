@@ -30,7 +30,7 @@ namespace Roguelike
             {
                 if (!string.IsNullOrEmpty(data.iconPath))
                 {
-                    var sprite = Resources.Load<Sprite>(data.iconPath);
+                    var sprite = Res.Load<Sprite>(data.iconPath);
                     if (sprite != null)
                         iconImage.sprite = sprite;
                     else

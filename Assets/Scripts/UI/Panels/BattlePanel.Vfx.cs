@@ -202,7 +202,7 @@ public partial class BattlePanel
         {
             projectileSpriteLoaded = true;
             if (!string.IsNullOrEmpty(cardProjectileSpritePath))
-                projectileSpriteCache = Resources.Load<Sprite>(cardProjectileSpritePath);
+                projectileSpriteCache = Res.Load<Sprite>(cardProjectileSpritePath);
         }
         if (projectileSpriteCache != null) return projectileSpriteCache;
 
@@ -306,7 +306,7 @@ public partial class BattlePanel
             hitFramesLoaded = true;
             if (!string.IsNullOrEmpty(hitEffectFramesPath))
             {
-                var loaded = Resources.LoadAll<Sprite>(hitEffectFramesPath);
+                var loaded = Res.LoadAll<Sprite>(hitEffectFramesPath);
                 if (loaded != null && loaded.Length > 0)
                 {
                     System.Array.Sort(loaded, (a, b) => string.CompareOrdinal(a.name, b.name));
