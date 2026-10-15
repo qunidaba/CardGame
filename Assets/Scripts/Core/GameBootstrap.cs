@@ -4,7 +4,7 @@ using Roguelike;
 
 /// <summary>
 /// 游戏入口：启动时先初始化 YooAsset（资源就绪），再校验依赖并显示主菜单。
-/// （原名 BattleUI —— 既不负责战斗 UI，也不只做战斗，故更名并移入 Core）
+/// 「首次」强制下载资源；「后续更新」只提示玩家，是否更新由玩家决定。
 /// </summary>
 public class GameBootstrap : MonoBehaviour
 {
@@ -22,13 +22,28 @@ public class GameBootstrap : MonoBehaviour
             return;
         }
 
+        // 发现新版本时，由这里弹出"是否更新"询问（Res.Init 内部会 yield 这个协程）
+        Res.AskUpdate = AskUpdateRoutine;
+
         StartCoroutine(BootRoutine());
     }
 
     private IEnumerator BootRoutine()
     {
-        // 先初始化 YooAsset：资源就绪后再进入游戏，保证各面板能同步 Res.Load
+        UpdatePanel.Show();
+
+        // 初始化资源：首次强制下载；有更新则询问玩家（拒绝则用旧版本运行）
         yield return Res.Init();
+
+        // 若本次成功下载了资源（首次，或玩家同意更新），显示"点击进入"
+        if (Res.Ready && Res.HasUpdate)
+        {
+            UpdatePanel.ShowConfirm("资源更新完成，点击进入", "进入游戏");
+            yield return new WaitUntil(() => UpdatePanel.Choice == true);
+        }
+
+        UpdatePanel.Hide();
+
         if (!Res.Ready)
         {
             Debug.LogError("[GameBootstrap] 资源初始化失败，无法继续。");
@@ -51,5 +66,12 @@ public class GameBootstrap : MonoBehaviour
         // 进入主菜单（在菜单里点「开始游戏」才会 StartNewRun）
         UIManager.Instance.ShowPanel<MainMenuPanel>();
     }
-}
 
+    /// <summary>发现新版本：询问玩家是否更新。</summary>
+    private IEnumerator AskUpdateRoutine(string newVersion)
+    {
+        UpdatePanel.ShowChoice($"发现新版本（{newVersion}），是否更新？", "更新", "跳过");
+        yield return new WaitUntil(() => UpdatePanel.Choice != null);
+        Res.UpdateAccepted = UpdatePanel.Choice == true;
+    }
+}

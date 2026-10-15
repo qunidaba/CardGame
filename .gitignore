@@ -35,5 +35,6 @@ desktop.ini
 # ===== 本项目旧产物 / 备份（不纳入版本控制）=====
 /Game/
 /Saves/
+/Bundles/
 *.rar
 *.zip
