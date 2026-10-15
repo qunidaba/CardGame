@@ -45,7 +45,6 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         BuildSources();
-        BuildClips();
     }
 
     private void BuildSources()
@@ -91,10 +90,20 @@ public class AudioManager : MonoBehaviour
         return clip != null ? clip : fallback();
     }
 
+    private bool clipsBuilt;
+    /// <summary>首次用到时才构建音效（避免在资源系统就绪前加载）</summary>
+    private void EnsureClips()
+    {
+        if (clipsBuilt) return;
+        clipsBuilt = true;
+        BuildClips();
+    }
+
     /// <summary>播放音效</summary>
     public void Play(Sfx id, float volume = 1f, float pitch = 1f)
     {
         if (pool == null) return;
+        EnsureClips();
 
         if (id == lastSfx && Time.unscaledTime - lastTime < 0.03f) return;
         lastSfx = id;

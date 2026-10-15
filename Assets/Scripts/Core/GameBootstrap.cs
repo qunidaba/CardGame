@@ -50,6 +50,9 @@ public class GameBootstrap : MonoBehaviour
             yield break;
         }
 
+        // 加载热更 dll（从 YooAsset 下载/取到）并执行热更代码
+        HotfixLoader.Run();
+
         // 应用存档设置（音量 / 分辨率 / 全屏）
         GameSettings.Load();
         GameSettings.Apply();

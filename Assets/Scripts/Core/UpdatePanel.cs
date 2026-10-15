@@ -40,7 +40,7 @@ public class UpdatePanel : MonoBehaviour
         return _instance;
     }
 
-    /// <summary>询问："是否更新" —— 显示 yes/no 两个按钮，等待玩家点击。</summary>
+    /// <summary>询问："是否更新" —— 显示 yes/no 两个按钮（并排），等待玩家点击。</summary>
     public static void ShowChoice(string statusText, string yesText, string noText)
     {
         if (_instance == null) return;
@@ -51,11 +51,13 @@ public class UpdatePanel : MonoBehaviour
         _instance._statusText.text = statusText;
         _instance._yesLabel.text = yesText;
         _instance._noLabel.text = noText;
+        SetBtnPos(_instance._yesBtn, -150f);
+        SetBtnPos(_instance._noBtn, 150f);
         _instance._yesBtn.gameObject.SetActive(true);
         _instance._noBtn.gameObject.SetActive(true);
     }
 
-    /// <summary>更新完成："点击进入" —— 只显示一个按钮。</summary>
+    /// <summary>更新完成："点击进入" —— 只显示一个按钮（居中）。</summary>
     public static void ShowConfirm(string statusText, string yesText)
     {
         if (_instance == null) return;
@@ -65,8 +67,15 @@ public class UpdatePanel : MonoBehaviour
         _instance._detailText.text = "";
         _instance._statusText.text = statusText;
         _instance._yesLabel.text = yesText;
+        SetBtnPos(_instance._yesBtn, 0f);
         _instance._yesBtn.gameObject.SetActive(true);
         _instance._noBtn.gameObject.SetActive(false);
+    }
+
+    private static void SetBtnPos(Button btn, float x)
+    {
+        if (btn == null) return;
+        ((RectTransform)btn.transform).anchoredPosition = new Vector2(x, -140f);
     }
 
     public static void Hide()

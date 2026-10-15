@@ -4,7 +4,8 @@
     "references": [
         "Roguelike",
         "Unity.TextMeshPro",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "HybridCLR.Editor"
     ],
     "includePlatforms": [
         "Editor"
