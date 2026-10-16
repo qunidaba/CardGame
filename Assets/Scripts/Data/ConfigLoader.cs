@@ -24,25 +24,23 @@ namespace Roguelike.Data
         {
             if (isLoaded) return;
 
-            string configDir = Path.Combine(Application.streamingAssetsPath, "Config");
-            if (!Directory.Exists(configDir))
+            if (!Res.Ready)
             {
-                Debug.LogError($"[ConfigLoader] Config directory not found: {configDir}");
-                cachedConfig = new AllConfig();
-                isLoaded = true;
+                // 资源系统（YooAsset）尚未就绪，等就绪后再加载（由启动流程调用）
+                Debug.Log("[ConfigLoader] 资源尚未就绪，暂不加载配置");
                 return;
             }
 
             cachedConfig = new AllConfig();
 
-            // 加载每个配置文件
-            LoadEnemies(configDir);
-            LoadRelics(configDir);
-            LoadEnchantments(configDir);
-            LoadEvents(configDir);
-            LoadPotions(configDir);
-            LoadActs(configDir);
-            LoadEncounters(configDir);
+            // 加载每个配置文件（从 YooAsset 读取）
+            LoadEnemies(ReadConfig("enemies"));
+            LoadRelics(ReadConfig("relics"));
+            LoadEnchantments(ReadConfig("enchantments"));
+            LoadEvents(ReadConfig("events"));
+            LoadPotions(ReadConfig("potions"));
+            LoadActs(ReadConfig("acts"));
+            LoadEncounters(ReadConfig("encounters"));
 
             // 建立查找字典
             BuildLookups();
@@ -60,12 +58,21 @@ namespace Roguelike.Data
             LoadAll();
         }
 
-        private static void LoadEnemies(string dir)
+        /// <summary>从 YooAsset 读取一份配置文本（不含扩展名，如 "enemies"）。</summary>
+        private static string ReadConfig(string name)
         {
-            string path = Path.Combine(dir, "enemies.json");
-            if (!File.Exists(path)) return;
+            var ta = Res.Load<TextAsset>("Config/" + name);
+            if (ta == null)
+            {
+                Debug.LogError($"[ConfigLoader] 读取配置失败：Config/{name}");
+                return null;
+            }
+            return ta.text;
+        }
 
-            var json = File.ReadAllText(path);
+        private static void LoadEnemies(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return;
             var root = MiniJson.Deserialize(json) as Dictionary<string, object>;
             if (root == null || !root.TryGetValue("enemies", out var listObj)) return;
 
@@ -169,12 +176,9 @@ namespace Roguelike.Data
             return intent;
         }
 
-        private static void LoadRelics(string dir)
+        private static void LoadRelics(string json)
         {
-            string path = Path.Combine(dir, "relics.json");
-            if (!File.Exists(path)) return;
-
-            var json = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(json)) return;
             var root = MiniJson.Deserialize(json) as Dictionary<string, object>;
             if (root == null || !root.TryGetValue("relics", out var listObj)) return;
 
@@ -224,12 +228,9 @@ namespace Roguelike.Data
             return r;
         }
 
-        private static void LoadEnchantments(string dir)
+        private static void LoadEnchantments(string json)
         {
-            string path = Path.Combine(dir, "enchantments.json");
-            if (!File.Exists(path)) return;
-
-            var json = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(json)) return;
             var root = MiniJson.Deserialize(json) as Dictionary<string, object>;
             if (root == null || !root.TryGetValue("enchantments", out var listObj)) return;
 
@@ -281,12 +282,9 @@ namespace Roguelike.Data
             return e;
         }
 
-        private static void LoadEvents(string dir)
+        private static void LoadEvents(string json)
         {
-            string path = Path.Combine(dir, "events.json");
-            if (!File.Exists(path)) return;
-
-            var json = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(json)) return;
             var root = MiniJson.Deserialize(json) as Dictionary<string, object>;
             if (root == null || !root.TryGetValue("events", out var listObj)) return;
 
@@ -376,12 +374,9 @@ namespace Roguelike.Data
             return r;
         }
 
-        private static void LoadPotions(string dir)
+        private static void LoadPotions(string json)
         {
-            string path = Path.Combine(dir, "potions.json");
-            if (!File.Exists(path)) return;
-
-            var json = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(json)) return;
             var root = MiniJson.Deserialize(json) as Dictionary<string, object>;
             if (root == null || !root.TryGetValue("potions", out var listObj)) return;
 
@@ -421,12 +416,9 @@ namespace Roguelike.Data
             return p;
         }
 
-        private static void LoadActs(string dir)
+        private static void LoadActs(string json)
         {
-            string path = Path.Combine(dir, "acts.json");
-            if (!File.Exists(path)) return;
-
-            var json = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(json)) return;
             var root = MiniJson.Deserialize(json) as Dictionary<string, object>;
             if (root == null || !root.TryGetValue("acts", out var listObj)) return;
 
@@ -439,12 +431,9 @@ namespace Roguelike.Data
             }
         }
 
-        private static void LoadEncounters(string dir)
+        private static void LoadEncounters(string json)
         {
-            string path = Path.Combine(dir, "encounters.json");
-            if (!File.Exists(path)) return;
-
-            var json = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(json)) return;
             var root = MiniJson.Deserialize(json) as Dictionary<string, object>;
             if (root == null || !root.TryGetValue("encounters", out var listObj)) return;
 

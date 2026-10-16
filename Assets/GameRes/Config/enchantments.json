@@ -429,7 +429,7 @@
         {
             "id": 36,
             "name": "瘟疫医生",
-            "description": "打出时：敌人每有 1 层中毒，回复 1 点生命",
+            "description": "打出时：敌人每有 1 层中毒，回复 1 点生命（最多 6 点）",
             "trigger": "OnHandType",
             "effects": [
                 {
@@ -560,7 +560,7 @@
             "effects": [
                 {
                     "type": "ApplySelfStatus",
-                    "value": 1,
+                    "value": 2,
                     "duration": 2,
                     "status": "Regeneration"
                 }

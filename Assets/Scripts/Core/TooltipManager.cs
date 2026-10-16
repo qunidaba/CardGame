@@ -70,9 +70,40 @@ namespace Roguelike
             Hide();
         }
 
+        /// <summary>
+        /// 运行时给标题/描述修正字体材质：预制体里序列化的 m_sharedMaterial 在资源搬进 YooAsset 后可能失效
+        /// （MissingReferenceException）。注意 TMP 的 font setter 在"字体资产相同"时会直接 return，
+        /// 所以这里直接重指 fontSharedMaterial 来强制修复。
+        /// </summary>
+        private void EnsureFont()
+        {
+            if (titleText == null || descriptionText == null) return;
+            var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
+            if (font == null) return;
+
+            ApplyFont(titleText, font);
+            ApplyFont(descriptionText, font);
+        }
+
+        private static void ApplyFont(TextMeshProUGUI t, TMP_FontAsset font)
+        {
+            if (t == null) return;
+
+            if (t.font != font) t.font = font;
+
+            // fontSharedMaterial 的 Unity 判空对"已销毁对象"返回 null，安全；坏了就重指到有效材质
+            if (t.fontSharedMaterial == null)
+            {
+                t.fontSharedMaterial = font.material;
+                t.SetMaterialDirty();
+            }
+        }
+
         public void Show(string title, string description, RectTransform target, bool above = false)
         {
             if (tooltipPanelInstance == null || target == null || titleText == null || descriptionText == null) return;
+
+            EnsureFont();
 
             titleText.text = title;
             descriptionText.text = description;

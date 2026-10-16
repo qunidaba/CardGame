@@ -1489,7 +1489,7 @@
                     "actions": [
                         {
                             "type": "Attack",
-                            "value": 10,
+                            "value": 13,
                             "multiHit": false,
                             "hitCount": 1,
                             "description": null,
@@ -1501,7 +1501,7 @@
                         },
                         {
                             "type": "Defense",
-                            "value": 15,
+                            "value": 20,
                             "multiHit": false,
                             "hitCount": 1,
                             "description": null,
@@ -1526,7 +1526,7 @@
                     "actions": [
                         {
                             "type": "Defense",
-                            "value": 14,
+                            "value": 23,
                             "multiHit": false,
                             "hitCount": 1,
                             "description": null,
@@ -1538,7 +1538,7 @@
                         },
                         {
                             "type": "Buff",
-                            "value": 2,
+                            "value": 4,
                             "multiHit": false,
                             "hitCount": 1,
                             "description": null,

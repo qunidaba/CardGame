@@ -86,7 +86,8 @@ namespace Roguelike
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            Roguelike.Data.ConfigLoader.LoadAll();
+            // 配置改为从 YooAsset 读取，须等资源就绪后加载（见 GameBootstrap 启动流程）
+            // Roguelike.Data.ConfigLoader.LoadAll();
             rewardSystem = new RewardSystem();
             relicSystem = new RelicSystem();
             eventSystem = new EventSystem();

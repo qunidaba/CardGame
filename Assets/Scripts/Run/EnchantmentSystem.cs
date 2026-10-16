@@ -131,6 +131,9 @@ namespace Roguelike
         private BattleManager battleManager;
         private RunDirector runDirector;
 
+        /// <summary>瘟疫医生：一次触发最多回复的生命（上限）</summary>
+        private const int PlagueDoctorMaxHeal = 6;
+
         public void Initialize(RunData runData, BattleManager battleManager, RunDirector runDirector)
         {
             this.runData = runData;
@@ -158,8 +161,8 @@ namespace Roguelike
         }
 
         /// <summary>
-        /// 预览专用：只应用「纯数值」类附魔（写入 HandEffect 列表、无任何副作用），
-        /// 让手牌效果预览（伤害 / 抽牌 / 防御 / 治疗）尽量与实打一致。
+        /// 预览专用：把附魔效果折算进「出牌效果预览」，与实打尽量一致、且全程只读无副作用。
+        /// 能算进伤害/防御/抽牌/治疗的折进对应项；其余（金币/施状态/自buff/失血等）作为文字行显示。
         /// </summary>
         public void ApplyPreviewModifiers(List<CardData> cards, HandTypeResult handResult, List<HandEffectTable.HandEffect> effects)
         {
@@ -179,57 +182,104 @@ namespace Roguelike
                     foreach (var eff in ench.effects)
                     {
                         if (!Enum.TryParse<EffectType>(eff.type, true, out var effectType)) continue;
-                        ApplyPreviewEffect(effectType, GetIntValue(eff.value), GetFloatValue(eff.value), card, effects);
+                        ApplyPreviewEffect(effectType, eff, card, handResult, effects);
                     }
                 }
             }
         }
 
-        /// <summary>只处理不产生副作用的数值类效果；其余（加金币/施状态/抽牌库等）一律跳过</summary>
-        private static void ApplyPreviewEffect(EffectType type, int intValue, float floatValue, CardData card, List<HandEffectTable.HandEffect> effects)
+        private void ApplyPreviewEffect(EffectType type, EnchantmentEffectData eff, CardData card,
+            HandTypeResult handResult, List<HandEffectTable.HandEffect> effects)
         {
+            int iv = GetIntValue(eff.value);
+            float fv = GetFloatValue(eff.value);
+            string dur = eff.duration > 0 ? $"（{eff.duration} 回合）" : "";
+            var enemy = battleManager?.GetEnemy();
+            int poison = enemy != null ? enemy.GetStatusAmount(StatusEffectType.Poison) : 0;
+
             switch (type)
             {
-                case EffectType.AddDamage:
-                    HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Damage, intValue);
-                    break;
-                case EffectType.AddDefense:
-                    HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Defense, intValue);
-                    break;
-                case EffectType.AddDraw:
-                    HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.DrawCard, intValue);
-                    break;
-                case EffectType.AddHeal:
-                    HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Heal, intValue);
-                    break;
+                // ===== 折进数值项（伤害/防御/抽牌/治疗）=====
+                case EffectType.AddDamage: HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Damage, iv); break;
+                case EffectType.AddDefense: HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Defense, iv); break;
+                case EffectType.AddDraw: HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.DrawCard, iv); break;
+                case EffectType.AddHeal: HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Heal, iv); break;
+                case EffectType.HealPercentOfDamage: HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.HealPercentOfDamage, iv); break;
                 case EffectType.AddDamageEqualRank:
-                    if (card != null)
-                        HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Damage, card.rank);
+                    if (card != null) HandEffectUtil.AddDamageToEffects(effects, card.rank);
                     break;
-                case EffectType.MultiplyDamage:
-                {
-                    var dmg = effects.Find(e => e.effectType == HandEffectTable.EffectType.Damage);
-                    if (dmg != null)
-                    {
-                        dmg.value = Mathf.RoundToInt(dmg.value * floatValue);
-                        dmg.description = HandEffectTable.Describe(HandEffectTable.EffectType.Damage, dmg.value);
-                    }
-                    break;
-                }
+                case EffectType.MultiplyDamage: HandEffectUtil.MultiplyDamageEffect(effects, fv); break;
                 case EffectType.ReduceDamage:
                 {
                     var dmg = effects.Find(e => e.effectType == HandEffectTable.EffectType.Damage);
                     if (dmg != null)
                     {
-                        dmg.value = Mathf.Max(0, dmg.value - intValue);
+                        dmg.value = Mathf.Max(0, dmg.value - iv);
                         dmg.description = HandEffectTable.Describe(HandEffectTable.EffectType.Damage, dmg.value);
                     }
                     break;
                 }
-                case EffectType.HealPercentOfDamage:
-                    HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.HealPercentOfDamage, intValue);
+                case EffectType.AddDamagePerEnemyPoison:
+                    if (poison > 0) HandEffectUtil.AddDamageToEffects(effects, poison * iv);
                     break;
+                case EffectType.AddDamagePerEnemyDebuff:
+                {
+                    if (enemy != null) { int c = CountEnemyDebuffs(enemy); if (c > 0) HandEffectUtil.AddDamageToEffects(effects, c * iv); }
+                    break;
+                }
+                case EffectType.HealPerEnemyPoison:
+                    if (poison > 0) HandEffectTable.AddOrMerge(effects, HandEffectTable.EffectType.Heal, Mathf.Min(poison * iv, PlagueDoctorMaxHeal));
+                    break;
+                case EffectType.ExecuteBelowHpPercent:
+                    if (enemy != null && enemy.MaxHp > 0 && (float)enemy.CurrentHp / enemy.MaxHp * 100f < iv)
+                        HandEffectUtil.MultiplyDamageEffect(effects, 3f);
+                    break;
+
+                // ===== 文字行（Note）=====
+                case EffectType.AddGold: HandEffectTable.AddNote(effects, $"获得 {iv} 金币"); break;
+                case EffectType.LoseGold: HandEffectTable.AddNote(effects, $"失去 {iv} 金币"); break;
+                case EffectType.LoseHp: HandEffectTable.AddNote(effects, $"失去 {iv} 点生命"); break;
+                case EffectType.AddTurnDamageBonus: HandEffectTable.AddNote(effects, $"本回合后续出牌伤害 +{iv}"); break;
+                case EffectType.AddDrawNextTurn: HandEffectTable.AddNote(effects, $"下回合抽 {iv} 张牌"); break;
+                case EffectType.AddSuitDamageBonus: HandEffectTable.AddNote(effects, $"本场该花色每张牌额外 +{iv} 伤害"); break;
+                case EffectType.DoubleEnemyBurn: HandEffectTable.AddNote(effects, "敌人灼烧层数翻倍"); break;
+                case EffectType.ApplyPoison: HandEffectTable.AddNote(effects, $"施加 {iv} 层中毒{dur}"); break;
+                case EffectType.ApplyBurn: HandEffectTable.AddNote(effects, $"施加 {iv} 层灼烧{dur}"); break;
+                case EffectType.ApplyWeaken: HandEffectTable.AddNote(effects, $"施加 {iv} 层虚弱{dur}"); break;
+                case EffectType.ApplyVulnerable: HandEffectTable.AddNote(effects, $"施加 {iv} 层易伤{dur}"); break;
+                case EffectType.ApplyPoisonEqualCount:
+                {
+                    int cnt = (handResult != null ? handResult.cardCount : 0) + (battleManager?.GetPoisonBonus() ?? 0);
+                    if (cnt > 0) HandEffectTable.AddNote(effects, $"施加 {cnt} 层中毒{dur}");
+                    break;
+                }
+                case EffectType.GainStrengthPerEnemyPoison:
+                    if (poison > 0) HandEffectTable.AddNote(effects, $"获得 {poison * iv} 层力量");
+                    break;
+                case EffectType.ApplySelfStatus:
+                    HandEffectTable.AddNote(effects, $"获得 {iv} 层{StatusName(eff.status)}{dur}");
+                    break;
+                case EffectType.ApplyEnemyStatus:
+                    HandEffectTable.AddNote(effects, $"施加 {iv} 层{StatusName(eff.status)}{dur}");
+                    break;
+                case EffectType.GainBuffByDominantSuit:
+                {
+                    var suit = battleManager != null ? battleManager.GetDominantSuit() : Suit.Spade;
+                    HandEffectTable.AddNote(effects, $"获得 {iv} 层{StatusEffectRegistry.Name(SuitToBuffStatus(suit))}{dur}");
+                    break;
+                }
+                case EffectType.ReturnCardsToHand: HandEffectTable.AddNote(effects, $"本次出牌后返回 {iv} 张牌到手牌"); break;
+                case EffectType.GrantRandomTier1Enchant: HandEffectTable.AddNote(effects, "随机一张手牌获得临时附魔"); break;
+                case EffectType.SearchDiscard: HandEffectTable.AddNote(effects, "打出后：从弃牌堆选一张牌回手"); break;
+                // 其余（Passive / 弃牌触发 / 预留复杂类）不出现在出牌预览
             }
+        }
+
+        private static string StatusName(string status)
+        {
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<StatusEffectType>(status, true, out var st))
+                return StatusEffectRegistry.Name(st);
+            return status ?? "";
         }
 
         /// <summary>
@@ -639,8 +689,9 @@ namespace Roguelike
                     {
                         var enemyUnit = battleManager?.GetEnemy();
                         int poison = enemyUnit != null ? enemyUnit.GetStatusAmount(StatusEffectType.Poison) : 0;
-                        if (effects != null && poison > 0)
-                            AddEffectValue(effects, HandEffectTable.EffectType.Heal, poison * GetIntValue(eff.value));
+                        int heal = Mathf.Min(poison * GetIntValue(eff.value), PlagueDoctorMaxHeal);
+                        if (effects != null && heal > 0)
+                            AddEffectValue(effects, HandEffectTable.EffectType.Heal, heal);
                         break;
                     }
                     case EffectType.GainStrengthPerEnemyPoison:

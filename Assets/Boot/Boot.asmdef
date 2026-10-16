@@ -2,7 +2,9 @@
     "name": "Boot",
     "rootNamespace": "",
     "references": [
-        "HybridCLR.Runtime"
+        "HybridCLR.Runtime",
+        "YooAsset",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

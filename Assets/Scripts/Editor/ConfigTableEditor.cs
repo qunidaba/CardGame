@@ -861,7 +861,7 @@ public class ConfigTableEditor : EditorWindow
             ConfigType.Encounters => "encounters.json",
             _ => "enemies.json"
         };
-        return Path.Combine(Application.streamingAssetsPath, "Config", fileName);
+        return Path.Combine(Application.dataPath, "GameRes", "Config", fileName);
     }
 
     private string GetJsonRootKey(ConfigType type)

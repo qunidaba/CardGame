@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
@@ -72,6 +73,18 @@ public class UpdatePanel : MonoBehaviour
         _instance._noBtn.gameObject.SetActive(false);
     }
 
+    /// <summary>只显示一行状态文字（无按钮、无进度条），由调用方自动推进，用于"正在进入…"这类无需点击的提示。</summary>
+    public static void SetStatus(string statusText)
+    {
+        if (_instance == null) return;
+        _instance._confirming = true;   // 阻止 Update() 覆盖文字
+        _instance._statusText.text = statusText;
+        _instance._barBg.gameObject.SetActive(false);
+        _instance._detailText.text = "";
+        if (_instance._yesBtn != null) _instance._yesBtn.gameObject.SetActive(false);
+        if (_instance._noBtn != null) _instance._noBtn.gameObject.SetActive(false);
+    }
+
     private static void SetBtnPos(Button btn, float x)
     {
         if (btn == null) return;
@@ -87,6 +100,8 @@ public class UpdatePanel : MonoBehaviour
 
     private void Build()
     {
+        EnsureEventSystem();
+
         var font = GetOsFont();
 
         var canvasGo = new GameObject("Canvas", typeof(RectTransform));
@@ -136,6 +151,14 @@ public class UpdatePanel : MonoBehaviour
         _noBtn.onClick.AddListener(() => { Choice = false; HideButtons(); });
 
         HideButtons();
+    }
+
+    private static void EnsureEventSystem()
+    {
+        if (EventSystem.current != null) return;
+        if (FindObjectOfType<EventSystem>() != null) return;
+        // 不常驻：随当前（Boot）场景销毁，避免进入游戏场景后与它自带的 EventSystem 重复
+        var go = new GameObject("[EventSystem]", typeof(EventSystem), typeof(StandaloneInputModule));
     }
 
     private void HideButtons()

@@ -83,7 +83,7 @@ public class MainMenuPanel : BasePanel
 
         // 版本号
         var ver = CreateText(transform, "Version", font, 18, TextAlignmentOptions.BottomRight, new Vector2(400, 30));
-        ver.text = "v0.1 prototype";
+        ver.text = "v0.5 prototype";
         ver.color = new Color(0.45f, 0.45f, 0.5f);
         Anchor(ver.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-20, 15));
     }

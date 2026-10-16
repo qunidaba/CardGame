@@ -11,7 +11,8 @@ public class HandEffectTable
         Defense,    // 获得防御
         DrawCard,   // 抽牌
         Heal,       // 回血
-        HealPercentOfDamage  // 按本次造成伤害的百分比回血（吸血）
+        HealPercentOfDamage,  // 按本次造成伤害的百分比回血（吸血）
+        Note        // 仅用于预览显示的文字行（施状态 / 金币 / 自buff 等），不参与结算
     }
 
     public class HandEffect
@@ -147,5 +148,12 @@ public class HandEffectTable
             case EffectType.HealPercentOfDamage: return $"回复伤害的 {value}%";
             default: return $"+{value}";
         }
+    }
+
+    /// <summary>加一行仅供预览显示的文字（不参与结算）</summary>
+    public static void AddNote(List<HandEffect> effects, string text)
+    {
+        if (effects == null || string.IsNullOrEmpty(text)) return;
+        effects.Add(new HandEffect { effectType = EffectType.Note, value = 0, description = text });
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using YooAsset;
 
 /// <summary>
@@ -45,7 +46,11 @@ public static class Res
     public static bool FirstRun;                      // 首次运行（本地没有已安装版本 → 强制下载）
     public static string InstalledVersion = "";       // 本地已安装版本
     public static string RemoteVersion = "";          // 远端最新版本
+    public static string LoadedVersion = "";          // 本次实际加载的版本（跳过更新时 = 已安装版本）
     public static bool UpdateAccepted;                // 玩家是否同意更新
+
+    /// <summary>最近一次初始化失败的原因（供 UI 提示；成功时为空）。</summary>
+    public static string LastError = "";
 
     /// <summary>发现新版本时调用（由 UI 层提供）：显示"是否更新"并等玩家选择，把结果写进 UpdateAccepted。</summary>
     public static System.Func<string, IEnumerator> AskUpdate;
@@ -64,7 +69,24 @@ public static class Res
     /// <summary>初始化 YooAsset 并加载清单（在进入游戏逻辑前 await 完）。</summary>
     public static IEnumerator Init()
     {
+        if (_ready) yield break;
+
+        LastError = "";
         _ready = false;
+
+        // 包初始化（幂等）：若包已初始化（例如失败后重试），直接采用，不再重复初始化
+        ResourcePackage existing = null;
+        bool packageReady = YooAssets.IsInitialized
+            && YooAssets.TryGetPackage(PackageName, out existing)
+            && existing.InitializeStatus == EOperationStatus.Succeeded;
+        if (packageReady)
+        {
+            _package = existing;
+            Debug.Log("[Res] 包已初始化，直接进入更新阶段");
+            yield return UpdatePhase();
+            yield break;
+        }
+
         _package = null;
         _handles.Clear();
         _subHandles.Clear();
@@ -126,23 +148,34 @@ public static class Res
 
         if (initOp == null)
         {
-            Debug.LogError($"[Res] 当前模式 {Mode} 无法初始化（编辑器模拟模式仅编辑器可用）");
+            LastError = $"当前模式 {Mode} 无法初始化（编辑器模拟模式仅编辑器可用）";
+            Debug.LogError("[Res] " + LastError);
             yield break;
         }
 
         yield return initOp;
         if (initOp.Status != EOperationStatus.Succeeded)
         {
-            Debug.LogError($"[Res] YooAsset 初始化失败：{initOp.Error}");
+            LastError = $"YooAsset 初始化失败：{initOp.Error}";
+            Debug.LogError("[Res] " + LastError);
             yield break;
         }
 
+        yield return UpdatePhase();
+    }
+
+    /// <summary>版本 → 清单 → 下载 → 清理（可重复调用：初始化失败后重试会走这里）。</summary>
+    private static IEnumerator UpdatePhase()
+    {
         Phase = "检查资源版本";
+        HasUpdate = false;
+        Downloading = false;
         var versionOp = _package.RequestPackageVersionAsync();
         yield return versionOp;
         if (versionOp.Status != EOperationStatus.Succeeded)
         {
-            Debug.LogError($"[Res] 请求资源版本失败：{versionOp.Error}");
+            LastError = $"请求资源版本失败：{versionOp.Error}";
+            Debug.LogError("[Res] " + LastError);
             yield break;
         }
 
@@ -166,14 +199,15 @@ public static class Res
 
         // 是否加载/采用新版本：首次强制；无更新用最新；有更新则看玩家是否同意，拒绝则回退到已安装版本
         bool useNewVersion = FirstRun || !updateAvailable || accepted;
-        string loadVersion = useNewVersion ? RemoteVersion : InstalledVersion;
+        LoadedVersion = useNewVersion ? RemoteVersion : InstalledVersion;
 
         Phase = "更新资源清单";
-        var manifestOp = _package.LoadPackageManifestAsync(new LoadPackageManifestOptions(loadVersion, 60));
+        var manifestOp = _package.LoadPackageManifestAsync(new LoadPackageManifestOptions(LoadedVersion, 60));
         yield return manifestOp;
         if (manifestOp.Status != EOperationStatus.Succeeded)
         {
-            Debug.LogError($"[Res] 加载资源清单失败：{manifestOp.Error}");
+            LastError = $"加载资源清单失败：{manifestOp.Error}";
+            Debug.LogError("[Res] " + LastError);
             yield break;
         }
 
@@ -205,14 +239,15 @@ public static class Res
                 Downloading = false;
                 if (downloader.Status != EOperationStatus.Succeeded)
                 {
-                    Debug.LogError($"[Res] 资源下载失败：{downloader.Error}");
+                    LastError = $"资源下载失败：{downloader.Error}";
+                    Debug.LogError("[Res] " + LastError);
                     yield break;
                 }
                 Debug.Log("[Res] 资源下载完成");
             }
 
             // 记录已安装版本
-            PlayerPrefs.SetString(InstalledVersionKey, RemoteVersion);
+            PlayerPrefs.SetString(InstalledVersionKey, LoadedVersion);
             PlayerPrefs.Save();
         }
 
@@ -276,6 +311,12 @@ public static class Res
         // 回退：把该路径当单资源处理
         var one = Load<T>(key);
         return one != null ? new[] { one } : System.Array.Empty<T>();
+    }
+
+    /// <summary>从 YooAsset 加载场景（key 相对 GameRes，如 "Scenes/Scene"）。热更脚本挂的场景必须走 AB 加载。</summary>
+    public static SceneHandle LoadSceneAsync(string key)
+    {
+        return _package.LoadSceneAsync(Loc(key), LoadSceneMode.Single);
     }
 
     private static T[] Collect<T>(IReadOnlyList<Object> objs) where T : Object

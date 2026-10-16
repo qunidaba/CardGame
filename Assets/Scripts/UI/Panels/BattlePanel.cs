@@ -1236,6 +1236,10 @@ private void OnEnemyTurnStart()
         RefreshHandCards();
         RefreshPileCounts();
         UpdateButtonStates();
+
+        // 手牌数变化会影响「抽髓」这类按手牌数算伤害的意图数值，出牌时立即刷新敌人意图显示
+        if (battleManager != null && battleManager.IsPlayerTurn)
+            OnEnemyIntentReady();
     }
 
     private void OnSelectionChanged()
