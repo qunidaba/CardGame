@@ -79,8 +79,7 @@ namespace Roguelike
         {
             if (titleText == null || descriptionText == null) return;
             var font = Res.Load<TMP_FontAsset>("Fonts/simhei SDF");
-            if (font == null) return;
-
+            if (font == null) { Debug.LogWarning("[Tooltip] 字体加载失败（Fonts/simhei SDF）"); return; }
             ApplyFont(titleText, font);
             ApplyFont(descriptionText, font);
         }
@@ -88,15 +87,15 @@ namespace Roguelike
         private static void ApplyFont(TextMeshProUGUI t, TMP_FontAsset font)
         {
             if (t == null) return;
+            if (font.material == null) { Debug.LogWarning("[Tooltip] 字体材质为空（font.material == null）"); return; }
 
             if (t.font != font) t.font = font;
 
-            // fontSharedMaterial 的 Unity 判空对"已销毁对象"返回 null，安全；坏了就重指到有效材质
-            if (t.fontSharedMaterial == null)
-            {
-                t.fontSharedMaterial = font.material;
-                t.SetMaterialDirty();
-            }
+            // TMP 的 font setter 在"字体资产相同"时会直接 return，无法刷新 m_sharedMaterial；
+            // 预制体里序列化的材质在资源搬进 YooAsset 后可能失效 → 无条件重指到字体自带材质。
+            t.fontSharedMaterial = font.material;
+            t.SetMaterialDirty();
+            t.ForceMeshUpdate();
         }
 
         public void Show(string title, string description, RectTransform target, bool above = false)

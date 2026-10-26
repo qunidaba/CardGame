@@ -170,36 +170,54 @@ public static class Res
         Phase = "检查资源版本";
         HasUpdate = false;
         Downloading = false;
-        var versionOp = _package.RequestPackageVersionAsync();
-        yield return versionOp;
-        if (versionOp.Status != EOperationStatus.Succeeded)
-        {
-            LastError = $"请求资源版本失败：{versionOp.Error}";
-            Debug.LogError("[Res] " + LastError);
-            yield break;
-        }
 
-        RemoteVersion = versionOp.PackageVersion;
         InstalledVersion = PlayerPrefs.GetString(InstalledVersionKey, "");
         FirstRun = string.IsNullOrEmpty(InstalledVersion);
-        bool updateAvailable = !FirstRun && InstalledVersion != RemoteVersion;
 
-        // 后续更新：提示玩家，是否更新由玩家决定（首次不询问，强制下载最新）
-        bool accepted = true;
-        if (updateAvailable)
+        bool skipDownload = false;   // 不下载：网络不可用回退旧版 / 玩家选择跳过
+
+        var versionOp = _package.RequestPackageVersionAsync();
+        yield return versionOp;
+
+        if (versionOp.Status != EOperationStatus.Succeeded)
         {
-            UpdateAccepted = false;
-            if (AskUpdate != null)
+            // 首次运行没有可回退的版本 → 必须联网
+            if (FirstRun)
             {
-                yield return AskUpdate(RemoteVersion);
-                accepted = UpdateAccepted;
+                LastError = $"请求资源版本失败：{versionOp.Error}";
+                Debug.LogError("[Res] " + LastError);
+                yield break;
             }
-            Debug.Log($"[Res] 发现新版本 {RemoteVersion}（当前 {InstalledVersion}）：玩家{(accepted ? "选择更新" : "跳过")}");
-        }
 
-        // 是否加载/采用新版本：首次强制；无更新用最新；有更新则看玩家是否同意，拒绝则回退到已安装版本
-        bool useNewVersion = FirstRun || !updateAvailable || accepted;
-        LoadedVersion = useNewVersion ? RemoteVersion : InstalledVersion;
+            // 已经装过资源 → 网络不好就用已安装的旧版本直接进游戏
+            skipDownload = true;
+            RemoteVersion = InstalledVersion;
+            LoadedVersion = InstalledVersion;
+            Debug.LogWarning($"[Res] 网络异常，改用已安装版本 {InstalledVersion} 继续：{versionOp.Error}");
+        }
+        else
+        {
+            RemoteVersion = versionOp.PackageVersion;
+            bool updateAvailable = !FirstRun && InstalledVersion != RemoteVersion;
+
+            // 后续更新：提示玩家，是否更新由玩家决定（首次不询问，强制下载最新）
+            bool accepted = true;
+            if (updateAvailable)
+            {
+                UpdateAccepted = false;
+                if (AskUpdate != null)
+                {
+                    yield return AskUpdate(RemoteVersion);
+                    accepted = UpdateAccepted;
+                }
+                Debug.Log($"[Res] 发现新版本 {RemoteVersion}（当前 {InstalledVersion}）：玩家{(accepted ? "选择更新" : "跳过")}");
+            }
+
+            // 是否加载/采用新版本：首次强制；无更新用最新；有更新则看玩家是否同意，拒绝则回退到已安装版本
+            bool useNewVersion = FirstRun || !updateAvailable || accepted;
+            LoadedVersion = useNewVersion ? RemoteVersion : InstalledVersion;
+            skipDownload = !useNewVersion;   // 玩家选择跳过 → 不下载
+        }
 
         Phase = "更新资源清单";
         var manifestOp = _package.LoadPackageManifestAsync(new LoadPackageManifestOptions(LoadedVersion, 60));
@@ -211,8 +229,8 @@ public static class Res
             yield break;
         }
 
-        // 下载资源包：首次强制；已最新为 0；玩家同意则下差异；玩家拒绝则跳过（用旧的运行）
-        if (useNewVersion)
+        // 下载资源包：首次强制；已最新为 0；玩家同意则下差异；跳过/离线则不下
+        if (!skipDownload)
         {
             Phase = "检查资源更新";
             var downloader = _package.CreateResourceDownloader(new ResourceDownloaderOptions(10, 3));
@@ -237,19 +255,43 @@ public static class Res
                 downloader.StartDownload();
                 yield return downloader;
                 Downloading = false;
+
                 if (downloader.Status != EOperationStatus.Succeeded)
                 {
-                    LastError = $"资源下载失败：{downloader.Error}";
-                    Debug.LogError("[Res] " + LastError);
-                    yield break;
-                }
-                Debug.Log("[Res] 资源下载完成");
-            }
+                    // 下载中途断网：已装过资源就回退旧版继续进游戏
+                    if (!FirstRun)
+                    {
+                        Debug.LogWarning($"[Res] 下载失败，回退到已安装版本 {InstalledVersion}：{downloader.Error}");
+                        HasUpdate = false;
+                        LoadedVersion = InstalledVersion;
+                        RemoteVersion = InstalledVersion;
 
-            // 记录已安装版本
-            PlayerPrefs.SetString(InstalledVersionKey, LoadedVersion);
-            PlayerPrefs.Save();
+                        var fallbackOp = _package.LoadPackageManifestAsync(new LoadPackageManifestOptions(LoadedVersion, 60));
+                        yield return fallbackOp;
+                        if (fallbackOp.Status != EOperationStatus.Succeeded)
+                        {
+                            LastError = $"资源下载失败且无法回退：{downloader.Error}";
+                            Debug.LogError("[Res] " + LastError);
+                            yield break;
+                        }
+                    }
+                    else
+                    {
+                        LastError = $"资源下载失败：{downloader.Error}";
+                        Debug.LogError("[Res] " + LastError);
+                        yield break;
+                    }
+                }
+                else
+                {
+                    Debug.Log("[Res] 资源下载完成");
+                }
+            }
         }
+
+        // 记录已安装版本（回退时 LoadedVersion == InstalledVersion，写入无变化）
+        PlayerPrefs.SetString(InstalledVersionKey, LoadedVersion);
+        PlayerPrefs.Save();
 
         // 清理不再使用的缓存包（被删除的资源 / 旧版本残留），回收客户端空间
         if (Mode != PlayMode.EditorSimulate)
@@ -264,7 +306,7 @@ public static class Res
         }
 
         _ready = true;
-        Debug.Log("[Res] YooAsset 就绪");
+        Debug.Log($"[Res] YooAsset 就绪（版本 {LoadedVersion}{(skipDownload ? "，未更新/离线" : "")}）");
     }
 
     /// <summary>同步加载单个资源（等价于原来的 Res.Load&lt;T&gt;）。</summary>
