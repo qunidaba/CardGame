@@ -69,7 +69,7 @@ namespace Roguelike
                     {
                         $"Lv1：每场战斗第一回合额外抽 {DestinyPassiveSystem.ClubLv1FirstTurnDraw} 张",
                         $"Lv2：附魔奖励 {DestinyPassiveSystem.ClubLv2EnchantOptionCountBase} 选 1 → {DestinyPassiveSystem.ClubLv2EnchantOptionCount} 选 1",
-                        $"Lv3：每回合开始时，随机 {DestinyPassiveSystem.ClubLv3HandEnchantPerTurn} 张手牌获得随机附魔（仅本场战斗）"
+                        $"Lv3：每回合开始时，随机 {DestinyPassiveSystem.ClubLv3HandEnchantPerTurn} 张手牌获得临时随机附魔"
                     };
                 case Suit.Diamond:
                     return new[]
@@ -112,8 +112,8 @@ namespace Roguelike
                     break;
                 case Suit.Club:
                     if (rank == 1) body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌";
-                    else if (rank == 2) body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv2} 张各获得随机附魔（仅本场战斗）";
-                    else body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv3} 张各获得随机稀有附魔（仅本场战斗）";
+                    else if (rank == 2) body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv2} 张各获得临时随机附魔";
+                    else body = $"抽 {DestinyPassiveSystem.ActiveClubDraw} 张牌，其中 {DestinyPassiveSystem.ActiveClubEnchantLv3} 张各获得临时随机稀有附魔";
                     break;
                 case Suit.Diamond:
                     if (rank == 1) body = $"立即获得 {DestinyPassiveSystem.ActiveDiamondGoldLv1} 金币";

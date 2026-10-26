@@ -217,7 +217,7 @@ namespace Roguelike
                 {
                     var bm = Roguelike.RunDirector.Instance != null ? Roguelike.RunDirector.Instance.BattleManager : null;
                     int played = bm != null ? bm.CardsPlayedThisTurn : 0;
-                    return $"本回合必须恰好打出 {a} 张牌（已打出 {played}）；否则回合结束随机 7 张手牌被随机诅咒";
+                    return $"本回合必须恰好打出 {a} 张牌（已打出 {played}）；否则回合结束随机 7 张手牌被临时诅咒";
                 });
         }
 

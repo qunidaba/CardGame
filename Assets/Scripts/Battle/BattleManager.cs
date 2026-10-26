@@ -1065,9 +1065,19 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         CanPlayerAct = true;
         OnCanPlayerActChanged?.Invoke(true);
 
-        // 嘲讽生效中：强制把选中目标设为嘲讽者
+        // 回合开始自动选目标：被嘲讽 → 强制嘲讽者（不变）；否则 → 自动选最左边（第一个存活）的敌人
         int tauntIdx = GetTauntTargetIndex();
-        if (tauntIdx >= 0) SetTarget(tauntIdx);
+        if (tauntIdx >= 0)
+        {
+            SetTarget(tauntIdx);
+        }
+        else
+        {
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                if (enemies[i] != null && !enemies[i].IsDead) { SetTarget(i); break; }
+            }
+        }
 
         OnEnemyIntentReady?.Invoke();
         OnPlayerPhaseChanged?.Invoke("WaitInput");

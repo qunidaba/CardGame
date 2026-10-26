@@ -134,6 +134,9 @@ namespace Roguelike
         /// <summary>瘟疫医生：一次触发最多回复的生命（上限）</summary>
         private const int PlagueDoctorMaxHeal = 6;
 
+        /// <summary>炼化：一次触发最多获得的力量（上限）</summary>
+        private const int RefineMaxStrength = 6;
+
         public void Initialize(RunData runData, BattleManager battleManager, RunDirector runDirector)
         {
             this.runData = runData;
@@ -254,8 +257,11 @@ namespace Roguelike
                     break;
                 }
                 case EffectType.GainStrengthPerEnemyPoison:
-                    if (poison > 0) HandEffectTable.AddNote(effects, $"获得 {poison * iv} 层力量");
+                {
+                    int gain = Mathf.Min(poison / 2 * iv, RefineMaxStrength);
+                    if (gain > 0) HandEffectTable.AddNote(effects, $"获得 {gain} 层力量");
                     break;
+                }
                 case EffectType.ApplySelfStatus:
                     HandEffectTable.AddNote(effects, $"获得 {iv} 层{StatusName(eff.status)}{dur}");
                     break;
@@ -698,8 +704,10 @@ namespace Roguelike
                     {
                         var enemyUnit = battleManager?.GetEnemy();
                         int poison = enemyUnit != null ? enemyUnit.GetStatusAmount(StatusEffectType.Poison) : 0;
-                        if (poison > 0)
-                            battleManager?.GetPlayer()?.AddStatus(StatusEffectType.Strength, poison * GetIntValue(eff.value), -1);
+                        // 目标每 2 点中毒获得 value 点力量，最多 6 点
+                        int gain = Mathf.Min(poison / 2 * GetIntValue(eff.value), RefineMaxStrength);
+                        if (gain > 0)
+                            battleManager?.GetPlayer()?.AddStatus(StatusEffectType.Strength, gain, -1);
                         break;
                     }
                     case EffectType.ExecuteBelowHpPercent:

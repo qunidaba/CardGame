@@ -449,7 +449,7 @@
         {
             "id": 37,
             "name": "炼化",
-            "description": "打出时：敌人每有 1 层中毒，获得 1 层力量",
+            "description": "打出时：目标每有 2 点中毒获得 1 点力量（最多 6 点）",
             "trigger": "OnPlay",
             "effects": [
                 {
@@ -755,7 +755,7 @@
         {
             "id": 66,
             "name": "魔导",
-            "description": "打出时：随机一张手牌获得一个临时随机附魔，本场战斗结束后消失",
+            "description": "打出时：随机一张手牌获得一个临时随机附魔",
             "trigger": "OnPlay",
             "effects": [
                 {

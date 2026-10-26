@@ -132,15 +132,15 @@
         {
             "id": 7,
             "name": "剧毒之刃",
-            "description": "打出一对时，给敌人施加3层中毒，持续3回合",
+            "description": "打出一对时，随机一张手牌临时获得附魔「毒刃」",
             "rarity": "Rare",
             "effects": [
                 {
                     "trigger": "OnHandType",
-                    "type": "ApplyPoison",
-                    "value": 3,
+                    "type": "TempEnchantRandomHandCard",
+                    "value": 10,
                     "condition": "OnePair",
-                    "duration": 3
+                    "duration": 0
                 }
             ],
             "maxSlots": 1,
@@ -578,7 +578,7 @@
         {
             "id": 33,
             "name": "滋养手环",
-            "description": "每回合结束时最大生命 +1、生命 +1（每局最多触发 5 次）",
+            "description": "每回合结束时最大生命 +1、生命 +1（每场战斗最多触发 5 次）",
             "rarity": "Event",
             "effects": [
                 {
@@ -632,7 +632,7 @@
         {
             "id": 36,
             "name": "魔导书",
-            "description": "一次打出 5 张牌时，其中随机 2 张获得随机附魔（仅本场战斗）",
+            "description": "一次打出 5 张牌时，其中随机 2 张获得临时随机附魔",
             "rarity": "Event",
             "effects": [
                 {

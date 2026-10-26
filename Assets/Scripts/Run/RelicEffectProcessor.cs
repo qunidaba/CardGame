@@ -161,6 +161,9 @@ namespace Roguelike
             }
         }
 
+        /// <summary>滋养手环：本场战斗已触发的次数（每场战斗重新计，BattleManager 每场新建本处理器）</summary>
+        private int _nourishCount;
+
         private void ApplySingleEffect(RelicEffectData effect, Context ctx)
         {
             if (ctx.RunData == null) return;
@@ -334,15 +337,17 @@ namespace Roguelike
 
                 // ===== 红桃事件遗物 =====
 
-                // 「滋养手环」：回合结束时最大生命 +value、生命 +value（每局最多 duration 次，默认 5）
+                // 「滋养手环」：回合结束时最大生命 +value、生命 +value（每场战斗最多 duration 次，默认 5）
                 case "AddMaxHpAndHealPerTurn":
                 {
                     int per = Mathf.Max(1, GetIntValue(effect.value));
                     int cap = effect.duration > 0 ? effect.duration : 5;
-                    if (ctx.RunData.GetRelicCounter("nourish") >= cap) break;
-                    ctx.RunData.AddRelicCounter("nourish", 1);
-                    ctx.Player.MaxHp += per;
-                    ctx.Player.CurrentHp += per;
+                    if (_nourishCount >= cap) break;   // 每场战斗重新计数
+                    _nourishCount++;
+
+                    // 最大生命是「整局永久」的（RunData.MaxHp 会触发 OnMaxHpChanged 同步到战斗单位）
+                    ctx.RunData.MaxHp += per;
+                    if (ctx.Player != null) ctx.Player.CurrentHp += per;   // 本场战斗的生命 +value
                     break;
                 }
 
@@ -435,6 +440,31 @@ namespace Roguelike
                         Debug.Log($"[魔导书] 打出 5 张牌，{granted} 张获得随机附魔（仅本场战斗）");
                         OnCardVisualsChanged?.Invoke();
                     }
+                    break;
+                }
+
+                // 「剧毒之刃」：打出一对时，随机一张（未打出的）手牌获得指定临时附魔（value = 附魔 id，仅本场战斗）
+                case "TempEnchantRandomHandCard":
+                {
+                    int enchId = GetIntValue(effect.value);
+                    if (enchId <= 0) break;
+                    var hand = ctx.HandArea != null ? ctx.HandArea.HandCards : null;
+                    if (hand == null || hand.Count == 0) break;
+
+                    var candidates = new List<CardData>();
+                    foreach (var c in hand)
+                    {
+                        if (c == null) continue;
+                        if (ctx.PlayedCards != null && ctx.PlayedCards.Contains(c)) continue;   // 本次打出的牌马上离手，不算
+                        if (ctx.RunData.GetCardEnchantments(c.EnchantRank, c.EnchantSuit).Contains(enchId)) continue;   // 已有就别重复
+                        candidates.Add(c);
+                    }
+                    if (candidates.Count == 0) break;
+
+                    var target = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+                    ctx.RunData.AddTempEnchantment(target.EnchantRank, target.EnchantSuit, enchId);
+                    OnCardVisualsChanged?.Invoke();
+                    Debug.Log($"[剧毒之刃] {target.DisplayName} 临时获得附魔 {enchId}（本场战斗）");
                     break;
                 }
 

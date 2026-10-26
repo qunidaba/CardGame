@@ -146,7 +146,8 @@ namespace Roguelike.Data
         UpgradeCard,
         RemoveCard,
         CopyCard,
-        ChangeCardType
+        ChangeCardType,
+        TempEnchantRandomHandCard
     }
 
     /// <summary>事件结果类型（必须与 EventSystem 的 case 字符串一致）</summary>

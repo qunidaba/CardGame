@@ -2846,12 +2846,12 @@
             "once": true,
             "options": [
                 {
-                    "text": "接受苦修（失去 10 点最大生命，获得遗物「滋养手环」）",
+                    "text": "接受苦修（失去 15 点最大生命，获得遗物「滋养手环」）",
                     "condition": null,
                     "results": [
                         {
                             "type": "LoseMaxHp",
-                            "value": 20,
+                            "value": 15,
                             "count": 0,
                             "rarity": "Any",
                             "suit": null,
@@ -4770,7 +4770,7 @@
                             "type": "GainGold",
                             "value": 30,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,
@@ -4791,7 +4791,7 @@
                             "type": "GainSpecificRelic",
                             "value": 37,
                             "count": 0,
-                            "rarity": null,
+                            "rarity": "Any",
                             "suit": null,
                             "enemyId": 0,
                             "require": null,

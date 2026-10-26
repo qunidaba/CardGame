@@ -2728,7 +2728,7 @@ private void OnEnemyTurnStart()
                 {
                     var curse = Roguelike.Data.ConfigLoader.GetEnchantment(intent.value);
                     string curseName = curse != null ? curse.name : $"诅咒#{intent.value}";
-                    body = $"诅咒 {Mathf.Max(1, intent.hitCount)} 张牌（{curseName}）";
+                    body = $"临时诅咒 {Mathf.Max(1, intent.hitCount)} 张牌（{curseName}）";
                 }
                 return $"<color=#C08CFF>{body}</color>";
             }
@@ -2849,7 +2849,7 @@ private void OnEnemyTurnStart()
                 {
                     var curse = Roguelike.Data.ConfigLoader.GetEnchantment(a.value);
                     string curseName = curse != null ? curse.name : $"诅咒#{a.value}";
-                    parts.Add($"<color=#C08CFF>诅咒 {Mathf.Max(1, a.hitCount)} 张（{curseName}）</color>");
+                    parts.Add($"<color=#C08CFF>临时诅咒 {Mathf.Max(1, a.hitCount)} 张（{curseName}）</color>");
                     break;
                 }
                 case "Swallow":
