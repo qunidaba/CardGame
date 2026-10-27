@@ -319,6 +319,10 @@ public static class Res
             return null;
         }
 
+        // 地址不存在（如未提供的可选图标）：静默返回，避免 YooAsset 对无效地址报错
+        if (!_package.IsLocationValid(Loc(key)))
+            return null;
+
         if (_handles.TryGetValue(key, out var cached) && cached != null)
             return cached.AssetObject as T;
 

@@ -1840,7 +1840,7 @@ private void OnEnemyTurnStart()
         rt.anchorMax = new Vector2(0.5f, 1f);
         rt.pivot = new Vector2(0.5f, 1f);
         rt.anchoredPosition = new Vector2(0f, 0f);
-        rt.sizeDelta = new Vector2(400f, 40f);
+        rt.sizeDelta = new Vector2(900f, 40f);
     }
 
     private void UpdateHpBars()
@@ -1893,7 +1893,32 @@ private void OnEnemyTurnStart()
     private void UpdateTurnCount()
     {
         if (turnCountText == null || battleManager == null) return;
-        turnCountText.text = $"第 {battleManager.TurnsElapsed} 回合";
+
+        var rd = battleManager.GetRunData();
+        int act = rd != null ? rd.actId : 1;
+        int battleNo = rd != null ? rd.battleIndex : 0;
+        int total = RunDirector.Instance != null ? RunDirector.Instance.GetActTotalBattles() : 7;
+
+        // Boss：RunData.isBossBattle，或敌方里有 Boss
+        bool boss = rd != null && rd.isBossBattle;
+        if (!boss && battleManager.GetEnemyDatas() != null)
+        {
+            foreach (var e in battleManager.GetEnemyDatas())
+                if (e != null && e.isBoss) { boss = true; break; }
+        }
+
+        // 第X章  进度：1/7  普通/精英  第R回合；Boss 时进度显示 Boss
+        string progress = boss ? "Boss" : $"{battleNo}/{total}";
+        string type = boss ? "" : (battleManager.IsElite ? "  精英" : "  普通");
+        turnCountText.text = $"第{CnNumber(act)}章  进度：{progress}{type}  第{battleManager.TurnsElapsed}回合";
+    }
+
+    /// <summary>章节用的中文数字（1~10，其余回退阿拉伯数字）</summary>
+    private static string CnNumber(int n)
+    {
+        string[] d = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
+        if (n >= 0 && n <= 10) return d[n];
+        return n.ToString();
     }
 
     private readonly Dictionary<CardData, CardUI> cardUis = new Dictionary<CardData, CardUI>();

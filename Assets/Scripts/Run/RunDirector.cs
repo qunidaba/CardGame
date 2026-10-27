@@ -394,6 +394,13 @@ namespace Roguelike
             return Roguelike.Data.ConfigLoader.GetEnemiesByPool(pool).Count > 0;
         }
 
+        /// <summary>当前章节共几场战斗（进 Boss 前）</summary>
+        public int GetActTotalBattles()
+        {
+            GetActBattleConfig(out int total, out _, out _, out _);
+            return total;
+        }
+
         public void EnterNextBattle()
         {
             if (RunData == null) return;
@@ -450,7 +457,7 @@ namespace Roguelike
             StartCombat(pool, isElite);
         }
 
-        /// <summary>Boss 战胜利：有下一章就继续，否则通关</summary>
+        /// <summary>Boss 战胜利：有下一章就继续（先进入一次事件），否则通关</summary>
         private void OnBossDefeated()
         {
             int nextAct = RunData.actId + 1;
@@ -463,10 +470,14 @@ namespace Roguelike
                 return;
             }
 
+            // 先推进到下一章并把战斗序号归零（读档时也不会重新触发 Boss）
             RunData.actId = nextAct;
             battleCount = 0;
-            Debug.Log($"[RunDirector] 进入第 {nextAct} 章：{next.name}");
-            EnterNextBattle();
+            RunData.battleIndex = 0;
+            Debug.Log($"[RunDirector] 进入第 {nextAct} 章：{next.name}（Boss 后先进入事件）");
+
+            // 打完 Boss 也进入一次事件；事件结束后 EnterNextBattle 会开始新章第一战
+            EnterSuitEvent(allowShop: false);
         }
 
         private void StartCombat(string enemyPool, bool isElite)
@@ -1068,7 +1079,7 @@ namespace Roguelike
         /// <summary>
         /// 根据本场战斗的主导花色进入对应事件
         /// </summary>
-        private void EnterSuitEvent()
+        private void EnterSuitEvent(bool allowShop = true)
         {
             if (RunData == null || BattleManager == null)
             {
@@ -1088,7 +1099,7 @@ namespace Roguelike
             bool guaranteed = RunData.battlesSinceShop >= 4;
             bool isShopSuit = (int)suit == RunData.shopSuitIndex;
 
-            if (isShopSuit && (guaranteed || UnityEngine.Random.value < 0.1f))
+            if (allowShop && isShopSuit && (guaranteed || UnityEngine.Random.value < 0.1f))
             {
                 if (OpenShop(EnterNextBattle))
                 {
