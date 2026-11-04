@@ -878,14 +878,16 @@ namespace Roguelike
                 case "ThreeOfAKind": return t == HandType.ThreeOfAKind;
                 case "FullHouse": return t == HandType.FullHouse;
                 case "FourOfAKind": return t == HandType.FourOfAKind;
-                case "StraightAny": return t == HandType.Straight3 || t == HandType.Straight4 || t == HandType.Straight5;
-                case "Straight3": return t == HandType.Straight3;
-                case "Straight4": return t == HandType.Straight4;
-                case "Straight5": return t == HandType.Straight5;
-                case "FlushAny": return t == HandType.Flush3 || t == HandType.Flush4 || t == HandType.Flush5;
-                case "Flush3": return t == HandType.Flush3;
-                case "Flush4": return t == HandType.Flush4;
-                case "Flush5": return t == HandType.Flush5;
+                case "StraightAny": return t == HandType.Straight3 || t == HandType.Straight4 || t == HandType.Straight5
+                                          || t == HandType.StraightFlush3 || t == HandType.StraightFlush4 || t == HandType.StraightFlush5;
+                case "Straight3": return t == HandType.Straight3 || t == HandType.StraightFlush3;
+                case "Straight4": return t == HandType.Straight4 || t == HandType.StraightFlush4;
+                case "Straight5": return t == HandType.Straight5 || t == HandType.StraightFlush5;
+                case "FlushAny": return t == HandType.Flush3 || t == HandType.Flush4 || t == HandType.Flush5
+                                       || t == HandType.StraightFlush3 || t == HandType.StraightFlush4 || t == HandType.StraightFlush5;
+                case "Flush3": return t == HandType.Flush3 || t == HandType.StraightFlush3;
+                case "Flush4": return t == HandType.Flush4 || t == HandType.StraightFlush4;
+                case "Flush5": return t == HandType.Flush5 || t == HandType.StraightFlush5;
                 case "StraightFlushAny": return t == HandType.StraightFlush3 || t == HandType.StraightFlush4 || t == HandType.StraightFlush5;
                 case "StraightFlush3": return t == HandType.StraightFlush3;
                 case "StraightFlush4": return t == HandType.StraightFlush4;

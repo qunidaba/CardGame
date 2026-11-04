@@ -34,7 +34,7 @@ namespace Roguelike
         public const int ClubLv1FirstTurnDraw = 2;           // Lv1：第一回合额外抽 N 张
         public const int ClubLv2EnchantOptionCountBase = 3;  // Lv2：附魔奖励 N 选 1
         public const int ClubLv2EnchantOptionCount = 4;      //      → M 选 1
-        public const int ClubLv3HandEnchantPerTurn = 2;      // Lv3：每回合开始时随机 N 张手牌附魔
+        public const int ClubLv3HandEnchantPerTurn = 1;      // Lv3：每回合开始时随机 N 张手牌附魔
 
         // ---- 方块 ----
         public const int DiamondLv1ShopDiscountPercent = 20; // Lv1：商店降价 N%（⚠ 见文件末尾备注）

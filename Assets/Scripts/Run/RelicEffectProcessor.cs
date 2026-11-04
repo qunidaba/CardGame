@@ -550,18 +550,20 @@ namespace Roguelike
 
             return condition switch
             {
-                "StraightAny" => result.type == HandType.Straight3 || result.type == HandType.Straight4 || result.type == HandType.Straight5,
-                "FlushAny" => result.type == HandType.Flush3 || result.type == HandType.Flush4 || result.type == HandType.Flush5,
+                "StraightAny" => result.type == HandType.Straight3 || result.type == HandType.Straight4 || result.type == HandType.Straight5
+                                 || result.type == HandType.StraightFlush3 || result.type == HandType.StraightFlush4 || result.type == HandType.StraightFlush5,
+                "FlushAny" => result.type == HandType.Flush3 || result.type == HandType.Flush4 || result.type == HandType.Flush5
+                              || result.type == HandType.StraightFlush3 || result.type == HandType.StraightFlush4 || result.type == HandType.StraightFlush5,
                 "StraightFlushAny" => result.type == HandType.StraightFlush3 || result.type == HandType.StraightFlush4 || result.type == HandType.StraightFlush5,
                 "OnePair" => result.type == HandType.OnePair,
                 "TwoConsecutivePairs" => result.type == HandType.TwoConsecutivePairs,
                 "ThreeOfAKind" => result.type == HandType.ThreeOfAKind,
-                "Straight3" => result.type == HandType.Straight3,
-                "Straight4" => result.type == HandType.Straight4,
-                "Straight5" => result.type == HandType.Straight5,
-                "Flush3" => result.type == HandType.Flush3,
-                "Flush4" => result.type == HandType.Flush4,
-                "Flush5" => result.type == HandType.Flush5,
+                "Straight3" => result.type == HandType.Straight3 || result.type == HandType.StraightFlush3,
+                "Straight4" => result.type == HandType.Straight4 || result.type == HandType.StraightFlush4,
+                "Straight5" => result.type == HandType.Straight5 || result.type == HandType.StraightFlush5,
+                "Flush3" => result.type == HandType.Flush3 || result.type == HandType.StraightFlush3,
+                "Flush4" => result.type == HandType.Flush4 || result.type == HandType.StraightFlush4,
+                "Flush5" => result.type == HandType.Flush5 || result.type == HandType.StraightFlush5,
                 "FullHouse" => result.type == HandType.FullHouse,
                 "FourOfAKind" => result.type == HandType.FourOfAKind,
                 "StraightFlush3" => result.type == HandType.StraightFlush3,

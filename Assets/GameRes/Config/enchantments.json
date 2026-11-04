@@ -269,11 +269,11 @@
         {
             "id": 26,
             "name": "对子专精",
-            "description": "参与对子时：本次出牌伤害 ×2",
+            "description": "打出对子时：获得的防御 +2",
             "trigger": "OnHandType",
             "effects": [
                 {
-                    "type": "MultiplyDamage",
+                    "type": "AddDefense",
                     "value": 2,
                     "duration": -1,
                     "status": null

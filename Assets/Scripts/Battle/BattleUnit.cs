@@ -69,10 +69,10 @@ public class BattleUnit
     /// 破防：对防御的伤害翻倍——防御按双倍消耗，所以「能挡住的伤害」是 ceil(防御/2)。
     /// 例：防御 5 → 能挡 3 点，同时护盾被 3×2=6 打光，剩下的伤害才进血量。
     /// </param>
-    public int TakeDamage(int damage, BattleUnit attacker = null, bool halveDefense = false)
+    public int TakeDamage(int damage, BattleUnit attacker = null, bool halveDefense = false, bool isAttack = true)
     {
         // 状态效果修正伤害（易伤、无形、荆棘反伤等）
-        int finalDamage = StatusEffects.OnTakeDamage(damage, attacker);
+        int finalDamage = StatusEffects.OnTakeDamage(damage, attacker, isAttack);
 
         int defensePool = halveDefense ? Mathf.CeilToInt(Defense / 2f) : Defense;
         int defenseLost = Mathf.Min(finalDamage, defensePool);

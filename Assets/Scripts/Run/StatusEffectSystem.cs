@@ -362,7 +362,7 @@ namespace Roguelike
         /// <summary>
         /// 受击时处理（荆棘、无形、神器等）
         /// </summary>
-        public int OnTakeDamage(int incomingDamage, BattleUnit attacker)
+        public int OnTakeDamage(int incomingDamage, BattleUnit attacker, bool isAttack = true)
         {
             int finalDamage = incomingDamage;
 
@@ -380,8 +380,8 @@ namespace Roguelike
                 RemoveStatus(StatusEffectType.Intangible, 1);
             }
 
-            // 遁地：受到的所有伤害固定为 1，每受到一次伤害消耗 1 层（层数 = 还需受击次数）
-            if (HasStatus(StatusEffectType.Burrow))
+            // 遁地：只对「攻击」生效（受击固定为 1、消耗 1 层）；buff / DoT 伤害不算受击
+            if (isAttack && HasStatus(StatusEffectType.Burrow))
             {
                 finalDamage = 1;
                 RemoveStatus(StatusEffectType.Burrow, 1);
@@ -460,7 +460,7 @@ namespace Roguelike
             switch (effect.type)
             {
                 case StatusEffectType.Poison:
-                    owner.TakeDamage(effect.amount);
+                    owner.TakeDamage(effect.amount, isAttack: false);   // DoT 不算受击
                     break;
                 case StatusEffectType.Burn:
                     // 灼烧的伤害与层数衰减由 BattleManager 的 DoT 结算处理，

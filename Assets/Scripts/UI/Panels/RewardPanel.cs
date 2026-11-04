@@ -399,9 +399,10 @@ public class RewardPanel : BasePanel
         var temp = runData.GetTempEnchantments(rank, suit);
         foreach (var id in runData.GetCardEnchantments(rank, suit))
         {
+            if (temp != null && temp.Contains(id)) continue;   // 临时附魔不显示在奖励面板
             var e = ConfigLoader.GetEnchantment(id);
             if (e == null) continue;
-            names.Add((temp != null && temp.Contains(id)) ? $"{e.name}（临）" : e.name);
+            names.Add(e.name);
         }
         return names;
     }

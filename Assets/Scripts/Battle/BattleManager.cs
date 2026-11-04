@@ -1707,9 +1707,10 @@ else
     {
         switch (effect.type)
         {
-            case StatusEffectType.Poison:
-            case StatusEffectType.Burn:
-                target.TakeDamage(effect.amount);
+                case StatusEffectType.Poison:
+                case StatusEffectType.Burn:
+                    // DoT 属于 buff 伤害，不算「受击」（不消耗遁地层数等）
+                    target.TakeDamage(effect.amount, isAttack: false);
                 break;
             case StatusEffectType.Regeneration:
                 target.Heal(effect.amount);
@@ -1999,14 +2000,15 @@ else
     private void FinishWin()
     {
         pendingWinEnd = false;
-        OnBattleOver?.Invoke(true);
-        relicProcessor?.ApplyEffects("OnBattleWin", BuildContext());
 
-        // 战斗结束清理状态效果与临时附魔
+        // 战斗结束先清理状态效果 / 临时附魔 / 污染（在显示奖励面板之前，避免奖励里还显示临时附魔）
         player?.OnCombatEnd();
         foreach (var unit in enemies) unit?.OnCombatEnd();
         runData.ClearTempEnchantments();
         runData.ClearPollution();
+
+        OnBattleOver?.Invoke(true);
+        relicProcessor?.ApplyEffects("OnBattleWin", BuildContext());
     }
 
     /// <summary>
