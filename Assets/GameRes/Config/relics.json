@@ -150,14 +150,14 @@
         {
             "id": 10,
             "name": "命运共鸣",
-            "description": "命运之力充能翻倍",
+            "description": "打出一对时，命运之力 +1",
             "rarity": "Rare",
             "effects": [
                 {
-                    "trigger": "Passive",
-                    "type": "MultiplyFatePower",
-                    "value": 2,
-                    "condition": null,
+                    "trigger": "OnHandType",
+                    "type": "AddFatePower",
+                    "value": 1,
+                    "condition": "OnePair",
                     "duration": 0
                 }
             ],

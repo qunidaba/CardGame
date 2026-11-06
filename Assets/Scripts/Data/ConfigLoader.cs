@@ -24,12 +24,14 @@ namespace Roguelike.Data
         {
             if (isLoaded) return;
 
+#if !UNITY_EDITOR
             if (!Res.Ready)
             {
                 // 资源系统（YooAsset）尚未就绪，等就绪后再加载（由启动流程调用）
                 Debug.Log("[ConfigLoader] 资源尚未就绪，暂不加载配置");
                 return;
             }
+#endif
 
             cachedConfig = new AllConfig();
 
@@ -58,16 +60,24 @@ namespace Roguelike.Data
             LoadAll();
         }
 
-        /// <summary>从 YooAsset 读取一份配置文本（不含扩展名，如 "enemies"）。</summary>
+        /// <summary>读取一份配置文本（不含扩展名，如 "enemies"）。
+        /// 打包后走资源系统；编辑器 / 资源未就绪时（如配置表编辑、退出 Play 后）回退为直接读工程文件。</summary>
         private static string ReadConfig(string name)
         {
-            var ta = Res.Load<TextAsset>("Config/" + name);
-            if (ta == null)
+            if (Res.Ready)
             {
-                Debug.LogError($"[ConfigLoader] 读取配置失败：Config/{name}");
-                return null;
+                var ta = Res.Load<TextAsset>("Config/" + name);
+                if (ta != null) return ta.text;
             }
-            return ta.text;
+
+#if UNITY_EDITOR
+            string path = System.IO.Path.Combine(Application.dataPath, "GameRes", "Config", name + ".json");
+            if (System.IO.File.Exists(path))
+                return System.IO.File.ReadAllText(path);
+#endif
+
+            Debug.LogError($"[ConfigLoader] 读取配置失败：Config/{name}");
+            return null;
         }
 
         private static void LoadEnemies(string json)

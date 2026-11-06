@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Roguelike;
 
-public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class CardUI : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
 {
     public Image bgImage;
     public Image artworkImage;  // 卡牌图案图片
@@ -17,7 +17,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
     public float tooltipDelay = 0.3f;
     public int maxNamesOnCard = 2;   // 牌面上最多显示的附魔名数量，超出显示 +N
 
-    public System.Action OnClick;
+    public System.Action OnPress;
+    /// <summary>拖选进行中：抑制 tooltip，避免拖动时弹提示。</summary>
+    public static bool GlobalPainting;
 
     private CardData cardData;
     private float hoverTimer;
@@ -168,10 +170,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
         bgImage.color = selected ? Color.yellow : Color.white;
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData)
     {
         AudioManager.Instance?.Play(Sfx.CardSelect);
-        OnClick?.Invoke();
+        OnPress?.Invoke();
     }
 
     // ===== 悬停显示附魔详情（显示在牌的上方）=====
@@ -190,6 +192,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
 
     private void Update()
     {
+        if (GlobalPainting) return;   // 拖选时不出 tooltip
         if (!isHovering || cardData == null) return;
 
         hoverTimer += Time.unscaledDeltaTime;

@@ -57,9 +57,9 @@ namespace Roguelike
         public const int FateCostSpadeLv1 = 12;
         public const int FateCostSpadeLv2 = 14;
         public const int FateCostSpadeLv3 = 14;
-        public const int FateCostHeartLv1 = 12;
-        public const int FateCostHeartLv2 = 13;
-        public const int FateCostHeartLv3 = 14;
+        public const int FateCostHeartLv1 = 13;
+        public const int FateCostHeartLv2 = 15;
+        public const int FateCostHeartLv3 = 18;
         public const int FateCostClubLv1 = 15;
         public const int FateCostClubLv2 = 18;
         public const int FateCostClubLv3 = 18;

@@ -60,7 +60,7 @@ public class MainMenuPanel : BasePanel
         crt.anchorMin = new Vector2(0.5f, 0.5f);
         crt.anchorMax = new Vector2(0.5f, 0.5f);
         crt.pivot = new Vector2(0.5f, 0.5f);
-        crt.sizeDelta = new Vector2(420, 400);
+        crt.sizeDelta = new Vector2(420, 500);
         crt.anchoredPosition = new Vector2(0, -40);
         var vlg = container.GetComponent<VerticalLayoutGroup>();
         vlg.spacing = 22;
@@ -71,6 +71,7 @@ public class MainMenuPanel : BasePanel
         vlg.childForceExpandHeight = false;
 
         CreateButton(container.transform, "开始游戏", new Vector2(400, 74), OnStartGame, font, true);
+        CreateButton(container.transform, "新手教学", new Vector2(400, 74), OnStartTutorial, font, false);
         if (RunSaveSystem.HasSave())
         {
             // 只有存在存档时才显示「继续游戏」，位置在「开始游戏」下方
@@ -86,6 +87,11 @@ public class MainMenuPanel : BasePanel
         ver.text = "v0.5 prototype";
         ver.color = new Color(0.45f, 0.45f, 0.5f);
         Anchor(ver.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-20, 15));
+    }
+
+    private void OnStartTutorial()
+    {
+        Roguelike.RunDirector.Instance?.StartTutorial();
     }
 
     private void OnStartGame()

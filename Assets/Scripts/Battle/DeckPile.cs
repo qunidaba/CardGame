@@ -48,6 +48,13 @@ public class DeckPile
         OnCountChanged?.Invoke(cards.Count);
     }
 
+    /// <summary>按给定顺序初始化牌堆（不洗牌；列表末尾=牌堆顶，先被抽到）</summary>
+    public void InitOrdered(List<CardData> ordered)
+    {
+        cards = new List<CardData>(ordered);
+        OnCountChanged?.Invoke(cards.Count);
+    }
+
     /// <summary>
     /// 从牌堆顶部抽取指定数量的牌（牌堆为空则抽多少算多少）
     /// </summary>

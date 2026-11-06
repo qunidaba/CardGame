@@ -173,6 +173,7 @@ public class BattleUnit
     /// </summary>
     public void AddStatus(StatusEffectType type, int amount = 1, int duration = -1)
     {
+        if (StatusEffectSystem.TryDeferAdd(this, type, Suit.Spade, amount, duration, false)) return;
         StatusEffects.AddStatus(type, amount, duration);
     }
 
@@ -181,6 +182,7 @@ public class BattleUnit
     /// </summary>
     public void AddStatus(StatusEffectType type, Suit suit, int amount = 1, int duration = -1)
     {
+        if (StatusEffectSystem.TryDeferAdd(this, type, suit, amount, duration, true)) return;
         StatusEffects.AddStatus(type, suit, amount, duration);
     }
 

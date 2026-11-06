@@ -202,15 +202,22 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     public bool IsBattleOver { get; private set; }
     public bool IsWin { get; private set; }
     private int mulligansUsed = 0;
-    public bool HasUsedMulligan
+
+    /// <summary>本回合可弃牌重抽的总次数（基础 2 次 + 遗物/事件加成）</summary>
+    public int MaxMulligans
     {
         get
         {
-            if (battleNoMulligan) return true;
+            if (battleNoMulligan) return 0;
             int extra = (relicSystem != null ? relicSystem.GetFlatBonus("ExtraMulligan", 0) : 0) + battleMulliganDelta;
-            return mulligansUsed >= 1 + extra;
+            return Mathf.Max(0, 2 + extra);
         }
     }
+
+    /// <summary>本回合剩余弃牌重抽次数</summary>
+    public int MulligansRemaining => Mathf.Max(0, MaxMulligans - mulligansUsed);
+
+    public bool HasUsedMulligan => mulligansUsed >= MaxMulligans;
 
     /// <summary>本场战斗已进行的回合数（遗物「速通者」用）</summary>
     public int TurnsElapsed { get; private set; }
@@ -772,15 +779,25 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         // 使用带附魔的牌组（先清掉上一场遗留的临时附魔 / 污染）
         runData.ClearTempEnchantments();
         runData.ClearPollution();
-        var fullDeck = DeckBuilder.BuildDeckWithEnchantments(runData);
-        deckPile.Init(fullDeck);
 
-        // 天命：战斗第一回合必定抽到
-        var destinyCards = fullDeck.FindAll(c => c.IsDestiny);
-        if (destinyCards.Count > 0)
+        var fullDeck = new List<CardData>();
+        if (TutorialMode)
         {
-            deckPile.MoveToTop(destinyCards);
-            Debug.Log($"天命：{destinyCards.Count} 张牌置于牌堆顶");
+            // 教学：使用脚本给定的有序牌堆（不洗牌；手牌由教学直接下发）
+            deckPile.InitOrdered(TutorialDeck ?? new List<CardData>());
+        }
+        else
+        {
+            fullDeck = DeckBuilder.BuildDeckWithEnchantments(runData);
+            deckPile.Init(fullDeck);
+
+            // 天命：战斗第一回合必定抽到
+            var destinyCards = fullDeck.FindAll(c => c.IsDestiny);
+            if (destinyCards.Count > 0)
+            {
+                deckPile.MoveToTop(destinyCards);
+                Debug.Log($"天命：{destinyCards.Count} 张牌置于牌堆顶");
+            }
         }
 
         // 事件效果：读取并消耗「下场战斗」相关
@@ -996,37 +1013,40 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         }
         yield return new WaitForSeconds(phaseDelay);
 
-        // 阶段 2: 抽牌（先把弃牌堆全部洗回牌堆）
-        OnPlayerPhaseChanged?.Invoke("DrawCards");
-        deckPile.ReshuffleDiscardIntoDeck();
-        int drawBonus = Mathf.Max(0, battleDrawBonus);
-        int needDraw = maxHandSize - handArea.Count;   // 手牌上限 15
-        if (needDraw > 0)
+        // 阶段 2: 抽牌（先把弃牌堆全部洗回牌堆）。教学模式跳过，由教学脚本直接下发手牌。
+        if (!TutorialMode)
         {
-            int toDraw = Mathf.Min(needDraw, drawPerTurn + drawBonus);
-            var drawn = deckPile.Draw(toDraw);
-            yield return DrawStaggered(drawn);
-            Debug.Log($"玩家抽了 {drawn.Count} 张牌，手牌: {handArea.Count}");
-        }
-
-        // 上回合「同花之魂」预约的额外抽牌（读玩家状态，抽完移除）
-        int nextDraw = player.GetStatusAmount(StatusEffectType.NextTurnDraw);
-        if (nextDraw > 0)
-        {
-            var extra = deckPile.Draw(nextDraw);
-            yield return DrawStaggered(extra);
-            Debug.Log($"同花之魂：本回合额外抽了 {extra.Count} 张牌");
-            player.RemoveStatus(StatusEffectType.NextTurnDraw);
-        }
-
-        // 命格：梅花 Lv1 第一回合额外抽牌
-        if (isFirstTurn)
-        {
-            if (DestinyPassives.FirstTurnBonusDraw > 0)
+            OnPlayerPhaseChanged?.Invoke("DrawCards");
+            deckPile.ReshuffleDiscardIntoDeck();
+            int drawBonus = Mathf.Max(0, battleDrawBonus);
+            int needDraw = maxHandSize - handArea.Count;   // 手牌上限 15
+            if (needDraw > 0)
             {
-                var bonus = deckPile.Draw(DestinyPassives.FirstTurnBonusDraw);
-                yield return DrawStaggered(bonus);
-                Debug.Log($"[命格] 梅花 Lv1：开局额外抽 {bonus.Count} 张");
+                int toDraw = Mathf.Min(needDraw, drawPerTurn + drawBonus);
+                var drawn = deckPile.Draw(toDraw);
+                yield return DrawStaggered(drawn);
+                Debug.Log($"玩家抽了 {drawn.Count} 张牌，手牌: {handArea.Count}");
+            }
+
+            // 上回合「同花之魂」预约的额外抽牌（读玩家状态，抽完移除）
+            int nextDraw = player.GetStatusAmount(StatusEffectType.NextTurnDraw);
+            if (nextDraw > 0)
+            {
+                var extra = deckPile.Draw(nextDraw);
+                yield return DrawStaggered(extra);
+                Debug.Log($"同花之魂：本回合额外抽了 {extra.Count} 张牌");
+                player.RemoveStatus(StatusEffectType.NextTurnDraw);
+            }
+
+            // 命格：梅花 Lv1 第一回合额外抽牌
+            if (isFirstTurn)
+            {
+                if (DestinyPassives.FirstTurnBonusDraw > 0)
+                {
+                    var bonus = deckPile.Draw(DestinyPassives.FirstTurnBonusDraw);
+                    yield return DrawStaggered(bonus);
+                    Debug.Log($"[命格] 梅花 Lv1：开局额外抽 {bonus.Count} 张");
+                }
             }
         }
 
@@ -1345,6 +1365,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
 
         Debug.Log($"玩家打出 {result.type}（{string.Join(", ", selected.ConvertAll(c => c.DisplayName))}）");
 
+        // 出牌结算窗口开始：本手施加的状态（玩家 buff / 对敌负面状态）延后到本手伤害结算后再生效
+        StatusEffectSystem.BeginDeferAdds();
+
         // 遗物触发：OnCardPlayed（应用即时效果）
         var ctx = BuildContext();
         ctx.PlayedCards = selected;
@@ -1401,6 +1424,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
             }
         }
 
+        // 本手伤害/防御结算完毕：现在才让本手施加的状态生效（从下一次出牌起受影响）
+        StatusEffectSystem.EndDeferAddsAndFlush();
+
         // 燃料等：其他牌打出时，检查仍留在手牌中的附魔
         enchantmentSystem?.OnOtherCardsPlayed(selected);
 
@@ -1440,6 +1466,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         var actuallyReturned = AddToHand(toReturn, triggerOnDraw: false);
         foreach (var c in actuallyReturned) fromDiscardToHand.Add(c);
 
+        // 教学：出牌成功事件（在胜负结算前触发，便于教学推进）
+        OnPlayerPlayedCards?.Invoke();
+
         CheckBattleEnd();
 
         // 触发流程事件
@@ -1449,7 +1478,7 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
     }
 
     /// <summary>
-    /// 弃牌重抽：丢弃选中牌，抽取等量新牌（每回合限一次）
+    /// 弃牌重抽：丢弃选中牌，抽取等量新牌（每回合最多 MaxMulligans 次，基础 2 次）
     /// </summary>
     public bool TryMulligan()
     {
@@ -1478,8 +1507,9 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         handArea.RemoveCards(selected);
 
         // 先抽新牌（此时弃掉的牌还没回堆，避免立刻抽回同一张）
-        var drawn = deckPile.Draw(discardCount);
-        AddToHand(drawn);
+        // 教学：不真抽（手牌由教学脚本下发），避免两次抽牌动画叠加导致卡牌错位
+        var drawn = TutorialMode ? new List<CardData>() : deckPile.Draw(discardCount);
+        if (drawn.Count > 0) AddToHand(drawn);
 
         // 再把弃掉的牌放回牌堆并洗牌
         deckPile.Discard(selected);
@@ -1489,6 +1519,8 @@ public partial class BattleManager : IPotionContext, IEnemyAbilityContext, IDest
         handArea.ClearSelection();
 
         Debug.Log($"弃牌重抽：丢弃 {discardCount} 张，抽取 {drawn.Count} 张新牌");
+
+        OnPlayerMulligan?.Invoke();
 
         // 触发流程事件
         OnHandChanged?.Invoke();
@@ -2007,6 +2039,15 @@ else
         runData.ClearTempEnchantments();
         runData.ClearPollution();
 
+        // 等最后一个敌人死亡的表现播完（0.5s）再弹奖励面板
+        CoroutineRunner.Instance.StartCoroutine(Roguelike.CoroutineRunner.SafeCoroutine(FinishWinRoutine()));
+    }
+
+    private const float WinRewardDelay = 0.5f;
+
+    private System.Collections.IEnumerator FinishWinRoutine()
+    {
+        yield return new WaitForSeconds(WinRewardDelay);
         OnBattleOver?.Invoke(true);
         relicProcessor?.ApplyEffects("OnBattleWin", BuildContext());
     }

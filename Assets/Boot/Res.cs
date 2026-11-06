@@ -313,11 +313,15 @@ public static class Res
     public static T Load<T>(string key) where T : Object
     {
         if (string.IsNullOrEmpty(key)) return null;
-        if (!_ready)
+        if (!_ready || _package == null)
         {
             Debug.LogWarning($"[Res] 尚未就绪，无法加载 '{key}'");
             return null;
         }
+
+        // 资源包可能已被销毁/未初始化（如编辑器退出 Play 后），此时 IsLocationValid 会抛异常
+        if (_package.InitializeStatus != EOperationStatus.Succeeded)
+            return null;
 
         // 地址不存在（如未提供的可选图标）：静默返回，避免 YooAsset 对无效地址报错
         if (!_package.IsLocationValid(Loc(key)))
@@ -341,7 +345,9 @@ public static class Res
     public static T[] LoadAll<T>(string key) where T : Object
     {
         if (string.IsNullOrEmpty(key)) return System.Array.Empty<T>();
-        if (!_ready) return System.Array.Empty<T>();
+        if (!_ready || _package == null) return System.Array.Empty<T>();
+        if (_package.InitializeStatus != EOperationStatus.Succeeded) return System.Array.Empty<T>();
+        if (!_package.IsLocationValid(Loc(key))) return System.Array.Empty<T>();
 
         if (_subHandles.TryGetValue(key, out var cached) && cached != null)
             return Collect<T>(cached.SubAssetObjects);

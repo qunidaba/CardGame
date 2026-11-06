@@ -99,6 +99,7 @@ public partial class BattlePanel : BasePanel
     public TextMeshProUGUI mulliganButtonText;
     private ColorBlock mulliganButtonColors = ColorBlock.defaultColorBlock;
     private bool mulliganColorsCached;
+    private readonly List<Image> mulliganDots = new List<Image>();   // 重抽按钮下方的剩余次数绿点
 
     [Header("金币与遗物")]
     public TextMeshProUGUI goldText;
@@ -183,6 +184,17 @@ public partial class BattlePanel : BasePanel
     private TextMeshProUGUI destinyHudText;
 
     private PotionSlotUI[] potionSlots = new PotionSlotUI[3];   // 药水槽（运行时创建在遗物栏下方）
+
+    // 教学用：命格相关 UI 引用
+    public RectTransform DestinyHudRect => destinyHudText != null ? destinyHudText.rectTransform : null;
+    public Button ActiveSkillButton => activeSkillButton;
+    public Button DestinyButton => destinyButton;
+    public Button FateButton => fateButton;
+
+    /// <summary>手牌是否还在动画中（抽牌批次 / 落位 / 平滑移动 / 移动驱动）</summary>
+    public bool IsHandBusy =>
+        drawBatchesRunning > 0 || pendingDrawAnims.Count > 0 || pendingLanding.Count > 0
+        || handDriver != null || handMoves.Count > 0;
 
     /// <summary>
     /// 注入BattleManager引用，绑定按钮事件和订阅事件
@@ -285,6 +297,8 @@ public partial class BattlePanel : BasePanel
         cardUis.Clear();
         handTargets.Clear();
         handMoves.Clear();
+        handPainting = false;
+        CardUI.GlobalPainting = false;
 
         if (handContainer != null)
         {
@@ -605,6 +619,10 @@ public partial class BattlePanel : BasePanel
     // ===== 敌人受击表现（血条/飘字/闪红/屏震）延迟到投射物命中 =====
 
     private int activeProjectiles;
+
+    /// <summary>本次出牌投射物全部命中后触发（教学等外部等待"真正命中"用）</summary>
+    public event System.Action OnPlayVfxDone;
+    public bool IsPlayVfxActive => activeProjectiles > 0;
     private bool enemyUiRefreshQueued;
     private readonly List<System.Action> deferredEnemyVisuals = new List<System.Action>();
 
@@ -835,6 +853,9 @@ public partial class BattlePanel : BasePanel
     // ===== 多敌人槽位 =====
 
     private readonly List<EnemySlotUI> enemySlots = new List<EnemySlotUI>();
+
+    /// <summary>教学等外部使用：当前敌人显示槽位</summary>
+    public IReadOnlyList<EnemySlotUI> EnemySlots => enemySlots;
 
     /// <summary>
     /// 构建敌人显示：不用容器/布局组，直接以 enemyAnchor 为锚点，
@@ -1155,6 +1176,9 @@ public partial class BattlePanel : BasePanel
 
         // 投射物已全部命中：这时才播被推迟的抽牌动画
         FlushDeferredDraws();
+
+        // 告知外部（教学等）：本次出牌命中已完成
+        OnPlayVfxDone?.Invoke();
 
         // 特效都打完了：结算被延迟的胜利（奖励面板）
         if (battleManager != null)
@@ -2128,16 +2152,7 @@ private void OnEnemyTurnStart()
         cardUI.Init(card);
 
         var cardData = card;
-        cardUI.OnClick = () =>
-        {
-            if (battleManager != null && battleManager.Potions.HasPendingRankShift)
-            {
-                battleManager.Potions.ApplyPendingRankShift(cardData);
-                return;
-            }
-            battleManager.GetHandArea().ToggleSelect(cardData);
-            battleManager.OnCardSelectionChanged();
-        };
+        cardUI.OnPress = () => BeginHandPaint(cardData);
 
         cardUis[card] = cardUI;
         enchantSnapshot[card] = new HashSet<int>(card.GetLiveEnchantmentIds());
@@ -2576,6 +2591,109 @@ private void OnEnemyTurnStart()
         if (glowGo != null) Destroy(glowGo);
     }
 
+    // ===== 手牌拖选：按下即选，按住时扫过的牌一起选 / 一起取消 =====
+    private bool handPainting;
+    private bool handPaintTarget;
+
+    private void BeginHandPaint(CardData card)
+    {
+        if (battleManager == null || card == null) return;
+
+        // 药水改造待选：按下即应用，不进入拖选
+        if (battleManager.Potions.HasPendingRankShift)
+        {
+            battleManager.Potions.ApplyPendingRankShift(card);
+            return;
+        }
+
+        var hand = battleManager.GetHandArea();
+        bool wasSelected = hand.GetSelectedCards().Contains(card);
+        handPaintTarget = !wasSelected;   // 按未选的 → 选；按已选的 → 取消
+        handPainting = true;
+        CardUI.GlobalPainting = true;
+        ApplyPaintToCard(card);
+    }
+
+    private void ApplyPaintToCard(CardData card)
+    {
+        if (battleManager == null || card == null) return;
+        var hand = battleManager.GetHandArea();
+        bool selected = hand.GetSelectedCards().Contains(card);
+        if (selected == handPaintTarget) return;
+        hand.ToggleSelect(card);
+        battleManager.OnCardSelectionChanged();
+    }
+
+    private void Update()
+    {
+        if (!handPainting) return;
+
+        if (!Input.GetMouseButton(0))
+        {
+            handPainting = false;
+            CardUI.GlobalPainting = false;
+            return;
+        }
+
+        // 按住移动：把指针当前扫到的牌设成这次拖选的目标状态
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        if (es == null) return;
+        var ped = new UnityEngine.EventSystems.PointerEventData(es) { position = Input.mousePosition };
+        var results = new List<UnityEngine.EventSystems.RaycastResult>();
+        es.RaycastAll(ped, results);
+        foreach (var r in results)
+        {
+            var card = r.gameObject.GetComponentInParent<CardUI>();
+            if (card != null) { ApplyPaintToCard(card.GetCardData()); break; }
+        }
+    }
+
+    private void OnDisable()
+    {
+        handPainting = false;
+        CardUI.GlobalPainting = false;
+    }
+
+    /// <summary>在重抽按钮下方显示剩余次数的小绿点（用掉一次就少一个）。</summary>
+    private void UpdateMulliganDots(int remaining)
+    {
+        if (mulliganButton == null) return;
+
+        const float dotSize = 14f;
+        const float gap = 10f;
+        int show = Mathf.Max(0, remaining);
+        float totalWidth = show > 0 ? show * dotSize + (show - 1) * gap : 0f;
+
+        // 需要更多点就补
+        while (mulliganDots.Count < show)
+        {
+            var go = new GameObject("MulliganDot", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(mulliganButton.transform, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.sizeDelta = new Vector2(dotSize, dotSize);
+            var img = go.GetComponent<Image>();
+            img.sprite = GetRuntimeCircleSprite();
+            img.color = new Color(0.4f, 0.95f, 0.45f, 1f);
+            img.raycastTarget = false;
+            mulliganDots.Add(img);
+        }
+
+        for (int i = 0; i < mulliganDots.Count; i++)
+        {
+            var dot = mulliganDots[i];
+            if (dot == null) continue;
+            bool active = i < show;
+            dot.gameObject.SetActive(active);
+            if (!active) continue;
+
+            var rt = (RectTransform)dot.transform;
+            float x = -totalWidth * 0.5f + dotSize * 0.5f + i * (dotSize + gap);
+            rt.anchoredPosition = new Vector2(x, -6f);
+        }
+    }
+
     private void UpdateSelectionVisuals()
     {
         if (battleManager == null) return;
@@ -2605,14 +2723,14 @@ private void OnEnemyTurnStart()
         bool hasSel = battleManager.GetHandArea().GetSelectedCards().Count > 0;
         if (hasSel && !battleManager.CanPlaySelection(out var blockReason))
         {
-            handTypeText.text = preview.IsValid ? preview.type.ToString() : "无有效牌型";
+            handTypeText.text = preview.IsValid ? HandTypeNames.Full(preview.type) : "无有效牌型";
             effectPreviewText.text = string.IsNullOrEmpty(blockReason) ? "" : $"<color=#FF6B6B>{blockReason}</color>";
             return;
         }
 
         if (preview.IsValid)
         {
-            handTypeText.text = preview.type.ToString();
+            handTypeText.text = HandTypeNames.Full(preview.type);
 
             int predictedDamage = battleManager.PreviewSelectedDamage();
             string effectStr = "";
@@ -2663,10 +2781,12 @@ private void OnEnemyTurnStart()
         mulliganButton.interactable = canMulligan;
         if (mulliganButtonText != null)
         {
-            if (battleManager.HasUsedMulligan) mulliganButtonText.text = "已重抽";
+            if (battleManager.MulligansRemaining <= 0) mulliganButtonText.text = "次数耗尽";
             else if (hasMarkedSelected) mulliganButtonText.text = "茧缚";
-            else mulliganButtonText.text = hasSelected ? "弃牌重抽" : "请选牌";
+            else mulliganButtonText.text = "弃牌重抽";
         }
+
+        UpdateMulliganDots(battleManager.MulligansRemaining);
 
         // 选中被茧缚标记的花色时，重抽按钮整体略微变红
         if (mulliganButton != null)

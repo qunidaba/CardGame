@@ -242,6 +242,27 @@ namespace Roguelike
             ui?.ShowPanel<MainMenuPanel>();
         }
 
+        /// <summary>开始新手教学（独立战斗，不影响正式存档）</summary>
+        public void StartTutorial()
+        {
+            BattleManager?.AbortBattle();
+            BattleManager = null;
+            InRun = false;
+            pendingEventOutcome = null;
+            inEventBattle = false;
+
+            var ui = uiManager != null ? uiManager : UIManager.Instance;
+            ui?.DestroyAllPanels();
+            TutorialController.Begin(ui);
+        }
+
+        /// <summary>教学用：把教学战斗设为当前 BattleManager</summary>
+        public void SetBattleManagerForTutorial(BattleManager bm)
+        {
+            BattleManager = bm;
+            InRun = false;
+        }
+
         /// <summary>读档：还原到本场战斗开头（用存档里记录的基础敌人 + 强化等级重建，不重新随机）</summary>
         private void ResumeBattle(RunSave save)
         {
@@ -368,7 +389,7 @@ namespace Roguelike
                 ? progression.eliteChancePerBattle
                 : new float[] { 0f };
 
-            var act = Roguelike.Data.ConfigLoader.GetAct(RunData.actId);
+            var act = RunData != null ? Roguelike.Data.ConfigLoader.GetAct(RunData.actId) : null;
             if (act == null) return;
 
             if (act.totalBattles > 0) totalBattles = act.totalBattles;

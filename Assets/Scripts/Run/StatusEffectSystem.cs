@@ -121,6 +121,49 @@ namespace Roguelike
         /// <summary>
         /// 添加状态效果
         /// </summary>
+        // ===== 出牌结算窗口：本手施加的状态延后到本手伤害/防御结算完再生效 =====
+        private struct PendingAdd
+        {
+            public BattleUnit owner;
+            public StatusEffectType type;
+            public Suit suit;
+            public int amount;
+            public int duration;
+            public bool useSuit;
+        }
+
+        private static bool _deferAdds;
+        private static readonly List<PendingAdd> _pendingAdds = new List<PendingAdd>();
+
+        public static void BeginDeferAdds()
+        {
+            if (_deferAdds) EndDeferAddsAndFlush();   // 保险：上次异常退出若有残留，先落地
+            _deferAdds = true;
+            _pendingAdds.Clear();
+        }
+
+        public static void EndDeferAddsAndFlush()
+        {
+            _deferAdds = false;
+            if (_pendingAdds.Count == 0) return;
+            var list = new List<PendingAdd>(_pendingAdds);
+            _pendingAdds.Clear();
+            foreach (var p in list)
+            {
+                if (p.owner == null) continue;
+                // 直接调用 StatusEffects（不带 defer 检查），确保落地生效
+                if (p.useSuit) p.owner.StatusEffects.AddStatus(p.type, p.suit, p.amount, p.duration);
+                else p.owner.StatusEffects.AddStatus(p.type, p.amount, p.duration);
+            }
+        }
+
+        public static bool TryDeferAdd(BattleUnit owner, StatusEffectType type, Suit suit, int amount, int duration, bool useSuit)
+        {
+            if (!_deferAdds) return false;
+            _pendingAdds.Add(new PendingAdd { owner = owner, type = type, suit = suit, amount = amount, duration = duration, useSuit = useSuit });
+            return true;
+        }
+
         public void AddStatus(StatusEffectType type, int amount = 1, int duration = -1)
         {
             AddStatusInternal(type, amount, duration, Suit.Spade, false);

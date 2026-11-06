@@ -39,6 +39,10 @@ public partial class BattleManager
     {
         if (unit == null) return null;
 
+        // 教学：按脚本固定的意图序列出（攻击 6 / 19 / …）
+        if (TutorialMode && TutorialIntentQueue != null && TutorialIntentQueue.Count > 0)
+            return TutorialIntentQueue.Dequeue();
+
         // 0) 第一回合：勾了 battleStart 的意图必定出场
         if (preferBattleStart)
         {

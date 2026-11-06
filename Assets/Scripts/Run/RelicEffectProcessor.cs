@@ -202,6 +202,20 @@ namespace Roguelike
                     OnGoldChanged?.Invoke(finalGold);
                     break;
 
+                // 「命运共鸣」：打出一对时，命运之力 +value（受上限限制）
+                case "AddFatePower":
+                {
+                    int add = GetIntValue(effect.value);
+                    if (add != 0 && ctx.RunData != null)
+                    {
+                        ctx.RunData.fatePower = Mathf.Min(
+                            DestinyPassiveSystem.GetFatePowerCap(ctx.RunData),
+                            ctx.RunData.fatePower + add);
+                        ctx.RunData.NotifyDestinyChanged();
+                    }
+                    break;
+                }
+
                 // ===== 状态标记类（跨战斗持久）=====
                 case "NextBattleEnemyBuff":
                     ctx.RunData.nextBattleEnemyBuff += GetIntValue(effect.value);
